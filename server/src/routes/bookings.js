@@ -1,0 +1,59 @@
+import { Router } from 'express';
+import { authMiddleware } from '../lib/auth.js';
+import { canFit } from '../lib/availability.js';
+
+export default function bookingsRoutes({ prisma }){
+  const router = Router();
+
+  async function getConfig(){
+    const cfg = await prisma.config.findUnique({ where:{ id:1 } });
+    return cfg || { workingHours:{2:[9,18],3:[9,18],4:[9,18],5:[9,18],6:[9,18]}, blockedDays:[], blockedDateRanges:[], blockedTimes:{} };
+  }
+
+  router.get('/', authMiddleware(false), async (req,res)=>{
+    const { date } = req.query;
+    const where = date ? { date } : {};
+    let list = await prisma.booking.findMany({ where, orderBy:[{ date:'asc' },{ time:'asc' }] });
+    if(req.user?.role !== 'admin') list = list.filter(b=> b.userId === req.user?.sub);
+    res.json(list);
+  });
+
+  // Aggregate by date for availability (no user filtering, limited fields)
+  router.get('/day', authMiddleware(false), async (req,res)=>{
+    const { date } = req.query;
+    if(!date) return res.status(400).json({ error:'Missing date' });
+    const list = await prisma.booking.findMany({ where:{ date }, select:{ time:true, duration:true, serviceId:true } });
+    res.json(list);
+  });
+
+  router.post('/', authMiddleware(false), async (req,res)=>{
+    const { serviceId, date, time, name } = req.body||{};
+    if(!serviceId || !date || !time) return res.status(400).json({error:'Missing fields'});
+    // Look up service and duration
+    const svc = await prisma.service.findUnique({ where:{ id: String(serviceId) } });
+    if(!svc) return res.status(400).json({error:'Invalid service'});
+    const duration = svc.duration || 30;
+    // Fetch same-day bookings
+    const sameDay = await prisma.booking.findMany({ where:{ date }, orderBy:{ time:'asc' } });
+    const cfg = await getConfig();
+    if(!canFit(cfg, sameDay, date, time, duration)) return res.status(409).json({ error:'Time not available' });
+    const booking = await prisma.booking.create({ data:{
+      userId: req.user.sub,
+      serviceId: String(serviceId),
+      date, time, duration,
+      customerName: name || null,
+    }});
+    res.status(201).json(booking);
+  });
+
+  router.delete('/:id', authMiddleware(false), async (req,res)=>{
+    const id = String(req.params.id);
+    const b = await prisma.booking.findUnique({ where:{ id } });
+    if(!b) return res.status(404).json({error:'Not found'});
+    if(b.userId !== req.user?.sub && req.user?.role !== 'admin') return res.status(403).json({error:'Forbidden'});
+    await prisma.booking.delete({ where:{ id } });
+    res.status(204).end();
+  });
+
+  return router;
+}

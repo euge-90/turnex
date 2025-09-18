@@ -1,0 +1,47 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  role         String    @default("user")
+  createdAt    DateTime  @default(now())
+  bookings     Booking[]
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  duration    Int
+  price       Int
+  bookings    Booking[]
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  date       String
+  time       String
+  duration   Int
+  customerName String?
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  service    Service  @relation(fields: [serviceId], references: [id])
+  serviceId  String
+  createdAt  DateTime @default(now())
+}
+
+model Config {
+  id                Int   @id @default(1)
+  workingHours      String
+  blockedDays       String
+  blockedDateRanges String
+  blockedTimes      String
+}
