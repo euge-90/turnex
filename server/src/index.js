@@ -17,6 +17,17 @@ app.use(express.json());
 // Health
 app.get('/api/health', (_req, res)=> res.json({ ok: true }));
 
+// Friendly root message
+app.get('/', (_req, res) => {
+	res.json({
+		ok: true,
+		name: 'Turnex API',
+		message: 'Welcome to the Turnex API',
+		health: '/api/health',
+		services: '/api/services'
+	});
+});
+
 // Routes
 import authRoutes from './routes/auth.js';
 import servicesRoutes from './routes/services.js';
