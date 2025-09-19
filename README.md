@@ -8,7 +8,7 @@ Aplicación web estática para reservar turnos de peluquería unisex (mujeres, h
 - Google Fonts (Poppins, Inter)
 - SweetAlert2 (CDN)
 - JavaScript ES6 Modules (vanilla)
-- Persistencia: SQLite (Prisma ORM) por defecto; opcional PostgreSQL
+- Persistencia: PostgreSQL con Prisma ORM (Neon en producción). Nota: versiones iniciales usaron SQLite.
 
 ## Estructura
 - `index.html`
@@ -90,6 +90,62 @@ npm run studio
 	npx prisma studio
 	```
 
+## API (REST)
+
+Base de la API en producción: `https://turnex-api.onrender.com/api`
+
+Autenticación: JWT en el header `Authorization: Bearer <token>`.
+
+Endpoints principales:
+- `GET /api/health` — Health check
+- `POST /api/auth/signup` — Crear cuenta (campos: `email`, `password`)
+- `POST /api/auth/login` — Login (devuelve `token` y `user`)
+- `GET /api/services` — Listar servicios
+- `POST /api/services` — Crear servicio (admin)
+- `PUT /api/services/:id` — Actualizar servicio (admin)
+- `DELETE /api/services/:id` — Eliminar servicio (admin; sin turnos futuros)
+- `GET /api/bookings` — Listar turnos (propios; admin ve todos)
+- `GET /api/bookings/day?date=YYYY-MM-DD` — Turnos compactos del día (para disponibilidad)
+- `POST /api/bookings` — Crear turno (auth)
+- `DELETE /api/bookings/:id` — Cancelar turno (propietario o admin)
+- `GET /api/config` — Obtener configuración (horarios, bloqueos)
+- `PUT /api/config` — Actualizar configuración (admin)
+- `GET /api/admin/users/count` — Total de usuarios (admin)
+
+Ejemplos rápidos (curl):
+
+Signup:
+```bash
+curl -X POST "https://turnex-api.onrender.com/api/auth/signup" \
+	-H "Content-Type: application/json" \
+	-d '{"email":"user@example.com","password":"secret123"}'
+```
+
+Login (guardar token en variable de entorno POSIX):
+```bash
+TOKEN=$(curl -s -X POST "https://turnex-api.onrender.com/api/auth/login" \
+	-H "Content-Type: application/json" \
+	-d '{"email":"user@example.com","password":"secret123"}' | jq -r .token)
+```
+
+Listar servicios:
+```bash
+curl "https://turnex-api.onrender.com/api/services"
+```
+
+Crear turno (requiere token):
+```bash
+curl -X POST "https://turnex-api.onrender.com/api/bookings" \
+	-H "Authorization: Bearer $TOKEN" \
+	-H "Content-Type: application/json" \
+	-d '{"serviceId":"<SERVICE_ID>","date":"2025-09-20","time":"10:00","name":"Juan"}'
+```
+
+Ver mis turnos:
+```bash
+curl -H "Authorization: Bearer $TOKEN" "https://turnex-api.onrender.com/api/bookings"
+```
+
 ## Funcionalidades
 - Calendario interactivo (Martes a Sábado, 09:00-18:00, intervalos 30m)
 - Selección de día y hora con disponibilidad
@@ -101,7 +157,7 @@ npm run studio
 
 ## Notas y supuestos
 - Usuarios, servicios, reservas y configuración se guardan en la base (SQLite o PostgreSQL, según `DATABASE_URL`).
-- Contraseñas sin hash por simplicidad en v1.0 (no usar en producción).
+- Contraseñas con hash (`bcrypt`).
 - Se pueden ajustar horarios/días en `js/utils.js`.
 
 ## Próximos pasos

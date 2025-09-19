@@ -17,15 +17,65 @@ app.use(express.json());
 // Health
 app.get('/api/health', (_req, res)=> res.json({ ok: true }));
 
-// Friendly root message
-app.get('/', (_req, res) => {
+// API index (JSON): quick discoverability of endpoints
+app.get('/api', (req, res) => {
+	const base = `${req.protocol}://${req.get('host')}`;
 	res.json({
-		ok: true,
 		name: 'Turnex API',
-		message: 'Welcome to the Turnex API',
-		health: '/api/health',
-		services: '/api/services'
+		base,
+		endpoints: [
+			{ method: 'GET', path: '/api/health', desc: 'Service health check' },
+			{ method: 'POST', path: '/api/auth/signup', desc: 'Create account (email, password)' },
+			{ method: 'POST', path: '/api/auth/login', desc: 'Login and receive JWT' },
+			{ method: 'GET', path: '/api/services', desc: 'List services' },
+			{ method: 'POST', path: '/api/services', desc: 'Create service (admin)' },
+			{ method: 'PUT', path: '/api/services/:id', desc: 'Update service (admin)' },
+			{ method: 'DELETE', path: '/api/services/:id', desc: 'Delete service (admin, no future bookings)' },
+			{ method: 'GET', path: '/api/bookings', desc: 'List bookings (own unless admin)' },
+			{ method: 'GET', path: '/api/bookings/day?date=YYYY-MM-DD', desc: 'Compact bookings for a day' },
+			{ method: 'POST', path: '/api/bookings', desc: 'Create booking (auth)' },
+			{ method: 'DELETE', path: '/api/bookings/:id', desc: 'Cancel booking (owner or admin)' },
+			{ method: 'GET', path: '/api/config', desc: 'Get availability config' },
+			{ method: 'PUT', path: '/api/config', desc: 'Update availability config (admin)' },
+			{ method: 'GET', path: '/api/admin/users/count', desc: 'Total users (admin)' }
+		]
 	});
+});
+
+// Friendly root page (HTML)
+app.get('/', (req, res) => {
+	res.type('html').send(`<!doctype html>
+	<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Turnex API</title>
+		<style>
+			body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;margin:0;padding:2rem;line-height:1.5;color:#222;background:#f8f9fa}
+			.card{max-width:720px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+			.card h1{margin:0 0 .25rem;font-size:1.5rem}
+			.card .muted{color:#6b7280;font-size:.95rem;margin:.25rem 0 1rem}
+			.card .links a{display:inline-block;margin-right:1rem;color:#0d6efd;text-decoration:none}
+			.card .links a:hover{text-decoration:underline}
+			.badge{display:inline-block;background:#0d6efd;color:#fff;border-radius:999px;padding:.15rem .5rem;font-size:.75rem;margin-left:.5rem}
+			.box{padding:1.25rem 1.25rem}
+			code{background:#f1f5f9;border:1px solid #e5e7eb;border-radius:6px;padding:.1rem .35rem}
+		</style>
+	</head>
+	<body>
+		<div class="card">
+			<div class="box">
+				<h1>Turnex API <span class="badge">live</span></h1>
+				<div class="muted">Bienvenido. Esta es la API para la app de turnos.</div>
+				<div class="links">
+					<a href="/api/health">/api/health</a>
+					<a href="/api/services">/api/services</a>
+				</div>
+				<p class="muted">Frontend: configure el meta <code>api-base</code> para apuntar a <code>${req?.protocol ?? 'https'}://${req?.headers?.host ?? ''}/api</code>.</p>
+			</div>
+		</div>
+	</body>
+	</html>`);
 });
 
 // Routes
