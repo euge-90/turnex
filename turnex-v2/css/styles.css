@@ -1,6 +1,0 @@
-/* Minimal v2 styles */
-:root{
-  --brand:#6f42c1;
-}
-.btn-primary{ background-color:var(--brand); border-color:var(--brand); }
-.btn-primary:hover{ filter:brightness(0.9); }
