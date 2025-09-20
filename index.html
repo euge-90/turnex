@@ -644,16 +644,6 @@
               <input type="email" class="form-control" id="loginEmail" name="email" required inputmode="email" autocomplete="email" />
               <div class="invalid-feedback">Ingresá un email válido.</div>
             </div>
-            <div class="mb-3">
-              <label for="loginName" class="form-label">Nombre y apellido</label>
-              <input type="text" class="form-control" id="loginName" name="name" required autocomplete="name" />
-              <div class="invalid-feedback">Ingresá tu nombre.</div>
-            </div>
-            <div class="mb-3">
-              <label for="loginPhone" class="form-label">Teléfono</label>
-              <input type="tel" class="form-control" id="loginPhone" name="phone" required inputmode="tel" autocomplete="tel" />
-              <div class="invalid-feedback">Ingresá un teléfono válido (mín. 8 dígitos).</div>
-            </div>
             <div class="mb-2 position-relative">
               <label for="loginPassword" class="form-label">Contraseña</label>
               <div class="password-wrap">
@@ -662,7 +652,7 @@
                   <i class="bi bi-eye"></i>
                 </button>
               </div>
-              <div class="invalid-feedback">La contraseña debe tener al menos 8 caracteres.</div>
+              <div class="invalid-feedback">La contraseña debe tener al menos 9 caracteres.</div>
             </div>
             <div class="d-grid mt-3">
               <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-auth">
@@ -688,14 +678,24 @@
               <input type="tel" class="form-control" id="signupPhone" required inputmode="tel" autocomplete="tel" />
               <div class="invalid-feedback">Ingresá un teléfono válido (mín. 8 dígitos).</div>
             </div>
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
               <label for="signupPassword" class="form-label">Contraseña</label>
-              <input type="password" class="form-control" id="signupPassword" required minlength="9" autocomplete="new-password" />
-              <div class="invalid-feedback">La contraseña debe tener al menos 9 caracteres.</div>
+              <div class="password-wrap">
+                <input type="password" class="form-control" id="signupPassword" required minlength="9" autocomplete="new-password" />
+                <button type="button" class="btn btn-eye" data-toggle-password="signupPassword" aria-label="Mostrar/ocultar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <div class="invalid-feedback">La contraseña debe tener al menos 9 caracteres y ser segura.</div>
             </div>
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
               <label for="signupPassword2" class="form-label">Repetir contraseña</label>
-              <input type="password" class="form-control" id="signupPassword2" required minlength="9" autocomplete="new-password" />
+              <div class="password-wrap">
+                <input type="password" class="form-control" id="signupPassword2" required minlength="9" autocomplete="new-password" />
+                <button type="button" class="btn btn-eye" data-toggle-password="signupPassword2" aria-label="Mostrar/ocultar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
               <div class="invalid-feedback">Las contraseñas deben coincidir.</div>
             </div>
             <div class="d-grid mt-3">

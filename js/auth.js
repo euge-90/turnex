@@ -29,8 +29,8 @@ export function logout(){ apiClearSession(); }
 
     let defaultMode = 'login'; // NUEVO: modo por defecto al abrir
     const modeButtons = $authModal.querySelectorAll('[data-auth-mode]');
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
 
     modeButtons.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.authMode)));
     function setMode(mode) {
@@ -56,8 +56,7 @@ export function logout(){ apiClearSession(); }
     });
 
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRe = /^[+\d\s().-]{8,}$/;
-  const fullNameOk = (v) => v.split(/\s+/).filter(w => w.length >= 2).length >= 2;
+  // Login no requiere nombre ni teléfono; solo email y password
   const passStrong = (v) => v.length >= 9 && /[a-z]/.test(v) && /[A-Z]/.test(v) && /\d/.test(v);
 
     function findFeedback(input) {
@@ -73,13 +72,11 @@ export function logout(){ apiClearSession(); }
       if (fb) fb.style.visibility = valid ? 'hidden' : 'visible';
     }
 
-    // Login realtime
+    // Login realtime (solo email y password)
     loginForm?.addEventListener('input', e => {
       const t = e.target;
       if (t.id === 'loginEmail') markValid(t, emailRe.test(t.value), 'Ingresá un email válido.');
-  if (t.id === 'loginName')  markValid(t, fullNameOk((t.value || '').trim()), 'Ingresá nombre y apellido.');
-      if (t.id === 'loginPhone') markValid(t, phoneRe.test(t.value), 'Ingresá un teléfono válido (mín. 8 dígitos).');
-  if (t.id === 'loginPassword') markValid(t, (t.value || '').length >= 9, 'Mínimo 9 caracteres.');
+      if (t.id === 'loginPassword') markValid(t, (t.value || '').length >= 9, 'Mínimo 9 caracteres.');
     });
 
     // Signup realtime
@@ -106,25 +103,19 @@ export function logout(){ apiClearSession(); }
       return payload;
     }
 
-    // Submit LOGIN (requiere email, nombre, teléfono y password; API solo recibe email/password)
+  // Submit LOGIN (solo email y password)
     loginForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = loginForm.loginEmail.value.trim();
-      const name = loginForm.loginName.value.trim();
-      const phone = loginForm.loginPhone.value.trim();
       const password = loginForm.loginPassword.value;
 
       const vEmail = emailRe.test(email);
-  const vName = fullNameOk(name);
-      const vPhone = phoneRe.test(phone);
-  const vPass = password.length >= 9;
+    const vPass = password.length >= 9;
 
       markValid(loginForm.loginEmail, vEmail, 'Ingresá un email válido.');
-      markValid(loginForm.loginName, vName, 'Ingresá tu nombre.');
-      markValid(loginForm.loginPhone, vPhone, 'Ingresá un teléfono válido (mín. 8 dígitos).');
-  markValid(loginForm.loginPassword, vPass, 'Mínimo 9 caracteres.');
+    markValid(loginForm.loginPassword, vPass, 'Mínimo 9 caracteres.');
 
-      if (!(vEmail && vName && vPhone && vPass)) return;
+    if (!(vEmail && vPass)) return;
 
       const btn = document.getElementById('loginSubmitBtn');
       setLoading(btn, true, 'Ingresando...');
