@@ -152,7 +152,8 @@ html{scroll-behavior:smooth}
 	.stats .stat-value { font-weight:700; font-size:24px; }
 	.stats .stat-label { color: var(--bs-secondary-color); font-size:14px; }
 
-	.app-download .qr-mock { width:200px; height:200px; border-radius:16px; background: repeating-linear-gradient(45deg,#e9ecef,#e9ecef 10px,#f8f9fa 10px,#f8f9fa 20px); border:1px solid rgba(0,0,0,.06); }
+	.app-download .qr-mock { width:220px; height:220px; border-radius:16px; background: var(--bs-body-bg); border:1px solid rgba(0,0,0,.08); box-shadow: var(--shadow-sm); display:grid; place-items:center; padding:16px; }
+	.app-download .qr-mock svg{ width:100%; height:100%; image-rendering: pixelated; border-radius:10px; }
 
 	.how-it-works .how-card { background: var(--bs-body-bg); border:1px solid rgba(0,0,0,.06); border-radius:12px; padding:16px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 	.how-it-works .hiw-emoji { font-size:24px; margin-bottom:6px; }
@@ -304,6 +305,11 @@ h1,h2,h3,.display-5{font-family:var(--font-display)}
 
 /* Services */
 .service-card{border:0}
+.service-card .card-body{display:flex; flex-direction:column; height:100%}
+.service-card h3{line-height:1.25}
+.service-card p{margin-bottom:.25rem}
+.service-card .desc{display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; line-clamp:3}
+.service-card .btn{margin-top:auto}
 .service-badge{background:linear-gradient(135deg, var(--secondary), var(--accent)); color:#fff}
 
 /* My bookings */
@@ -404,3 +410,5 @@ footer{background:#fff}
 [data-bs-theme="dark"] .hero h2{color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.35)}
 [data-bs-theme="dark"] .hero .hero-badge{background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.3)}
 [data-bs-theme="dark"] .hero .text-gradient{color:#fff; background:none; -webkit-text-fill-color:#fff}
+/* QR mock dark theme */
+[data-bs-theme="dark"] .app-download .qr-mock{background: var(--surface-2); border-color: var(--border)}

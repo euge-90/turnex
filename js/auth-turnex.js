@@ -85,9 +85,16 @@ export class AuthTurnex {
     // Remember me visible on login
     const rememberRow = this.modalEl?.querySelector('[data-auth-remember]');
     if(rememberRow) rememberRow.classList.toggle('d-none', this.isSignup);
+    // Required attributes depending on mode
+    if(this.fName) this.fName.toggleAttribute('required', this.isSignup);
+    if(this.fPassword2) this.fPassword2.toggleAttribute('required', this.isSignup);
     // Reset strength UI when toggling
     this.updateStrength();
     this.validatePasswords(true);
+    // Re-evaluate form validity to enable/disable submit
+    if(this.formEl && this.btnSubmit){
+      this.btnSubmit.toggleAttribute('disabled', !this.formEl.checkValidity());
+    }
   }
 
   setLoading(loading){
@@ -124,7 +131,11 @@ export class AuthTurnex {
       this.onSuccess('login');
     }catch(err){
       const msg = (err && err.message) ? err.message : 'Ocurrió un error';
-      const pretty = /already/i.test(msg) ? 'El email ya está registrado' : /invalid/i.test(msg) ? 'Credenciales inválidas' : msg;
+      const pretty =
+        /already/i.test(msg) ? 'El email ya está registrado' :
+        /invalid/i.test(msg) ? 'Credenciales inválidas' :
+        /(failed|network|fetch|cors|blocked)/i.test(msg) ? 'No se pudo conectar con el servidor. Verificá tu conexión o intentá más tarde.' :
+        msg;
       Swal.fire('Error', pretty, 'error');
     }finally{ this.setLoading(false); }
   }

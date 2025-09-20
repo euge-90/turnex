@@ -300,7 +300,77 @@
             </div>
           </div>
           <div class="col-12 col-md-6 d-flex justify-content-center">
-            <div class="qr-mock" aria-label="QR para descargar app"></div>
+            <div class="qr-mock" aria-label="QR para descargar app" data-qr="https://euge-90.github.io/turnex/">
+              <!-- Placeholder QR (ficticio) -->
+              <svg viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Código QR de ejemplo">
+                <rect width="33" height="33" fill="#ffffff"/>
+                <!-- Finder patterns -->
+                <g fill="#000000">
+                  <!-- Top-left -->
+                  <rect x="0" y="0" width="7" height="7"/>
+                  <rect x="1.5" y="1.5" width="4" height="4" fill="#ffffff"/>
+                  <rect x="2.5" y="2.5" width="2" height="2"/>
+                  <!-- Top-right -->
+                  <rect x="26" y="0" width="7" height="7"/>
+                  <rect x="27.5" y="1.5" width="4" height="4" fill="#ffffff"/>
+                  <rect x="28.5" y="2.5" width="2" height="2"/>
+                  <!-- Bottom-left -->
+                  <rect x="0" y="26" width="7" height="7"/>
+                  <rect x="1.5" y="27.5" width="4" height="4" fill="#ffffff"/>
+                  <rect x="2.5" y="28.5" width="2" height="2"/>
+                </g>
+                <!-- Random modules to simulate a QR pattern (purely decorativo) -->
+                <g fill="#000000">
+                  <rect x="9" y="2" width="1" height="1"/>
+                  <rect x="11" y="3" width="1" height="1"/>
+                  <rect x="13" y="2" width="1" height="1"/>
+                  <rect x="15" y="3" width="1" height="1"/>
+                  <rect x="17" y="2" width="1" height="1"/>
+                  <rect x="19" y="3" width="1" height="1"/>
+
+                  <rect x="9" y="7" width="1" height="1"/>
+                  <rect x="10" y="9" width="1" height="1"/>
+                  <rect x="12" y="8" width="1" height="1"/>
+                  <rect x="14" y="9" width="1" height="1"/>
+                  <rect x="16" y="8" width="1" height="1"/>
+                  <rect x="18" y="9" width="1" height="1"/>
+                  <rect x="20" y="8" width="1" height="1"/>
+
+                  <rect x="9" y="12" width="1" height="1"/>
+                  <rect x="11" y="12" width="1" height="1"/>
+                  <rect x="13" y="12" width="1" height="1"/>
+                  <rect x="15" y="12" width="1" height="1"/>
+                  <rect x="17" y="12" width="1" height="1"/>
+                  <rect x="19" y="12" width="1" height="1"/>
+
+                  <rect x="8" y="15" width="1" height="1"/>
+                  <rect x="10" y="16" width="1" height="1"/>
+                  <rect x="12" y="15" width="1" height="1"/>
+                  <rect x="14" y="16" width="1" height="1"/>
+                  <rect x="16" y="15" width="1" height="1"/>
+                  <rect x="18" y="16" width="1" height="1"/>
+                  <rect x="20" y="15" width="1" height="1"/>
+
+                  <rect x="8" y="19" width="1" height="1"/>
+                  <rect x="9" y="21" width="1" height="1"/>
+                  <rect x="11" y="20" width="1" height="1"/>
+                  <rect x="13" y="21" width="1" height="1"/>
+                  <rect x="15" y="20" width="1" height="1"/>
+                  <rect x="17" y="21" width="1" height="1"/>
+                  <rect x="19" y="20" width="1" height="1"/>
+                  <rect x="21" y="21" width="1" height="1"/>
+
+                  <rect x="9" y="24" width="1" height="1"/>
+                  <rect x="11" y="25" width="1" height="1"/>
+                  <rect x="13" y="24" width="1" height="1"/>
+                  <rect x="15" y="25" width="1" height="1"/>
+                  <rect x="17" y="24" width="1" height="1"/>
+                  <rect x="19" y="25" width="1" height="1"/>
+                  <rect x="21" y="24" width="1" height="1"/>
+                  <rect x="23" y="25" width="1" height="1"/>
+                </g>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -665,6 +735,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <!-- QR generator (client-side) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script type="module" src="./js/app.js?v=20250920-1"></script>
   <script src="./js/ux.js?v=20250920-1"></script>
   <script>

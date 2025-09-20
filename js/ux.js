@@ -245,6 +245,30 @@
   gplay?.addEventListener('click', ()=> track('google_play'));
 })();
 
+// Generate QR in the mock container if library is available
+(() => {
+  const box = document.querySelector('.app-download .qr-mock');
+  if(!box) return;
+  const url = box.getAttribute('data-qr') || location.href;
+  if(typeof window.QRCode === 'function'){
+    // Clear placeholder SVG (if any)
+    box.innerHTML = '';
+    const size = Math.min(box.clientWidth, box.clientHeight) - 16; // keep padding
+    const qrEl = document.createElement('div');
+    box.appendChild(qrEl);
+    try{
+      new window.QRCode(qrEl, {
+        text: url,
+        width: size,
+        height: size,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: window.QRCode.CorrectLevel.M
+      });
+    }catch(_){ /* keep placeholder if fails */ }
+  }
+})();
+
 // Categories scroll navigation (prev/next buttons)
 (() => {
   const wrap = document.querySelector('.categories .cat-scroll');
