@@ -99,8 +99,8 @@
             </button>
           </li>
           <li class="nav-item d-flex gap-2">
-            <button class="btn btn-outline-secondary" id="btnSignup">Crear cuenta</button>
-            <button class="btn btn-primary" id="btnLogin">Ingresar</button>
+            <button class="btn btn-outline-secondary" id="btnSignup" data-auth-open="signup">Crear cuenta</button>
+            <button class="btn btn-primary" id="btnLogin" data-auth-open="login">Ingresar</button>
           </li>
         </ul>
       </nav>
@@ -426,7 +426,7 @@
               </div>
             </div>
             <div class="d-grid d-md-inline">
-              <button class="btn btn-primary" data-open-auth="signup">Crear cuenta gratis</button>
+              <button class="btn btn-primary" data-auth-open="signup">Crear cuenta gratis</button>
             </div>
           </div>
         </div>
@@ -629,98 +629,80 @@
     </div>
   </section>
 
-  <!-- LOGIN -->
-<form id="loginForm" novalidate autocomplete="on" data-mode="login" class="auth-form">
-  <div class="mb-3">
-    <label for="loginEmail" class="form-label">Email</label>
-    <input type="email" class="form-control" id="loginEmail" name="email" required inputmode="email" autocomplete="email" />
-    <div class="invalid-feedback">Ingresá un email válido.</div>
-  </div>
-
-  <!-- Nuevo: Nombre en login (requerido para validación) -->
-  <div class="mb-3">
-    <label for="loginName" class="form-label">Nombre y apellido</label>
-    <input type="text" class="form-control" id="loginName" name="name" required autocomplete="name" />
-    <div class="invalid-feedback">Ingresá tu nombre.</div>
-  </div>
-
-  <!-- Nuevo: Teléfono en login (requerido para validación) -->
-  <div class="mb-3">
-    <label for="loginPhone" class="form-label">Teléfono</label>
-    <input type="tel" class="form-control" id="loginPhone" name="phone" required inputmode="tel" autocomplete="tel" />
-    <div class="invalid-feedback">Ingresá un teléfono válido (mín. 8 dígitos).</div>
-  </div>
-
-  <div class="mb-2 position-relative">
-    <label for="loginPassword" class="form-label">Contraseña</label>
-    <div class="password-wrap">
-      <input type="password" class="form-control" id="loginPassword" name="password" required minlength="8" autocomplete="current-password" />
-      <button type="button" class="btn btn-eye" data-toggle-password="loginPassword" aria-label="Mostrar/ocultar contraseña">
-        <i class="bi bi-eye"></i>
-      </button>
-    </div>
-    <div class="invalid-feedback">La contraseña debe tener al menos 8 caracteres.</div>
-  </div>
-
-  <div class="d-grid mt-3">
-    <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-auth">
-      <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-      Ingresar
-    </button>
-  </div>
-</form>
   <!-- Auth Modal -->
   <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Ingresar</h5>
+          <h5 class="modal-title" id="authModalLabel">Ingresar</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body">
-          <form id="authForm" class="needs-validation" novalidate>
-            <div class="mb-3 d-none" data-auth-extra>
-              <label for="fullName" class="form-label">Nombre y apellido</label>
-              <input id="fullName" type="text" class="form-control" minlength="2" />
-              <div class="invalid-feedback">Ingresá tu nombre (mínimo 2 caracteres)</div>
-            </div>
-            <div class="mb-3 d-none" data-auth-extra>
-              <label for="phone" class="form-label">Teléfono (opcional)</label>
-              <input id="phone" type="tel" class="form-control" pattern="[0-9\-\s\+]{7,15}" placeholder="Ej: +54 11 1234 5678" />
-              <div class="invalid-feedback">Ingresá un teléfono válido</div>
+          <form id="loginForm" novalidate autocomplete="on" data-mode="login" class="auth-form">
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="loginEmail" name="email" required inputmode="email" autocomplete="email" />
+              <div class="invalid-feedback">Ingresá un email válido.</div>
             </div>
             <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input id="email" type="email" class="form-control" required />
-              <div class="invalid-feedback">Ingresá un email válido</div>
+              <label for="loginName" class="form-label">Nombre y apellido</label>
+              <input type="text" class="form-control" id="loginName" name="name" required autocomplete="name" />
+              <div class="invalid-feedback">Ingresá tu nombre.</div>
             </div>
             <div class="mb-3">
-              <label for="password" class="form-label">Contraseña</label>
-              <input id="password" type="password" class="form-control" minlength="6" required />
-              <div class="invalid-feedback">Mínimo 6 caracteres</div>
+              <label for="loginPhone" class="form-label">Teléfono</label>
+              <input type="tel" class="form-control" id="loginPhone" name="phone" required inputmode="tel" autocomplete="tel" />
+              <div class="invalid-feedback">Ingresá un teléfono válido (mín. 8 dígitos).</div>
             </div>
-            <div class="mb-3 d-none" data-auth-extra>
-              <label for="password2" class="form-label">Repetir contraseña</label>
-              <input id="password2" type="password" class="form-control" minlength="6" />
-              <div class="invalid-feedback">Las contraseñas deben coincidir</div>
-            </div>
-            <div class="mb-2 d-none" data-auth-extra>
-              <div class="small text-body-secondary">Seguridad de la contraseña</div>
-              <div class="progress" role="progressbar" aria-label="Seguridad" style="height:6px">
-                <div class="progress-bar" id="pwdStrengthBar" style="width: 0%"></div>
+            <div class="mb-2 position-relative">
+              <label for="loginPassword" class="form-label">Contraseña</label>
+              <div class="password-wrap">
+                <input type="password" class="form-control" id="loginPassword" name="password" required minlength="9" autocomplete="current-password" />
+                <button type="button" class="btn btn-eye" data-toggle-password="loginPassword" aria-label="Mostrar/ocultar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
               </div>
-              <div class="small mt-1" id="pwdStrengthLabel"></div>
+              <div class="invalid-feedback">La contraseña debe tener al menos 8 caracteres.</div>
             </div>
-            <div class="form-check mb-3" data-auth-remember>
-              <input class="form-check-input" type="checkbox" id="rememberMe" checked>
-              <label class="form-check-label" for="rememberMe">Recordarme en este dispositivo</label>
-            </div>
-            <div class="d-grid gap-2">
-              <button class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2" type="submit" id="btnDoLogin">
-                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                <span class="btn-label">Ingresar</span>
+            <div class="d-grid mt-3">
+              <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-auth">
+                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                Ingresar
               </button>
-              <button class="btn btn-outline-secondary" type="button" id="btnToggleAuth">Crear cuenta</button>
+            </div>
+          </form>
+          <hr class="text-body-tertiary my-3">
+          <form id="signupForm" novalidate autocomplete="on" data-mode="signup" class="auth-form d-none">
+            <div class="mb-3">
+              <label for="signupName" class="form-label">Nombre y apellido</label>
+              <input type="text" class="form-control" id="signupName" required autocomplete="name" />
+              <div class="invalid-feedback">Ingresá nombre y apellido.</div>
+            </div>
+            <div class="mb-3">
+              <label for="signupEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="signupEmail" required autocomplete="email" />
+              <div class="invalid-feedback">Ingresá un email válido.</div>
+            </div>
+            <div class="mb-3">
+              <label for="signupPhone" class="form-label">Teléfono</label>
+              <input type="tel" class="form-control" id="signupPhone" required inputmode="tel" autocomplete="tel" />
+              <div class="invalid-feedback">Ingresá un teléfono válido (mín. 8 dígitos).</div>
+            </div>
+            <div class="mb-3">
+              <label for="signupPassword" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="signupPassword" required minlength="9" autocomplete="new-password" />
+              <div class="invalid-feedback">La contraseña debe tener al menos 9 caracteres.</div>
+            </div>
+            <div class="mb-3">
+              <label for="signupPassword2" class="form-label">Repetir contraseña</label>
+              <input type="password" class="form-control" id="signupPassword2" required minlength="9" autocomplete="new-password" />
+              <div class="invalid-feedback">Las contraseñas deben coincidir.</div>
+            </div>
+            <div class="d-grid mt-3">
+              <button id="signupSubmitBtn" type="submit" class="btn btn-success btn-auth">
+                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                Crear cuenta
+              </button>
             </div>
           </form>
         </div>
