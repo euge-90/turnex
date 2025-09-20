@@ -198,6 +198,28 @@
   window.addEventListener('turnex:services-rendered', updateCategoryCounts);
   if(window.__services_cache) updateCategoryCounts();
 
+  // Animate services list on render (staggered)
+  const prefersReducedAnim = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function animateServices(){
+    if(prefersReducedAnim) return;
+    const grid = document.getElementById('servicesList');
+    if(!grid) return;
+    const cards = grid.querySelectorAll('.service-card');
+    let i = 0;
+    cards.forEach(card => {
+      const col = card.closest('[class^="col-"]') || card.parentElement;
+      if(col){
+        col.style.setProperty('--d', `${Math.min(600, i*40)}ms`);
+        col.classList.remove('srv-anim'); // restart
+        // force reflow
+        void col.offsetWidth;
+        col.classList.add('srv-anim');
+        i++;
+      }
+    });
+  }
+  window.addEventListener('turnex:services-rendered', animateServices);
+
   // Geolocation prefill for location input (best effort)
   (function prefillLocation(){
     if(!where || !navigator.geolocation) return;
