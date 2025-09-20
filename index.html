@@ -4,32 +4,84 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnex — Turnos Peluquería</title>
-  <meta name="description" content="Reserva de turnos para peluquería unisex (mujeres, hombres y niños) — simple, moderna y mobile-first." />
+  <script>
+    // Apply saved theme ASAP to avoid flash
+    (function(){
+      try {
+        var saved = localStorage.getItem('turnex-theme');
+        if(saved==="dark"||saved==="light") document.documentElement.setAttribute('data-bs-theme', saved);
+        else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+          document.documentElement.setAttribute('data-bs-theme','dark');
+        }
+      } catch(_){}
+    })();
+  </script>
+  <meta name="description" content="Reservá servicios de peluquería y estética: corte, color, barbería, uñas y más. Elegí día y hora, confirmación al instante." />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="Turnex — Turnos Peluquería" />
+  <meta property="og:description" content="Reservá servicios de peluquería y estética: corte, color, barbería, uñas y más. Elegí día y hora, confirmación al instante." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://euge-90.github.io/turnex/assets/images/logo.svg" />
+  <meta property="og:url" content="https://euge-90.github.io/turnex/" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Turnex — Turnos Peluquería" />
+  <meta name="twitter:description" content="Reservá servicios de peluquería y estética: corte, color, barbería, uñas y más. Elegí día y hora, confirmación al instante." />
+  <meta name="twitter:image" content="https://euge-90.github.io/turnex/assets/images/logo.svg" />
+  <link rel="canonical" href="https://euge-90.github.io/turnex/" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <meta name="theme-color" content="#8B4A9C" />
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/responsive.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HairSalon",
+    "name": "Turnex",
+    "url": "https://euge-90.github.io/turnex/",
+    "logo": "https://euge-90.github.io/turnex/assets/images/logo.svg",
+    "description": "Reserva de turnos para peluquería unisex — simple, moderna y mobile-first.",
+    "openingHours": [
+      "Tu-Sa 09:00-18:00"
+    ],
+    "priceRange": "$$",
+    "sameAs": []
+  }
+  </script>
   <!-- Optional: set API base via meta for production deployments -->
   <!-- Backend en Render -->
-  <meta name="api-base" content="https://turnex-api.onrender.com/api">
+  <!-- <meta name="api-base" content="https://turnex-api.onrender.com/api"> -->
+  <!-- Temporal para desarrollo local: -->
+  <meta name="api-base" content="http://localhost:3000/api">
   <script>
     (function(){
       var m = document.querySelector('meta[name="api-base"]');
       if(m && m.content && m.content.trim()){
-        window.API_BASE = m.content.trim();
+        var content = m.content.trim();
+        var isPageLocal = ['localhost','127.0.0.1'].includes(location.hostname);
+        var pointsToLocal = /^http:\/\/(localhost|127\.0\.0\.1):\d+\/api$/.test(content);
+        // If the page is NOT local but meta points to localhost API, switch to production API to avoid failed fetch/mixed content
+        if(!isPageLocal && pointsToLocal){
+          window.API_BASE = 'https://turnex-api.onrender.com/api';
+        }else{
+          window.API_BASE = content;
+        }
       }
     })();
   </script>
 </head>
 <body>
+  <a href="#servicios" class="visually-hidden-focusable skip-link">Saltar al contenido</a>
   <header class="navbar navbar-expand-lg sticky-top bg-body">
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="#" aria-label="Inicio">
-  <img src="assets/images/logo.svg" alt="Turnex logo" width="32" height="32" />
-  <span class="fw-bold">Turnex</span>
+    <a class="navbar-brand d-flex align-items-center gap-2" href="#" aria-label="Inicio">
+  <img src="assets/images/logo.svg" alt="Turnex logo" width="32" height="32" loading="lazy" />
+       <span class="fw-bold text-gradient">Turnex</span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -40,6 +92,12 @@
           <li class="nav-item"><a class="nav-link" href="#calendario">Calendario</a></li>
           <li class="nav-item"><a class="nav-link" href="#mis-turnos" id="navMyBookings">Mis turnos</a></li>
           <li class="nav-item d-none" id="navAdminItem"><a class="nav-link" href="#admin" id="navAdmin">Admin</a></li>
+          <li class="nav-item">
+            <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2" id="btnThemeToggle" type="button" title="Tema claro/oscuro" aria-label="Cambiar tema">
+              <i class="bi bi-moon-stars" aria-hidden="true"></i>
+              <span class="d-none d-sm-inline">Tema</span>
+            </button>
+          </li>
           <li class="nav-item d-flex gap-2">
             <button class="btn btn-outline-secondary" id="btnSignup">Crear cuenta</button>
             <button class="btn btn-primary" id="btnLogin">Ingresar</button>
@@ -50,99 +108,181 @@
   </header>
 
   <main>
-    <!-- Hero -->
-    <section class="hero text-center py-5">
+    <!-- Hero (Search-centric) -->
+    <section class="hero-search py-5 bg-body">
       <div class="container">
-        <h1 class="display-5 fw-bold mb-2 d-flex justify-content-center align-items-center gap-2">
-          <img src="assets/images/logo.svg" alt="Turnex" width="40" height="40" class="d-none d-sm-inline"/>
-          <span>Turnos de peluquería en minutos</span>
-        </h1>
-        <p class="lead mb-1">Reservá online, fácil y rápido</p>
-        <p class="text-body-secondary mb-2">Martes a Sábado · 09:00–18:00</p>
-        <p class="text-body-secondary">Servicios para mujeres, hombres y niños</p>
-        <div class="d-flex gap-2 justify-content-center mt-2">
-          <a class="btn btn-lg btn-primary d-none" id="heroReserveCta" href="#calendario">Reservar ahora</a>
-          <a class="btn btn-lg btn-outline-primary" href="#" data-open-auth="signup">Crear cuenta</a>
-          <a class="btn btn-lg btn-outline-secondary" href="#servicios">Ver servicios</a>
-        </div>
-        <div class="container mt-4">
-          <div class="row g-3 justify-content-center text-start text-sm-center">
-            <div class="col-12 col-sm-4">
-              <div class="card h-100 border-0 bg-body-tertiary">
-                <div class="card-body">
-                  <div class="text-primary display-6 mb-2"><i class="bi bi-person-plus"></i></div>
-                  <div class="fw-semibold mb-1">1) Creá tu cuenta</div>
-                  <div class="text-body-secondary small">Registrate con tu email para gestionar tus turnos.</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-4">
-              <div class="card h-100 border-0 bg-body-tertiary">
-                <div class="card-body">
-                  <div class="text-primary display-6 mb-2"><i class="bi bi-scissors"></i></div>
-                  <div class="fw-semibold mb-1">2) Elegí el servicio</div>
-                  <div class="text-body-secondary small">Mirá precios y duración; seleccioná el que te convenga.</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-4">
-              <div class="card h-100 border-0 bg-body-tertiary">
-                <div class="card-body">
-                  <div class="text-primary display-6 mb-2"><i class="bi bi-calendar-check"></i></div>
-                  <div class="fw-semibold mb-1">3) Reservá fecha y hora</div>
-                  <div class="text-body-secondary small">Confirmá en el calendario y recibí tu turno al instante.</div>
-                </div>
-              </div>
-            </div>
+        <h1 class="display-6 fw-semibold text-center mb-2">Reserva servicios de belleza en tu zona</h1>
+        <p class="text-center text-body-secondary mb-4">Encontrá y reservá con los mejores profesionales cerca de vos</p>
+        <div class="search-bar d-flex flex-column flex-md-row gap-2 justify-content-center">
+          <div class="input-group input-group-lg" style="max-width:480px">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input id="heroServiceQuery" type="text" class="form-control" placeholder="¿Qué servicio necesitás? (corte, color, uñas...)" />
           </div>
+          <div class="input-group input-group-lg" style="max-width:360px">
+            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+            <input id="heroLocation" type="text" class="form-control" placeholder="¿Dónde?" value="Buenos Aires" />
+          </div>
+          <button class="btn btn-primary btn-lg" id="btnHeroSearch"><i class="bi bi-search me-1"></i>Buscar disponibilidad</button>
         </div>
-        <div class="container mt-3">
-          <div class="d-flex flex-wrap gap-3 justify-content-center align-items-center small text-body-secondary">
-            <span class="d-inline-flex align-items-center gap-2"><i class="bi bi-shield-check text-success"></i> Cuenta segura</span>
-            <span class="d-inline-flex align-items-center gap-2"><i class="bi bi-x-circle text-warning"></i> Cancelación simple</span>
-            <span class="d-inline-flex align-items-center gap-2"><i class="bi bi-cash-coin text-primary"></i> Sin costo de reserva</span>
+      </div>
+    </section>
+
+    <!-- Categories (Fresha-style) -->
+    <section class="categories py-5">
+      <div class="container">
+        <h2 class="h4 fw-semibold mb-3">Explorá por categoría</h2>
+        <div class="row g-3">
+          <div class="col-6 col-md-4 col-lg-2">
+            <a href="#servicios" class="cat-card" data-cat="corte" aria-label="Corte">
+              <div class="cat-icon">✂️</div>
+              <div class="cat-name">Peluquería</div>
+              <div class="cat-count" id="catCount-corte">—</div>
+            </a>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <a href="#servicios" class="cat-card" data-cat="color" aria-label="Color">
+              <div class="cat-icon">🎨</div>
+              <div class="cat-name">Color</div>
+              <div class="cat-count" id="catCount-color">—</div>
+            </a>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <a href="#servicios" class="cat-card" data-cat="tratamiento" aria-label="Estética y tratamientos">
+              <div class="cat-icon">🌟</div>
+              <div class="cat-name">Estética</div>
+              <div class="cat-count" id="catCount-tratamiento">—</div>
+            </a>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <a href="#servicios" class="cat-card" data-cat="barba" aria-label="Barbería">
+              <div class="cat-icon">🧔</div>
+              <div class="cat-name">Barberías</div>
+              <div class="cat-count" id="catCount-barba">—</div>
+            </a>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <a href="#servicios" class="cat-card" data-cat="peinado" aria-label="Peinados">
+              <div class="cat-icon">💇‍♀️</div>
+              <div class="cat-name">Peinados</div>
+              <div class="cat-count" id="catCount-peinado">—</div>
+            </a>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <a href="#servicios" class="cat-card" data-cat="uñas" aria-label="Uñas" data-cat-fallback="tratamiento">
+              <div class="cat-icon">💅</div>
+              <div class="cat-name">Uñas</div>
+              <div class="cat-count" id="catCount-unas">—</div>
+            </a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Testimonios -->
-    <section class="py-4 border-top border-bottom bg-body">
+  <!-- Testimonios (con ubicaciones) -->
+    <section class="py-5 border-top border-bottom bg-body">
       <div class="container">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h2 class="h4 fw-semibold m-0">Lo que dicen nuestros clientes</h2>
+          <span class="badge text-bg-warning-subtle text-warning-emphasis d-none d-sm-inline"><i class="bi bi-stars me-1"></i>4.8/5</span>
+        </div>
         <div class="row g-3 align-items-stretch">
           <div class="col-12 col-md-4">
-            <div class="card h-100 shadow-sm">
-              <div class="card-body">
-                <div class="d-flex align-items-center gap-2 mb-1 text-warning">
-                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+            <div class="testimonial-card h-100 reveal" aria-label="Reseña de Sofía">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="testimonial-avatar" aria-hidden="true">S</div>
+                <div>
+                  <div class="fw-semibold">Sofía</div>
+                  <div class="small text-body-secondary">Cliente</div>
                 </div>
-                <p class="m-0">“Reservé en 2 minutos y me atendieron perfecto. Súper práctico.”</p>
-                <div class="small text-body-secondary mt-2">— Sofía</div>
               </div>
+              <div class="stars" aria-hidden="true">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+              </div>
+              <p class="m-0 mt-2">“Reservar es súper fácil, lo uso siempre para mis turnos.”<br><span class="small text-body-secondary">Buenos Aires, Argentina</span></p>
             </div>
           </div>
           <div class="col-12 col-md-4">
-            <div class="card h-100 shadow-sm">
-              <div class="card-body">
-                <div class="d-flex align-items-center gap-2 mb-1 text-warning">
-                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+            <div class="testimonial-card h-100 reveal" aria-label="Reseña de Martín">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="testimonial-avatar" aria-hidden="true">M</div>
+                <div>
+                  <div class="fw-semibold">Martín</div>
+                  <div class="small text-body-secondary">Cliente</div>
                 </div>
-                <p class="m-0">“Buenísimos los horarios disponibles y el recordatorio.”</p>
-                <div class="small text-body-secondary mt-2">— Martín</div>
               </div>
+              <div class="stars" aria-hidden="true">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+              </div>
+              <p class="m-0 mt-2">“La mejor app para encontrar salones cerca de casa.”<br><span class="small text-body-secondary">Córdoba, Argentina</span></p>
             </div>
           </div>
           <div class="col-12 col-md-4">
-            <div class="card h-100 shadow-sm">
-              <div class="card-body">
-                <div class="d-flex align-items-center gap-2 mb-1 text-warning">
-                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+            <div class="testimonial-card h-100 reveal" aria-label="Reseña de Camila">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="testimonial-avatar" aria-hidden="true">C</div>
+                <div>
+                  <div class="fw-semibold">Camila</div>
+                  <div class="small text-body-secondary">Cliente</div>
                 </div>
-                <p class="m-0">“La app es clara y rápida. Recomendado.”</p>
-                <div class="small text-body-secondary mt-2">— Camila</div>
               </div>
+              <div class="stars" aria-hidden="true">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+              </div>
+              <p class="m-0 mt-2">“Los recordatorios me facilitan mucho la vida.”<br><span class="small text-body-secondary">Rosario, Argentina</span></p>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats (confianza) -->
+    <section class="stats py-5 bg-body-tertiary">
+      <div class="container">
+        <div class="row g-3 text-center">
+          <div class="col-6 col-lg-3">
+            <div class="stat-card"><div class="stat-value">+10.000</div><div class="stat-label">Profesionales confían en Turnex</div></div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card"><div class="stat-value">+50.000</div><div class="stat-label">Turnos reservados</div></div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card"><div class="stat-value">+15</div><div class="stat-label">Ciudades en Argentina</div></div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card"><div class="stat-value">4.8★</div><div class="stat-label">Rating promedio</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- App download -->
+    <section class="app-download py-5">
+      <div class="container">
+        <div class="row g-4 align-items-center">
+          <div class="col-12 col-md-6">
+            <h2 class="h4 fw-semibold mb-2">Descargá la app de Turnex</h2>
+            <p class="text-body-secondary">Reservá desde tu celular en cualquier momento.</p>
+            <div class="d-flex gap-2 mt-3 flex-wrap">
+              <a class="btn btn-dark" id="btnAppStore"><i class="bi bi-apple me-1"></i>App Store</a>
+              <a class="btn btn-dark" id="btnGooglePlay"><i class="bi bi-google-play me-1"></i>Google Play</a>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 d-flex justify-content-center">
+            <div class="qr-mock" aria-label="QR para descargar app"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-it-works py-5 bg-body">
+      <div class="container">
+        <h2 class="h4 fw-semibold mb-3 text-center">¿Cómo funciona?</h2>
+        <div class="row g-3 text-center">
+          <div class="col-6 col-lg-3"><div class="how-card"><div class="hiw-emoji">🔍</div><div class="hiw-title">Encontrá tu servicio</div></div></div>
+          <div class="col-6 col-lg-3"><div class="how-card"><div class="hiw-emoji">📅</div><div class="hiw-title">Elegí fecha y horario</div></div></div>
+          <div class="col-6 col-lg-3"><div class="how-card"><div class="hiw-emoji">✅</div><div class="hiw-title">Confirmá tu reserva</div></div></div>
+          <div class="col-6 col-lg-3"><div class="how-card"><div class="hiw-emoji">💇‍♀️</div><div class="hiw-title">Disfrutá la experiencia</div></div></div>
         </div>
       </div>
     </section>
@@ -397,6 +537,16 @@
         </div>
         <div class="modal-body">
           <form id="authForm" class="needs-validation" novalidate>
+            <div class="mb-3 d-none" data-auth-extra>
+              <label for="fullName" class="form-label">Nombre y apellido</label>
+              <input id="fullName" type="text" class="form-control" minlength="2" />
+              <div class="invalid-feedback">Ingresá tu nombre (mínimo 2 caracteres)</div>
+            </div>
+            <div class="mb-3 d-none" data-auth-extra>
+              <label for="phone" class="form-label">Teléfono (opcional)</label>
+              <input id="phone" type="tel" class="form-control" pattern="[0-9\-\s\+]{7,15}" placeholder="Ej: +54 11 1234 5678" />
+              <div class="invalid-feedback">Ingresá un teléfono válido</div>
+            </div>
             <div class="mb-3">
               <label for="email" class="form-label">Email</label>
               <input id="email" type="email" class="form-control" required />
@@ -407,8 +557,27 @@
               <input id="password" type="password" class="form-control" minlength="6" required />
               <div class="invalid-feedback">Mínimo 6 caracteres</div>
             </div>
+            <div class="mb-3 d-none" data-auth-extra>
+              <label for="password2" class="form-label">Repetir contraseña</label>
+              <input id="password2" type="password" class="form-control" minlength="6" />
+              <div class="invalid-feedback">Las contraseñas deben coincidir</div>
+            </div>
+            <div class="mb-2 d-none" data-auth-extra>
+              <div class="small text-body-secondary">Seguridad de la contraseña</div>
+              <div class="progress" role="progressbar" aria-label="Seguridad" style="height:6px">
+                <div class="progress-bar" id="pwdStrengthBar" style="width: 0%"></div>
+              </div>
+              <div class="small mt-1" id="pwdStrengthLabel"></div>
+            </div>
+            <div class="form-check mb-3" data-auth-remember>
+              <input class="form-check-input" type="checkbox" id="rememberMe" checked>
+              <label class="form-check-label" for="rememberMe">Recordarme en este dispositivo</label>
+            </div>
             <div class="d-grid gap-2">
-              <button class="btn btn-primary" type="submit" id="btnDoLogin">Ingresar</button>
+              <button class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2" type="submit" id="btnDoLogin">
+                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                <span class="btn-label">Ingresar</span>
+              </button>
               <button class="btn btn-outline-secondary" type="button" id="btnToggleAuth">Crear cuenta</button>
             </div>
           </form>
@@ -417,12 +586,102 @@
     </div>
   </div>
 
-  <footer class="py-4 text-center small text-body-secondary">
-    <div class="container">© <span id="year"></span> Turnex — Hecho con ♥ por el Grupo 11</div>
+  <footer class="site-footer pt-5 pb-4">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-12 col-md-4">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <img src="assets/images/logo.svg" alt="Turnex" width="28" height="28" />
+            <span class="fw-semibold text-gradient">Turnex</span>
+          </div>
+          <div class="text-body-secondary small">Tu estilo, tu momento. Reservá turnos de belleza en segundos.</div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="fw-semibold mb-2">Enlaces</div>
+          <ul class="list-unstyled m-0 small vstack gap-1">
+            <li><a class="link-secondary" href="#servicios">Servicios</a></li>
+            <li><a class="link-secondary" href="#calendario">Calendario</a></li>
+            <li><a class="link-secondary" href="#mis-turnos">Mis turnos</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="fw-semibold mb-2">Contacto</div>
+          <ul class="list-unstyled m-0 small vstack gap-1">
+            <li class="d-flex align-items-center gap-2"><i class="bi bi-envelope"></i><a class="link-secondary" href="mailto:contacto@turnex.app">contacto@turnex.app</a></li>
+            <li class="d-flex align-items-center gap-2"><i class="bi bi-geo-alt"></i><span class="text-body-secondary">Buenos Aires, AR</span></li>
+          </ul>
+          <div class="d-flex gap-2 mt-2">
+            <a class="btn btn-sm btn-outline-secondary" aria-label="Instagram" href="#"><i class="bi bi-instagram"></i></a>
+            <a class="btn btn-sm btn-outline-secondary" aria-label="WhatsApp" href="#"><i class="bi bi-whatsapp"></i></a>
+          </div>
+        </div>
+      </div>
+      <hr class="my-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-body-secondary">
+        <div>© <span id="year"></span> Turnex — Hecho con ♥ por el Grupo 11</div>
+        <div class="mt-2 mt-md-0">Construido con <i class="bi bi-bootstrap"></i> Bootstrap y ❤️ Vanilla JS</div>
+      </div>
+    </div>
   </footer>
+
+  <!-- Bottom Navigation (mobile) -->
+  <nav class="bottom-nav d-md-none" aria-label="Navegación principal móvil">
+    <a href="#servicios" class="item" data-nav="servicios"><i class="bi bi-scissors"></i><span>Servicios</span></a>
+    <a href="#calendario" class="item" data-nav="calendario"><i class="bi bi-calendar3"></i><span>Calendario</span></a>
+    <a href="#mis-turnos" class="item" data-nav="mis-turnos"><i class="bi bi-clock-history"></i><span>Mis turnos</span></a>
+  </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script type="module" src="./js/app.js"></script>
+  <script src="./js/ux.js"></script>
+  <script>
+    // Sync bottom nav active state with hash
+    (function(){
+      const items = document.querySelectorAll('.bottom-nav .item');
+      function reflect(){
+        const h = (location.hash||'#servicios').replace('#','');
+        items.forEach(a=>{
+          const active = a.dataset.nav===h;
+          a.classList.toggle('active', active);
+          a.setAttribute('aria-current', active ? 'page' : 'false');
+        });
+      }
+      window.addEventListener('hashchange', reflect);
+      reflect();
+    })();
+  </script>
+  <script>
+    // Theme toggle logic with persistence
+    (function(){
+      const html = document.documentElement;
+      const btn = document.getElementById('btnThemeToggle');
+      const setIcon = () => {
+        const isDark = html.getAttribute('data-bs-theme') === 'dark';
+        if(btn){
+          btn.querySelector('i')?.classList.toggle('bi-moon-stars', !isDark);
+          btn.querySelector('i')?.classList.toggle('bi-sun', isDark);
+        }
+      };
+      function toggle(){
+        const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-bs-theme', next);
+        try{ localStorage.setItem('turnex-theme', next); }catch(_){ }
+        setIcon();
+      }
+      if(btn){
+        btn.addEventListener('click', toggle);
+        setIcon();
+      }
+    })();
+  </script>
+  <script>
+    // Only register SW in production, not in localhost/127.0.0.1 to avoid cache issues during development
+    if('serviceWorker' in navigator && !['localhost','127.0.0.1'].includes(location.hostname)){
+      window.addEventListener('load', ()=>{
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      });
+    }
+  </script>
 </body>
 </html>

@@ -20,6 +20,9 @@
 
 - [ ] Launch the Project
 	Use Live Server to launch.
+ 
+- [x] Launch the Project
+	Use Live Server to launch.
 
 - [x] Ensure Documentation is Complete
 	Add README.md with usage and features.

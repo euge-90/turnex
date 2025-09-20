@@ -1,7 +1,20 @@
 const API_BASE = (window.API_BASE || 'http://localhost:3000/api');
+const STORAGE_KEY = 'app_session_v1';
 
-function getToken(){ try{ return JSON.parse(localStorage.getItem('app_session_v1'))?.token || null; }catch{ return null } }
-function setSession(data){ localStorage.setItem('app_session_v1', JSON.stringify(data)); }
+function readSession(){
+  try{ const s = sessionStorage.getItem(STORAGE_KEY); if(s) return JSON.parse(s); }catch{}
+  try{ const s = localStorage.getItem(STORAGE_KEY); if(s) return JSON.parse(s); }catch{}
+  return null;
+}
+function getToken(){ try{ return readSession()?.token || null; }catch{ return null } }
+function setSession(data, opts={}){
+  const remember = opts.remember !== false; // default true
+  const json = JSON.stringify(data);
+  try{
+    if(remember){ localStorage.setItem(STORAGE_KEY, json); sessionStorage.removeItem(STORAGE_KEY); }
+    else { sessionStorage.setItem(STORAGE_KEY, json); localStorage.removeItem(STORAGE_KEY); }
+  }catch{}
+}
 function authHeaders(){ const t = getToken(); return t ? { Authorization: `Bearer ${t}` } : {}; }
 
 async function http(path, opts={}){
@@ -14,8 +27,17 @@ async function http(path, opts={}){
 }
 
 // Auth
-export async function apiSignup(email, password){ const data = await http('/auth/signup', { method:'POST', body: JSON.stringify({ email, password }) }); setSession({ email: data.user.email, role: data.user.role, token: data.token }); return data; }
-export async function apiLogin(email, password){ const data = await http('/auth/login', { method:'POST', body: JSON.stringify({ email, password }) }); setSession({ email: data.user.email, role: data.user.role, token: data.token }); return data; }
+// extras (e.g., name, phone) are currently client-side only; backend accepts email/password
+export async function apiSignup({ email, password, name, phone, remember=true }){
+  const data = await http('/auth/signup', { method:'POST', body: JSON.stringify({ email, password }) });
+  setSession({ email: data.user.email, role: data.user.role, token: data.token, name: name||'', phone: phone||'' }, { remember });
+  return data;
+}
+export async function apiLogin({ email, password, remember=true }){
+  const data = await http('/auth/login', { method:'POST', body: JSON.stringify({ email, password }) });
+  setSession({ email: data.user.email, role: data.user.role, token: data.token }, { remember });
+  return data;
+}
 
 // Config
 export async function apiGetConfig(){ return http('/config'); }
@@ -33,8 +55,8 @@ export async function apiGetMyBookings(){ return http('/bookings'); }
 export async function apiCreateBooking({ serviceId, date, time, name }){ return http('/bookings', { method:'POST', body: JSON.stringify({ serviceId, date, time, name }) }); }
 export async function apiCancelBooking(id){ return http(`/bookings/${id}`, { method:'DELETE' }); }
 
-export function getSession(){ try{ return JSON.parse(localStorage.getItem('app_session_v1')); }catch{ return null } }
-export function clearSession(){ localStorage.removeItem('app_session_v1'); }
+export function getSession(){ return readSession(); }
+export function clearSession(){ try{ localStorage.removeItem(STORAGE_KEY); }catch{} try{ sessionStorage.removeItem(STORAGE_KEY); }catch{} }
 
 // Admin
 export async function apiGetUsersCount(){ return http('/admin/users/count'); }

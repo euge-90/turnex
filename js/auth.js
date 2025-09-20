@@ -5,13 +5,13 @@ export function getSession(){ return apiGetSession(); }
 export function isLogged(){ return !!getSession(); }
 export function isAdmin(){ return getSession()?.role === 'admin'; }
 
-export async function signup(email, password){
-  const { user, token } = await apiSignup(email, password);
+export async function signup(email, password, extras={}, options={}){
+  const { user, token } = await apiSignup({ email, password, ...(extras||{}), ...(options||{}) });
   return { email: user.email, role: user.role, token };
 }
 
-export async function login(email, password){
-  const { user, token } = await apiLogin(email, password);
+export async function login(email, password, options={}){
+  const { user, token } = await apiLogin({ email, password, ...(options||{}) });
   return { email: user.email, role: user.role, token };
 }
 

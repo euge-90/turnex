@@ -1,7 +1,8 @@
 import { qs, qsa, generateTimeSlots, fmtDateKey, addDays, getConfig, setConfig, timeToMinutes, SLOT_MINUTES, isWorkingDay, isDateBlocked, minutesToTime } from './utils.js';
-import { Calendar } from './calendar.js';
+import { CalendarioTurnex } from './calendario-turnex.js';
 // Legacy booking.js imports removed; API is the source of truth
 import { isLogged, login, signup, logout, getSession, isAdmin } from './auth.js';
+import { AuthTurnex } from './auth-turnex.js';
 import { apiListServices, apiCreateBooking, apiGetMyBookings, apiGetBookingsByDate, apiCancelBooking, apiGetConfig, apiPutConfig, apiCreateService, apiUpdateService, apiDeleteService, apiGetUsersCount } from './api.js';
 
 // DOM refs
@@ -99,6 +100,8 @@ let selectedTime = null;
 async function syncServices(){
   try{ window.__services_cache = await apiListServices(); }
   catch{ window.__services_cache = []; }
+  // Notify listeners that services cache is ready
+  try{ window.dispatchEvent(new CustomEvent('turnex:services-synced', { detail: { count: (window.__services_cache||[]).length } })); }catch(_){ }
 }
 
 async function syncMyBookings(){
@@ -148,6 +151,7 @@ function detectCategory(s){
 }
 
 function renderServices(){
+  // Render services list from cache (called after sync); if cache empty but loading, a skeleton might be shown elsewhere
   // Fill service select (prefer API, fallback to local list)
   const ALL = (window.__services_cache || []).map(s=> ({...s, __cat: detectCategory(s)}));
   const filter = (svcCategory?.value||'').toLowerCase();
@@ -167,7 +171,10 @@ function renderServices(){
   // Cards
   const highlightCount = Math.min(4, Math.max(0, ALL.length - 8));
   const highlightIds = new Set(ALL.slice(-highlightCount).map(s=> String(s.id)));
-  servicesList.innerHTML = SERVICES.map(s=>`
+  if(SERVICES.length === 0){
+    servicesList.innerHTML = `<div class="col-12"><div class="card card-glass"><div class="card-body text-center text-body-secondary">No hay servicios para mostrar${filter? ' en esta categoría' : ''}. ${isAdmin()? 'Agregá servicios desde el panel Admin.' : ''}</div></div></div>`;
+  }else{
+    servicesList.innerHTML = SERVICES.map(s=>`
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="card card-glass service-card h-100">
         <div class="card-body">
@@ -182,6 +189,7 @@ function renderServices(){
         </div>
       </div>
     </div>`).join('');
+  }
 
   // Count label
   if(svcCount){
@@ -198,10 +206,28 @@ function renderServices(){
       document.getElementById('calendario').scrollIntoView({ behavior:'smooth' });
     });
   });
+
+  // Notify that services list has been rendered
+  try{ window.dispatchEvent(new CustomEvent('turnex:services-rendered', { detail: { total: (window.__services_cache||[]).length } })); }catch(_){ }
 }
 
 // Category filter change
 svcCategory && (svcCategory.onchange = renderServices);
+
+function renderServicesSkeleton(){
+  if(!servicesList) return;
+  servicesList.innerHTML = Array.from({length:8}).map(()=>`
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card card-glass service-card h-100">
+        <div class="card-body">
+          <div class="skeleton skeleton-text" style="width:60%"></div>
+          <div class="skeleton skeleton-text" style="width:90%"></div>
+          <div class="skeleton skeleton-text" style="width:40%"></div>
+          <div class="skeleton skeleton-btn mt-2"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
 
 function renderHoursBanner(){
   if(!hoursBanner) return;
@@ -238,10 +264,16 @@ function renderTimeSlots(dateKey){
     return true;
   }
 
-  slotsEl.innerHTML = slots.map(t=>{
+  const buttons = slots.map(t=>{
     const disabled = taken.has(t) || !canStartAt(t);
-    return `<button type="button" class="slot ${disabled?'disabled':''}" data-time="${t}" aria-disabled="${disabled}">${t}</button>`;
-  }).join('');
+    return { t, disabled };
+  });
+  const anyEnabled = buttons.some(b=> !b.disabled);
+  if(buttons.length===0 || !anyEnabled){
+    slotsEl.innerHTML = `<div class="text-body-secondary">No hay horarios disponibles para este día${svc? ' y servicio seleccionado' : ''}. Probá otro día o cambiá el servicio.</div>`;
+  }else{
+    slotsEl.innerHTML = buttons.map(({t,disabled})=>`<button type="button" class="slot ${disabled?'disabled':''}" data-time="${t}" aria-disabled="${disabled}">${t}</button>`).join('');
+  }
 
   qsa('.slot').forEach(el=>{
     el.addEventListener('click',()=>{
@@ -252,6 +284,11 @@ function renderTimeSlots(dateKey){
       updateConfirmState();
     });
   });
+}
+
+function renderTimeSlotsSkeleton(){
+  if(!slotsEl) return;
+  slotsEl.innerHTML = Array.from({length:8}).map(()=>`<div class="skeleton skeleton-btn"></div>`).join('');
 }
 
 function updateConfirmState(){
@@ -311,130 +348,99 @@ function renderMyBookings(){
 }
 
 function setupAuth(){
-  const modalEl = document.getElementById('authModal');
-  const modal = new bootstrap.Modal(modalEl);
-  const form = document.getElementById('authForm');
-  const btnToggle = document.getElementById('btnToggleAuth');
-  const btnDoLogin = document.getElementById('btnDoLogin');
-  let isSignup = false;
   const heroReserveCta = document.getElementById('heroReserveCta');
+  const auth = new AuthTurnex({
+    onSuccess: async (event)=>{
+      // Refresh UI on login/logout
+      const logged = isLogged();
+      btnLogout.classList.toggle('d-none', !logged);
+      btnLogin?.classList.toggle('d-none', logged);
+      btnSignup?.classList.toggle('d-none', logged);
+      if(heroReserveCta) heroReserveCta.classList.toggle('d-none', !logged);
+      if(servicesSignupCard) servicesSignupCard.classList.toggle('d-none', logged);
+      ensureAdminNavVisible(isAdmin());
+      adminSection?.classList.toggle('d-none', !isAdmin());
+      calendarioSection?.classList.toggle('d-none', !logged);
+      misTurnosSection?.classList.toggle('d-none', !logged);
+      const myNavLi = navMyBookings?.closest('li');
+      if(myNavLi) myNavLi.classList.toggle('d-none', !logged);
 
-  function updateUI(){
-    document.querySelector('#authModal .modal-title').textContent = isSignup ? 'Crear cuenta' : 'Ingresar';
-    btnToggle.textContent = isSignup ? 'Ya tengo cuenta' : 'Crear cuenta';
-    btnDoLogin.textContent = isSignup ? 'Crear cuenta' : 'Ingresar';
-  }
-
-  function setSessionUI(){
-    const logged = isLogged();
-    btnLogout.classList.toggle('d-none', !logged);
-    btnLogin?.classList.toggle('d-none', logged);
-    btnSignup?.classList.toggle('d-none', logged);
-    if(heroReserveCta) heroReserveCta.classList.toggle('d-none', !logged);
-  if(servicesSignupCard) servicesSignupCard.classList.toggle('d-none', logged);
-    // Admin nav visibility
-    ensureAdminNavVisible(isAdmin());
-    adminSection?.classList.toggle('d-none', !isAdmin());
-    // Toggle protected sections
-    calendarioSection?.classList.toggle('d-none', !logged);
-    misTurnosSection?.classList.toggle('d-none', !logged);
-    // Hide "Mis turnos" nav item for guests
-    const myNavLi = navMyBookings?.closest('li');
-    if(myNavLi) myNavLi.classList.toggle('d-none', !logged);
-    guardAdminRoute();
-  // Keep landing visible; only gate actions with modal
-  }
-
-  btnLogin.addEventListener('click', ()=>{ isSignup = false; updateUI(); modal.show(); });
-  btnSignup?.addEventListener('click', ()=>{ isSignup = true; updateUI(); modal.show(); });
-  btnLogout.addEventListener('click', ()=>{ logout(); setSessionUI(); renderMyBookings(); syncAdminBookings().then(renderAdmin); modal.show(); });
-
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    try{
-      if(isSignup) await signup(email, password); else await login(email, password);
-      modal.hide();
-      setSessionUI();
-      Swal.fire('¡Listo!','Sesión iniciada','success');
       await Promise.all([syncMyBookings(), syncAdminBookings()]);
       renderMyBookings();
       renderAdmin();
-      // Route based on role
-      if(isAdmin()){
-        location.hash = '#admin';
-      }else{
-        location.hash = '#calendario';
-        document.getElementById('calendario')?.scrollIntoView({ behavior:'smooth' });
+
+      if(event==='login'){
+        if(isAdmin()){
+          location.hash = '#admin';
+        }else{
+          location.hash = '#calendario';
+          document.getElementById('calendario')?.scrollIntoView({ behavior:'smooth' });
+        }
       }
-    }catch(err){ Swal.fire('Error', err.message, 'error'); }
+    }
   });
 
-  btnToggle.addEventListener('click', ()=>{ isSignup = !isSignup; updateUI(); });
-  setSessionUI();
-
-  // If not logged, force login modal on load and prevent navigation
-  if(!isLogged()){
-    updateUI();
-    modal.show();
-  }
-
-  // Block nav links if not logged (open modal instead)
+  // Gate protected links when not logged
   document.querySelectorAll('#nav a.nav-link, .hero a.btn, a[href="#calendario"], a[href="#mis-turnos"], a[href="#admin"]').forEach(a=>{
     a.addEventListener('click', (e)=>{
       if(!isLogged()){
-        // Allow browsing services without login
         const href = a.getAttribute('href')||'';
         if(href==='#servicios') return;
         e.preventDefault();
-        isSignup = false;
-        updateUI();
-        modal.show();
+        // open modal login
+        const modal = document.getElementById('authModal');
+        const m = modal ? new bootstrap.Modal(modal) : null;
+        m?.show();
       }
     });
   });
 
-  // Guard direct hash navigation to protected sections
   const protectHashes = ()=>{
     if(!isLogged()){
       const h = location.hash;
       if(h==='#calendario' || h==='#mis-turnos' || h==='#admin'){
         location.hash = '#servicios';
-        isSignup = false; updateUI(); modal.show();
+        const modal = document.getElementById('authModal');
+        const m = modal ? new bootstrap.Modal(modal) : null;
+        m?.show();
       }
     }
   };
   window.addEventListener('hashchange', protectHashes);
   protectHashes();
 
-  // Hero CTA: open signup directly
+  // Auto show auth modal if not logged on load
+  if(!isLogged()){
+    const modal = document.getElementById('authModal');
+    const m = modal ? new bootstrap.Modal(modal) : null;
+    m?.show();
+  }
+
+  // Hero CTA signup opens modal in signup mode
   document.querySelectorAll('[data-open-auth="signup"]').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.preventDefault();
-      isSignup = true;
-      updateUI();
-      modal.show();
+      const modal = document.getElementById('authModal');
+      const m = modal ? new bootstrap.Modal(modal) : null;
+      // set to signup mode by toggling UI label appropriately
+      const toggle = document.getElementById('btnToggleAuth');
+      if(toggle){
+        // force signup state by simulating toggle if needed
+        const title = document.querySelector('#authModal .modal-title');
+        if(title && title.textContent?.includes('Ingresar')) toggle.click();
+      }
+      m?.show();
     });
-  });
-
-  // Intercept "Mis turnos": if not logged, open modal on signup; else scroll
-  navMyBookings?.addEventListener('click', (e)=>{
-    if(!isLogged()){
-      e.preventDefault();
-      isSignup = false; // allow login by default
-      updateUI();
-      modal.show();
-    }
   });
 }
 
 function setupCalendar(){
-  const cal = new Calendar(grid, label);
+  const cal = new CalendarioTurnex(grid, label);
   cal.mount();
   cal.onSelect(async (date)=>{
     selectedDateKey = fmtDateKey(date);
     selectedTime = null;
+    renderTimeSlotsSkeleton();
     await syncTakenForDate(selectedDateKey);
     renderTimeSlots(selectedDateKey);
     updateConfirmState();
@@ -513,6 +519,7 @@ function setupBookingForm(){
 function init(){
   yearEl.textContent = new Date().getFullYear();
   syncConfig();
+  renderServicesSkeleton();
   syncServices().then(renderServices);
   setupCalendar();
   setupAuth();

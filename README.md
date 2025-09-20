@@ -23,6 +23,18 @@ Frontend (estático):
 1. Instalar `Live Server` (Ritwick Dey) en VS Code.
 2. Abrir `index.html` y elegir "Open with Live Server".
 
+Quick Start (PowerShell):
+```powershell
+# 1) Frontend con Live Server
+# En VS Code, click derecho sobre index.html → Open with Live Server
+
+# 2) API local (opcional pero recomendado)
+cd "server"
+npm install
+npm run dev
+# API en: http://localhost:3000/api (health: http://localhost:3000/api/health)
+```
+
 Backend (API con SQLite por defecto):
 1. Abrir una terminal y ubicarse en `server/`.
 2. Instalar dependencias:
@@ -167,3 +179,36 @@ curl -H "Authorization: Bearer $TOKEN" "https://turnex-api.onrender.com/api/book
 - Mejoras de accesibilidad (teclado completo en calendario)
 - Pruebas Lighthouse y tuning de performance
  - Migrar a base de datos con Prisma (SQLite/Postgres) y persistir datos
+
+## Deploy a GitHub Pages (frontend)
+
+Esta repo ya incluye un workflow de GitHub Actions que publica la RAÍZ del repositorio (carpeta `./`) a GitHub Pages en cada push a `main`.
+
+Pasos:
+1) En GitHub, ir a Settings → Pages → Build and deployment → Source = "GitHub Actions".
+2) Hacer un push a `main` o ejecutar manualmente el workflow "Deploy to GitHub Pages" (Actions → seleccionar workflow → Run workflow).
+3) La URL resultante será del estilo `https://<usuario>.github.io/<repo>/` (única versión oficial del sitio).
+
+SPA listo para Pages:
+- Se incluye `/.nojekyll` para evitar que GitHub procese archivos.
+- Se incluye `/404.html` con redirección a `index.html` para rutas internas.
+
+Backend (Render) y CORS:
+- El `index.html` (raíz) define `<meta name="api-base" content="https://turnex-api.onrender.com/api">` por defecto.
+- Asegurate de permitir el origen de tu Pages en Render: setear `CORS_ALLOWED_ORIGINS` con la URL exacta de Pages, por ejemplo:
+
+```
+https://<usuario>.github.io,https://<usuario>.github.io/<repo>
+```
+
+Luego de actualizar env vars en Render, reiniciar el servicio para aplicar cambios.
+
+Verificación rápida:
+- Abrir `https://<usuario>.github.io/<repo>/` y probar:
+	- "Crear cuenta" (POST `/api/auth/signup`)
+	- "Ingresar" (POST `/api/auth/login`)
+	- Listado de servicios (GET `/api/services`)
+
+Si ves errores CORS en consola:
+- Revisá `Settings → Environment` en Render: `CORS_ALLOWED_ORIGINS` debe incluir exactamente la URL de Pages (con protocolo https). 
+- Confirmá que el meta `api-base` del `index.html` apunta al dominio correcto del backend.
