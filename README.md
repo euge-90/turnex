@@ -182,33 +182,33 @@ curl -H "Authorization: Bearer $TOKEN" "https://turnex-api.onrender.com/api/book
 
 ## Deploy a GitHub Pages (frontend)
 
-Esta repo ya incluye un workflow de GitHub Actions que publica la RAÍZ del repositorio (carpeta `./`) a GitHub Pages en cada push a `main`.
+Esta repo ya incluye un workflow de GitHub Actions que publica la RAÍZ del repositorio (`./`) a GitHub Pages en cada push a `main`.
 
 Pasos:
-1) En GitHub, ir a Settings → Pages → Build and deployment → Source = "GitHub Actions".
-2) Hacer un push a `main` o ejecutar manualmente el workflow "Deploy to GitHub Pages" (Actions → seleccionar workflow → Run workflow).
-3) La URL resultante será del estilo `https://<usuario>.github.io/<repo>/` (única versión oficial del sitio).
+1) En GitHub, ir a `Settings → Pages → Build and deployment → Source = GitHub Actions`.
+2) Hacer un push a `main` o ejecutar manualmente el workflow "Deploy to GitHub Pages" (`Actions → Deploy to GitHub Pages → Run workflow`).
+3) La URL resultante será `https://<usuario>.github.io/<repo>/`.
 
 SPA listo para Pages:
 - Se incluye `/.nojekyll` para evitar que GitHub procese archivos.
 - Se incluye `/404.html` con redirección a `index.html` para rutas internas.
 
 Backend (Render) y CORS:
-- El `index.html` (raíz) define `<meta name="api-base" content="https://turnex-api.onrender.com/api">` por defecto.
-- Asegurate de permitir el origen de tu Pages en Render: setear `CORS_ALLOWED_ORIGINS` con la URL exacta de Pages, por ejemplo:
+- En `index.html` el meta `api-base` apunta a `http://localhost:3000/api` por defecto para desarrollo local, pero hay un script que AUTOMÁTICAMENTE cambia a producción (`https://turnex-api.onrender.com/api`) cuando el sitio corre online (no localhost). No necesitás tocar nada para el deploy.
+- En Render, asegurate de permitir el origen de tu Pages: definir `CORS_ALLOWED_ORIGINS` con la URL de origen de GitHub Pages (sin path), por ejemplo:
 
 ```
-https://<usuario>.github.io,https://<usuario>.github.io/<repo>
+https://<usuario>.github.io
 ```
 
 Luego de actualizar env vars en Render, reiniciar el servicio para aplicar cambios.
 
 Verificación rápida:
 - Abrir `https://<usuario>.github.io/<repo>/` y probar:
-	- "Crear cuenta" (POST `/api/auth/signup`)
-	- "Ingresar" (POST `/api/auth/login`)
-	- Listado de servicios (GET `/api/services`)
+  - "Crear cuenta" (POST `/api/auth/signup`)
+  - "Ingresar" (POST `/api/auth/login`)
+  - Listado de servicios (GET `/api/services`)
 
 Si ves errores CORS en consola:
-- Revisá `Settings → Environment` en Render: `CORS_ALLOWED_ORIGINS` debe incluir exactamente la URL de Pages (con protocolo https). 
-- Confirmá que el meta `api-base` del `index.html` apunta al dominio correcto del backend.
+- Revisá `Settings → Environment` en Render: `CORS_ALLOWED_ORIGINS` debe incluir exactamente el origen de Pages (`https://<usuario>.github.io`).
+- Confirmá que el meta `api-base` está en `http://localhost:3000/api` (dev) y que el script de auto-switching no fue removido para producción.
