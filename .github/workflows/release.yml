@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine release notes path
+        id: notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          echo "Tag: $TAG"
+          # Try docs/releases/<tag>.md first
+          CANDIDATES=(
+            "docs/releases/${TAG}.md"
+            "docs/releases/${TAG}.markdown"
+            "docs/releases/${TAG}.txt"
+          )
+          for f in "${CANDIDATES[@]}"; do
+            if [[ -f "$f" ]]; then
+              echo "Found notes: $f"
+              echo "path=$f" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          # Fallback: extract section from CHANGELOG.md matching the tag (strip leading 'v')
+          if [[ -f CHANGELOG.md ]]; then
+            ver="${TAG#v}"
+            awk "/^## \\[?${ver}\\]? -/{flag=1; next} /^##[[:space:]]*\\[?/{if(flag){flag=0}} flag {print}" CHANGELOG.md > RELEASE_NOTES.md || true
+            if [[ -s RELEASE_NOTES.md ]]; then
+              echo "Extracted notes from CHANGELOG.md"
+              echo "path=RELEASE_NOTES.md" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "No notes file found; will use generated release notes"
+          echo "path=" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Turnex ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.path == '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
