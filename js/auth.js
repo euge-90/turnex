@@ -55,8 +55,9 @@ export function logout(){ apiClearSession(); }
       });
     });
 
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRe = /^[+\d\s().-]{8,}$/;
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRe = /^[+\d\s().-]{8,}$/;
+  const fullNameOk = (v) => v.split(/\s+/).filter(w => w.length >= 2).length >= 2;
 
     function findFeedback(input) {
       return input.parentElement.querySelector('.invalid-feedback')
@@ -75,9 +76,9 @@ export function logout(){ apiClearSession(); }
     loginForm?.addEventListener('input', e => {
       const t = e.target;
       if (t.id === 'loginEmail') markValid(t, emailRe.test(t.value), 'Ingresá un email válido.');
-      if (t.id === 'loginName')  markValid(t, (t.value || '').trim().length >= 2, 'Ingresá tu nombre.');
+  if (t.id === 'loginName')  markValid(t, fullNameOk((t.value || '').trim()), 'Ingresá nombre y apellido.');
       if (t.id === 'loginPhone') markValid(t, phoneRe.test(t.value), 'Ingresá un teléfono válido (mín. 8 dígitos).');
-      if (t.id === 'loginPassword') markValid(t, (t.value || '').length >= 8, 'Mínimo 8 caracteres.');
+  if (t.id === 'loginPassword') markValid(t, (t.value || '').length >= 9, 'Mínimo 9 caracteres.');
     });
 
     // Signup realtime
@@ -85,10 +86,10 @@ export function logout(){ apiClearSession(); }
       const t = e.target;
       const pass1 = document.getElementById('signupPassword');
       const pass2 = document.getElementById('signupPassword2');
-      if (t.id === 'signupName') markValid(t, (t.value || '').trim().length >= 2, 'Ingresá tu nombre.');
+  if (t.id === 'signupName') markValid(t, fullNameOk((t.value || '').trim()), 'Ingresá nombre y apellido.');
       if (t.id === 'signupEmail') markValid(t, emailRe.test(t.value), 'Ingresá un email válido.');
       if (t.id === 'signupPhone') markValid(t, phoneRe.test(t.value), 'Ingresá un teléfono válido (mín. 8 dígitos).');
-      if (t.id === 'signupPassword') { markValid(t, (t.value || '').length >= 8, 'Mínimo 8 caracteres.'); if (pass2?.value) markValid(pass2, pass2.value === t.value, 'Las contraseñas no coinciden.'); }
+  if (t.id === 'signupPassword') { markValid(t, (t.value || '').length >= 9, 'Mínimo 9 caracteres.'); if (pass2?.value) markValid(pass2, pass2.value === t.value, 'Las contraseñas no coinciden.'); }
       if (t.id === 'signupPassword2' && pass1) markValid(t, t.value === pass1.value, 'Las contraseñas no coinciden.');
     });
 
@@ -113,9 +114,9 @@ export function logout(){ apiClearSession(); }
       const password = loginForm.loginPassword.value;
 
       const vEmail = emailRe.test(email);
-      const vName = name.length >= 2;
+  const vName = fullNameOk(name);
       const vPhone = phoneRe.test(phone);
-      const vPass = password.length >= 8;
+  const vPass = password.length >= 9;
 
       markValid(loginForm.loginEmail, vEmail, 'Ingresá un email válido.');
       markValid(loginForm.loginName, vName, 'Ingresá tu nombre.');
@@ -146,10 +147,10 @@ export function logout(){ apiClearSession(); }
       const password = signupForm.signupPassword.value;
       const password2 = signupForm.signupPassword2.value;
 
-      const vName = name.length >= 2;
+  const vName = fullNameOk(name);
       const vEmail = emailRe.test(email);
       const vPhone = phoneRe.test(phone);
-      const vPass1 = password.length >= 8;
+  const vPass1 = password.length >= 9;
       const vPass2 = password2 === password;
 
       markValid(signupForm.signupName, vName, 'Ingresá tu nombre.');

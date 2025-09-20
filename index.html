@@ -99,7 +99,7 @@
             </button>
           </li>
           <li class="nav-item d-flex gap-2">
-            <button class="btn btn-outline-secondary" id="btnSignup" data-auth-open="login">Crear cuenta</button>
+            <button class="btn btn-outline-secondary" id="btnSignup" data-auth-open="signup">Crear cuenta</button>
             <button class="btn btn-primary" id="btnLogin" data-auth-open="login">Ingresar</button>
           </li>
         </ul>
@@ -426,7 +426,7 @@
               </div>
             </div>
             <div class="d-grid d-md-inline">
-              <button class="btn btn-primary" data-auth-open="login">Crear cuenta gratis</button>
+              <button class="btn btn-primary" data-auth-open="signup">Crear cuenta gratis</button>
             </div>
           </div>
         </div>
@@ -668,6 +668,40 @@
               <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-auth">
                 <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
                 Ingresar
+              </button>
+            </div>
+          </form>
+          <hr class="text-body-tertiary my-3">
+          <form id="signupForm" novalidate autocomplete="on" data-mode="signup" class="auth-form d-none">
+            <div class="mb-3">
+              <label for="signupName" class="form-label">Nombre y apellido</label>
+              <input type="text" class="form-control" id="signupName" required autocomplete="name" />
+              <div class="invalid-feedback">Ingresá nombre y apellido.</div>
+            </div>
+            <div class="mb-3">
+              <label for="signupEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="signupEmail" required autocomplete="email" />
+              <div class="invalid-feedback">Ingresá un email válido.</div>
+            </div>
+            <div class="mb-3">
+              <label for="signupPhone" class="form-label">Teléfono</label>
+              <input type="tel" class="form-control" id="signupPhone" required inputmode="tel" autocomplete="tel" />
+              <div class="invalid-feedback">Ingresá un teléfono válido (mín. 8 dígitos).</div>
+            </div>
+            <div class="mb-3">
+              <label for="signupPassword" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="signupPassword" required minlength="9" autocomplete="new-password" />
+              <div class="invalid-feedback">La contraseña debe tener al menos 9 caracteres.</div>
+            </div>
+            <div class="mb-3">
+              <label for="signupPassword2" class="form-label">Repetir contraseña</label>
+              <input type="password" class="form-control" id="signupPassword2" required minlength="9" autocomplete="new-password" />
+              <div class="invalid-feedback">Las contraseñas deben coincidir.</div>
+            </div>
+            <div class="d-grid mt-3">
+              <button id="signupSubmitBtn" type="submit" class="btn btn-success btn-auth">
+                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                Crear cuenta
               </button>
             </div>
           </form>
