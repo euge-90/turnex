@@ -24,8 +24,8 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Remove mirror folder from artifact
-        run: rm -rf ./turnex
+      - name: Exclude nested turnex-v2 folder from artifact
+        run: rm -rf ./turnex-v2
 
       - name: Upload artifact (root)
         uses: actions/upload-pages-artifact@v3

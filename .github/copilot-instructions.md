@@ -18,9 +18,6 @@
 - [x] Create and Run Task
 	No tasks required for static site.
 
-- [ ] Launch the Project
-	Use Live Server to launch.
- 
 - [x] Launch the Project
 	Use Live Server to launch.
 
