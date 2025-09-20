@@ -100,11 +100,53 @@ html{scroll-behavior:smooth}
 	.hero-search { background: var(--bs-body-bg); }
 	.hero-search .search-bar .input-group-text { background: var(--bs-body-bg); }
 
-	.categories .cat-card { display:block; text-decoration:none; background: var(--bs-body-bg); border:1px solid rgba(0,0,0,.06); border-radius:12px; padding:16px; text-align:center; transition:transform .15s ease, box-shadow .15s ease; }
-	.categories .cat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,.06); }
-	.categories .cat-icon { font-size:28px; margin-bottom:6px; }
+	.categories .cat-card { position:relative; display:flex; align-items:center; gap:12px; text-decoration:none; background: var(--bs-body-bg); border:1px solid rgba(0,0,0,.06); border-radius:14px; padding:12px 14px; transition:transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s var(--ease), background-color .18s var(--ease); overflow:hidden; will-change: transform, box-shadow; transform-style: preserve-3d; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) }
+	.categories .cat-card::before { content:""; position:absolute; inset:0; background:linear-gradient(135deg, rgba(99,102,241,.08), rgba(236,72,153,.08)); opacity:0; transition:opacity .2s var(--ease) }
+	/* Sheen highlight that follows pointer */
+	.categories .cat-card::after{ content:""; position:absolute; inset:-40%; background:radial-gradient(300px 200px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.25), rgba(255,255,255,0) 60%); opacity:0; transition:opacity .25s var(--ease) }
+	.categories .cat-card:hover { transform: translateY(-2px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); box-shadow: 0 8px 28px rgba(0,0,0,.08); border-color:rgba(0,0,0,.08) }
+	.categories .cat-card:hover::before { opacity:1 }
+	.categories .cat-card:hover::after { opacity:.85 }
+	/* Active (selected) visual */
+	.categories .cat-card.is-active{ border-color: rgba(99,102,241,.45); box-shadow: 0 8px 28px rgba(99,102,241,.18) }
+	.categories .cat-card:focus-visible { outline:3px solid rgba(99,102,241,.35); outline-offset:2px }
+	.categories .cat-icon-wrap { position:relative; z-index:1; width:42px; height:42px; border-radius:12px; display:grid; place-items:center; background:linear-gradient(135deg, #eef2ff, #fdf2f8); color:#4F46E5; border:1px solid rgba(0,0,0,.06); box-shadow:0 4px 12px rgba(0,0,0,.06) }
+	.categories .cat-icon-wrap i { font-size:1.25rem }
+	.categories .cat-text { position:relative; z-index:1; display:flex; flex-direction:column; line-height:1.15 }
 	.categories .cat-name { font-weight:600; color: var(--bs-body-color); }
 	.categories .cat-count { font-size:12px; color: var(--bs-secondary-color); }
+	.categories .cat-see-all .cat-icon-wrap{background:linear-gradient(135deg, #f8fafc, #f1f5f9); color:#334155}
+
+		/* Background image layer with subtle parallax */
+		.categories .cat-bg{position:absolute; inset:0; background-size:cover; background-position:center; opacity:.22; filter:saturate(1) contrast(1); pointer-events:none; will-change: transform, opacity; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(1.02); transition: opacity .25s var(--ease), transform .25s var(--ease)}
+		.categories .cat-card:hover .cat-bg{opacity:.28}
+
+	/* Category scroll nav buttons */
+	.categories .cat-scroll{position:relative}
+	.categories .cat-nav{position:absolute; top:50%; transform:translateY(-50%); width:36px; height:36px; display:grid; place-items:center; border-radius:999px; background:rgba(255,255,255,.85); border:1px solid rgba(0,0,0,.08); box-shadow:0 6px 18px rgba(0,0,0,.12); z-index:3; color:#111827; cursor:pointer; transition:opacity .15s var(--ease), transform .15s var(--ease)}
+	.categories .cat-nav:hover{transform:translateY(-50%) scale(1.05)}
+	.categories .cat-nav.prev{left:6px}
+	.categories .cat-nav.next{right:6px}
+	.categories .cat-nav.disabled{opacity:.35; pointer-events:none}
+
+/* Mobile horizontal scroll for categories like Fresha/Booksy */
+@media (max-width: 575.98px){
+	.categories .cat-scroll{margin-inline:-12px; padding-inline:12px}
+	.categories .row.g-3{display:flex; overflow-x:auto; gap:12px; scroll-snap-type:x mandatory; padding-bottom:6px}
+	.categories .row.g-3 > [class^="col-"]{min-width:70%; flex:0 0 auto; scroll-snap-align:start}
+	.categories .cat-card{min-height:96px}
+	/* Edge fades */
+	.categories .cat-fade{position:absolute; top:0; bottom:0; width:28px; pointer-events:none; z-index:2}
+	.categories .cat-fade-left{left:0; background:linear-gradient(90deg, var(--bs-body-bg), transparent)}
+	.categories .cat-fade-right{right:0; background:linear-gradient(270deg, var(--bs-body-bg), transparent)}
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce){
+	.categories .cat-card{transition:none!important; transform:none!important}
+	.categories .cat-card::after{display:none!important}
+	.categories .cat-bg{transition:none!important; transform:none!important}
+}
 
 	.stats .stat-card { background: var(--bs-body-bg); border:1px solid rgba(0,0,0,.06); border-radius:12px; padding:16px; }
 	.stats .stat-value { font-weight:700; font-size:24px; }
@@ -305,6 +347,10 @@ footer{background:#fff}
 .reveal.show{opacity:1; transform:none; transition:opacity var(--tx-dur, .25s) var(--tx-ease, cubic-bezier(.2,.8,.2,1)), transform var(--tx-dur, .25s) var(--tx-ease, cubic-bezier(.2,.8,.2,1))}
 .floaty{animation:float 6s ease-in-out infinite}
 .pulse{animation:pulse 3.6s ease-in-out infinite}
+
+/* Subtle flash highlight (used to guide user attention to Servicios) */
+.flash-highlight-bg{animation:flashHighlight 1.2s ease-out}
+@keyframes flashHighlight{0%{box-shadow:0 0 0 0 rgba(99,102,241,.0), inset 0 0 0 9999px rgba(99,102,241,.10)} 40%{box-shadow:0 0 0 6px rgba(99,102,241,.22), inset 0 0 0 9999px rgba(99,102,241,.06)} 100%{box-shadow:0 0 0 0 rgba(99,102,241,.0), inset 0 0 0 0 rgba(99,102,241,.0)}}
 
 /* Bounce for scroll indicator */
 @keyframes bounce{0%, 20%, 50%, 80%, 100%{transform:translateY(0)} 40%{transform:translateY(-6px)} 60%{transform:translateY(-3px)}}

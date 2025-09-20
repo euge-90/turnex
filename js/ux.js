@@ -50,26 +50,101 @@
       categorySelect.dispatchEvent(new Event('change'));
     }
     const target = document.getElementById('servicios');
-    target?.scrollIntoView({ behavior:'smooth' });
+    if(target){
+      target.scrollIntoView({ behavior:'smooth' });
+      const container = target.querySelector('.container') || target;
+      container.classList.remove('flash-highlight-bg');
+      // reflow to restart animation
+      void container.offsetWidth;
+      container.classList.add('flash-highlight-bg');
+      setTimeout(()=> container.classList.remove('flash-highlight-bg'), 1200);
+    }
   }
 
   btn?.addEventListener('click', performSearch);
   q?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); performSearch(); } });
 
-  // Category cards click wiring
-  document.querySelectorAll('.cat-card[data-cat]').forEach(a=>{
+  // Category cards: interactions (click + 3D tilt/parallax)
+  const catCards = Array.from(document.querySelectorAll('.cat-card[data-cat]'));
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Helper: set active visual state
+  function setActiveCard(card){
+    catCards.forEach(c=> c.classList.toggle('is-active', c===card));
+  }
+
+  catCards.forEach(a=>{
+    // Click behavior (filter + scroll + highlight)
     a.addEventListener('click', (e)=>{
       const cat = a.getAttribute('data-cat') || '';
-      // allow a fallback mapping (e.g., uñas -> tratamiento)
       const fallback = a.getAttribute('data-cat-fallback') || '';
       if(categorySelect){
-        const to = [...categorySelect.options].some(o=>o.value===cat) ? cat : fallback;
-        if(to){
-          categorySelect.value = to;
+        if(cat === 'all'){
+          categorySelect.value = '';
           categorySelect.dispatchEvent(new Event('change'));
+          // Clear active state when viewing all
+          catCards.forEach(c=> c.classList.remove('is-active'));
+        } else {
+          const to = [...categorySelect.options].some(o=>o.value===cat) ? cat : fallback;
+          if(to){
+            categorySelect.value = to;
+            categorySelect.dispatchEvent(new Event('change'));
+            setActiveCard(a);
+          }
+        }
+        const target = document.getElementById('servicios');
+        if(target){
+          target.scrollIntoView({ behavior:'smooth' });
+          const container = target.querySelector('.container') || target;
+          container.classList.remove('flash-highlight-bg');
+          void container.offsetWidth;
+          container.classList.add('flash-highlight-bg');
+          setTimeout(()=> container.classList.remove('flash-highlight-bg'), 1200);
         }
       }
     });
+
+    if(prefersReduced) return; // Respect reduced motion
+
+    // 3D tilt + sheen + parallax background
+    const bg = a.querySelector('.cat-bg');
+    const maxTilt = 7; // deg
+    const maxParallax = 8; // px
+
+    function onMove(ev){
+      const r = a.getBoundingClientRect();
+      const x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+      const y = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
+      const px = (x / r.width) * 2 - 1;  // -1 .. 1
+      const py = (y / r.height) * 2 - 1; // -1 .. 1
+      const rx = (-py * maxTilt).toFixed(2) + 'deg';
+      const ry = (px * maxTilt).toFixed(2) + 'deg';
+      a.style.setProperty('--rx', rx);
+      a.style.setProperty('--ry', ry);
+      a.style.setProperty('--mx', (x.toFixed(1)) + 'px');
+      a.style.setProperty('--my', (y.toFixed(1)) + 'px');
+      if(bg){
+        const tx = (-px * maxParallax).toFixed(1) + 'px';
+        const ty = (-py * maxParallax).toFixed(1) + 'px';
+        bg.style.setProperty('--tx', tx);
+        bg.style.setProperty('--ty', ty);
+      }
+    }
+    function reset(){
+      a.style.removeProperty('--rx');
+      a.style.removeProperty('--ry');
+      a.style.removeProperty('--mx');
+      a.style.removeProperty('--my');
+      if(bg){
+        bg.style.removeProperty('--tx');
+        bg.style.removeProperty('--ty');
+      }
+    }
+    a.addEventListener('mousemove', onMove, { passive: true });
+    a.addEventListener('mouseleave', reset);
+    a.addEventListener('touchstart', onMove, { passive: true });
+    a.addEventListener('touchmove', onMove, { passive: true });
+    a.addEventListener('touchend', reset);
   });
 
   // Update category counts when services are synced or rendered
@@ -86,6 +161,21 @@
     if(/uñ[ae]s|manicu|pedicu/.test(text)) return 'tratamiento';
     return '';
   }
+  // Animate numbers helper
+  function tweenNumber(el, to, suffix){
+    const text = el.textContent || '';
+    const m = text.match(/\d+/);
+    const from = m ? parseInt(m[0],10) : 0;
+    const dur = 400; const start = performance.now();
+    function step(t){
+      const p = Math.min(1, (t - start) / dur);
+      const val = Math.round(from + (to - from) * p);
+      el.textContent = `${val}${suffix}`;
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
   function updateCategoryCounts(){
     const all = (window.__services_cache||[]).map(s=> ({...s, __cat: detectCategory(s)}));
     const countBy = all.reduce((acc,s)=>{ acc[s.__cat] = (acc[s.__cat]||0)+1; return acc; }, {});
@@ -99,10 +189,10 @@
     ];
     ids.forEach(([key,id])=>{
       const el = document.getElementById(id);
-      if(el) el.textContent = (countBy[key]||0) + ' servicios';
+      if(el) tweenNumber(el, (countBy[key]||0), ' servicios');
     });
     const unas = document.getElementById('catCount-unas');
-    if(unas) unas.textContent = (countBy['tratamiento']||0) + ' servicios';
+    if(unas) tweenNumber(unas, (countBy['tratamiento']||0), ' servicios');
   }
   window.addEventListener('turnex:services-synced', updateCategoryCounts);
   window.addEventListener('turnex:services-rendered', updateCategoryCounts);
@@ -131,4 +221,39 @@
   }
   appStore?.addEventListener('click', ()=> track('app_store'));
   gplay?.addEventListener('click', ()=> track('google_play'));
+})();
+
+// Categories scroll navigation (prev/next buttons)
+(() => {
+  const wrap = document.querySelector('.categories .cat-scroll');
+  const row = document.querySelector('.categories .row.g-3');
+  if(!wrap || !row) return;
+
+  const prev = document.createElement('button');
+  prev.className = 'cat-nav prev';
+  prev.setAttribute('aria-label', 'Anterior');
+  prev.innerHTML = '<i class="bi bi-chevron-left"></i>';
+  const next = document.createElement('button');
+  next.className = 'cat-nav next';
+  next.setAttribute('aria-label', 'Siguiente');
+  next.innerHTML = '<i class="bi bi-chevron-right"></i>';
+  wrap.appendChild(prev); wrap.appendChild(next);
+
+  function update(){
+    const max = row.scrollWidth - row.clientWidth - 1;
+    prev.classList.toggle('disabled', row.scrollLeft <= 0);
+    next.classList.toggle('disabled', row.scrollLeft >= max);
+    // Only show on overflow
+    const overflow = row.scrollWidth > row.clientWidth + 10;
+    prev.style.display = next.style.display = overflow ? 'grid' : 'none';
+  }
+  function scrollByDir(dir){
+    const amount = Math.max(200, row.clientWidth * 0.8) * dir;
+    row.scrollBy({ left: amount, behavior: 'smooth' });
+  }
+  prev.addEventListener('click', ()=> scrollByDir(-1));
+  next.addEventListener('click', ()=> scrollByDir(1));
+  row.addEventListener('scroll', update, { passive: true });
+  new ResizeObserver(update).observe(row);
+  update();
 })();
