@@ -29,8 +29,9 @@ async function http(path, opts={}){
 // Auth
 // extras (e.g., name, phone) are currently client-side only; backend accepts email/password
 export async function apiSignup({ email, password, name, phone, remember=true }){
-  const data = await http('/auth/signup', { method:'POST', body: JSON.stringify({ email, password }) });
-  setSession({ email: data.user.email, role: data.user.role, token: data.token, name: name||'', phone: phone||'' }, { remember });
+  const payload = { name, email, phone, password };
+  const data = await http('/auth/signup', { method:'POST', body: JSON.stringify(payload) });
+  setSession({ email: data.user.email, role: data.user.role, token: data.token, name: data.user.name||name||'', phone: data.user.phone||phone||'' }, { remember });
   return data;
 }
 export async function apiLogin({ email, password, remember=true }){

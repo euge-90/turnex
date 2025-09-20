@@ -58,6 +58,7 @@ export function logout(){ apiClearSession(); }
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRe = /^[+\d\s().-]{8,}$/;
   const fullNameOk = (v) => v.split(/\s+/).filter(w => w.length >= 2).length >= 2;
+  const passStrong = (v) => v.length >= 9 && /[a-z]/.test(v) && /[A-Z]/.test(v) && /\d/.test(v);
 
     function findFeedback(input) {
       return input.parentElement.querySelector('.invalid-feedback')
@@ -89,7 +90,7 @@ export function logout(){ apiClearSession(); }
   if (t.id === 'signupName') markValid(t, fullNameOk((t.value || '').trim()), 'Ingresá nombre y apellido.');
       if (t.id === 'signupEmail') markValid(t, emailRe.test(t.value), 'Ingresá un email válido.');
       if (t.id === 'signupPhone') markValid(t, phoneRe.test(t.value), 'Ingresá un teléfono válido (mín. 8 dígitos).');
-  if (t.id === 'signupPassword') { markValid(t, (t.value || '').length >= 9, 'Mínimo 9 caracteres.'); if (pass2?.value) markValid(pass2, pass2.value === t.value, 'Las contraseñas no coinciden.'); }
+  if (t.id === 'signupPassword') { markValid(t, passStrong((t.value || '')), 'Debe tener 9+ caracteres, mayúscula, minúscula y número.'); if (pass2?.value) markValid(pass2, pass2.value === t.value, 'Las contraseñas no coinciden.'); }
       if (t.id === 'signupPassword2' && pass1) markValid(t, t.value === pass1.value, 'Las contraseñas no coinciden.');
     });
 
@@ -121,7 +122,7 @@ export function logout(){ apiClearSession(); }
       markValid(loginForm.loginEmail, vEmail, 'Ingresá un email válido.');
       markValid(loginForm.loginName, vName, 'Ingresá tu nombre.');
       markValid(loginForm.loginPhone, vPhone, 'Ingresá un teléfono válido (mín. 8 dígitos).');
-      markValid(loginForm.loginPassword, vPass, 'Mínimo 8 caracteres.');
+  markValid(loginForm.loginPassword, vPass, 'Mínimo 9 caracteres.');
 
       if (!(vEmail && vName && vPhone && vPass)) return;
 
@@ -150,13 +151,13 @@ export function logout(){ apiClearSession(); }
   const vName = fullNameOk(name);
       const vEmail = emailRe.test(email);
       const vPhone = phoneRe.test(phone);
-  const vPass1 = password.length >= 9;
+  const vPass1 = passStrong(password);
       const vPass2 = password2 === password;
 
-      markValid(signupForm.signupName, vName, 'Ingresá tu nombre.');
+  markValid(signupForm.signupName, vName, 'Ingresá nombre y apellido.');
       markValid(signupForm.signupEmail, vEmail, 'Ingresá un email válido.');
       markValid(signupForm.signupPhone, vPhone, 'Ingresá un teléfono válido (mín. 8 dígitos).');
-      markValid(signupForm.signupPassword, vPass1, 'Mínimo 8 caracteres.');
+  markValid(signupForm.signupPassword, vPass1, 'Debe tener 9+ caracteres, mayúscula, minúscula y número.');
       markValid(signupForm.signupPassword2, vPass2, 'Las contraseñas no coinciden.');
 
       if (!(vName && vEmail && vPhone && vPass1 && vPass2)) return;

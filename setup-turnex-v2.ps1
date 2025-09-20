@@ -1,19 +1,12 @@
 # Requires: Git for Windows
 # TURNEX v2.0 - Windows PowerShell setup script
 
-Write-Host "Setting up TURNEX v2.0 - Commercial Version" -ForegroundColor Cyan
-Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "[DEPRECATED] TURNEX v2.0 scaffolding is no longer used. Use the root project (index.html, css/, js/)." -ForegroundColor Yellow
+Write-Host "================================================" -ForegroundColor Yellow
 
 # 1) Create project structure
-Write-Host "Creating project structure..."
-New-Item -ItemType Directory -Force -Path "turnex-v2" | Out-Null
-New-Item -ItemType Directory -Force -Path "turnex-v2/assets/images" | Out-Null
-New-Item -ItemType Directory -Force -Path "turnex-v2/assets/icons" | Out-Null
-New-Item -ItemType Directory -Force -Path "turnex-v2/css" | Out-Null
-New-Item -ItemType Directory -Force -Path "turnex-v2/js" | Out-Null
-New-Item -ItemType Directory -Force -Path "turnex-v2/docs" | Out-Null
-
-Set-Location "turnex-v2"
+Write-Host "This script remains for historical context only and will not create files."
+return
 
 # 2) Create essential files
 Write-Host "Creating essential files..."
