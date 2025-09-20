@@ -1,4 +1,4 @@
-# Turnex - Turnos (v1.0)
+# Turnex - Turnos (v1.1.0)
 
 Aplicación web estática para reservar turnos de peluquería unisex (mujeres, hombres y niños). Mobile-first, accesible y rápida.
 
