@@ -24,13 +24,27 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Remove mirror folder from artifact
-        run: rm -rf ./turnex
+      - name: Prepare static artifact (whitelist files)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p site
+          # Core files (present in this project)
+          for f in index.html 404.html manifest.json sw.js .nojekyll; do
+            if [[ -f "$f" ]]; then cp -a "$f" site/; fi
+          done
+          # Static folders
+          for d in assets css js; do
+            if [[ -d "$d" ]]; then cp -a "$d" site/; fi
+          done
+          # Optional docs for debugging (comment out to exclude)
+          # if [[ -f DEPLOY.md ]]; then cp -a DEPLOY.md site/; fi
+          echo "Artifact prepared:" && ls -la site
 
-      - name: Upload artifact (root)
+      - name: Upload artifact (static site)
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './'
+          path: 'site'
 
   deploy:
     needs: build
