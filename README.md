@@ -1,5 +1,8 @@
 # Turnex - Turnos (v1.1.0)
 
+[![Latest Release](https://img.shields.io/github/v/release/euge-90/turnex?sort=semver)](https://github.com/euge-90/turnex/releases)
+[Ver Changelog](./CHANGELOG.md)
+
 Aplicación web estática para reservar turnos de peluquería unisex (mujeres, hombres y niños). Mobile-first, accesible y rápida.
 
 ## Tecnologías
