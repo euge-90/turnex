@@ -629,6 +629,46 @@
     </div>
   </section>
 
+  <!-- LOGIN -->
+<form id="loginForm" novalidate autocomplete="on" data-mode="login" class="auth-form">
+  <div class="mb-3">
+    <label for="loginEmail" class="form-label">Email</label>
+    <input type="email" class="form-control" id="loginEmail" name="email" required inputmode="email" autocomplete="email" />
+    <div class="invalid-feedback">Ingresá un email válido.</div>
+  </div>
+
+  <!-- Nuevo: Nombre en login (requerido para validación) -->
+  <div class="mb-3">
+    <label for="loginName" class="form-label">Nombre y apellido</label>
+    <input type="text" class="form-control" id="loginName" name="name" required autocomplete="name" />
+    <div class="invalid-feedback">Ingresá tu nombre.</div>
+  </div>
+
+  <!-- Nuevo: Teléfono en login (requerido para validación) -->
+  <div class="mb-3">
+    <label for="loginPhone" class="form-label">Teléfono</label>
+    <input type="tel" class="form-control" id="loginPhone" name="phone" required inputmode="tel" autocomplete="tel" />
+    <div class="invalid-feedback">Ingresá un teléfono válido (mín. 8 dígitos).</div>
+  </div>
+
+  <div class="mb-2 position-relative">
+    <label for="loginPassword" class="form-label">Contraseña</label>
+    <div class="password-wrap">
+      <input type="password" class="form-control" id="loginPassword" name="password" required minlength="8" autocomplete="current-password" />
+      <button type="button" class="btn btn-eye" data-toggle-password="loginPassword" aria-label="Mostrar/ocultar contraseña">
+        <i class="bi bi-eye"></i>
+      </button>
+    </div>
+    <div class="invalid-feedback">La contraseña debe tener al menos 8 caracteres.</div>
+  </div>
+
+  <div class="d-grid mt-3">
+    <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-auth">
+      <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+      Ingresar
+    </button>
+  </div>
+</form>
   <!-- Auth Modal -->
   <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -737,6 +777,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <!-- QR generator (client-side) -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script type="module" src="js/auth.js?v=20250920-3"></script>
   <script type="module" src="./js/app.js?v=20250920-1"></script>
   <script src="./js/ux.js?v=20250920-1"></script>
   <script>
