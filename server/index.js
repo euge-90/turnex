@@ -30,15 +30,15 @@ const { validate } = require('./middlewares/validate');
 const { loginSchema, signupSchema } = require('./schemas/auth');
 const { createBookingSchema } = require('./schemas/booking');
 
-// Endpoints placeholder con validación (se implementan en STEP 3)
-app.post('/api/auth/login', validate(loginSchema), (req, res) => {
-  return res.status(501).json({ error: 'Not implemented' });
-});
+// Rutas API
+const authRouter = require('./routes/auth');
+app.use('/api/auth', authRouter);
 
-app.post('/api/auth/signup', validate(signupSchema), (req, res) => {
-  return res.status(501).json({ error: 'Not implemented' });
-});
+// Elimina placeholders 501 de auth (ya cubiertos por router)
+// app.post('/api/auth/login', validate(loginSchema), (req, res) => res.status(501).json({ error: 'Not implemented' }));
+// app.post('/api/auth/signup', validate(signupSchema), (req, res) => res.status(501).json({ error: 'Not implemented' }));
 
+// Placeholder booking (se implementará luego)
 app.post('/api/bookings', validate(createBookingSchema), (req, res) => {
   return res.status(501).json({ error: 'Not implemented' });
 });
