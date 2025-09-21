@@ -1,2 +1,10 @@
 @media (min-width:768px){.hero{padding-block:5rem}}
 @media (min-width:992px){.calendar-grid{gap:.75rem}.time-slots{gap:.75rem}}
+@media (max-width: 575.98px){
+	.navbar .navbar-nav{gap:.5rem}
+	#authButtons{width:100%}
+	#authButtons .btn{flex:1 1 auto}
+}
+@media (max-width: 767.98px){
+	#heroButtonsOut, #heroButtonsIn{margin-top:1rem}
+}

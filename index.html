@@ -98,9 +98,24 @@
               <span class="d-none d-sm-inline">Tema</span>
             </button>
           </li>
-          <li class="nav-item d-flex gap-2">
-            <button class="btn btn-outline-secondary" id="btnSignup" data-auth-open="signup">Crear cuenta</button>
-            <button class="btn btn-primary" id="btnLogin" data-auth-open="login">Ingresar</button>
+          <li class="nav-item d-flex gap-2 align-items-center">
+            <!-- Estado NO LOGUEADO -->
+            <div id="authButtons" class="d-flex gap-2">
+              <button class="btn btn-outline-secondary" id="btnSignup" data-auth-open="signup">Crear cuenta</button>
+              <button class="btn btn-primary" id="btnLogin" data-auth-open="login">Ingresar</button>
+            </div>
+            <!-- Estado LOGUEADO -->
+            <div id="userMenu" class="dropdown d-none">
+              <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="avatar-initial" id="userAvatarInitial" aria-hidden="true">U</span>
+                <span id="userName">Usuario</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#mis-turnos" id="navDashboard">Mi Dashboard</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" id="navLogout">Cerrar sesión</a></li>
+              </ul>
+            </div>
           </li>
         </ul>
       </nav>
@@ -123,6 +138,21 @@
             <input id="heroLocation" type="text" class="form-control" placeholder="¿Dónde?" value="Buenos Aires" />
           </div>
           <button class="btn btn-primary btn-lg" id="btnHeroSearch"><i class="bi bi-search me-1"></i>Buscar disponibilidad</button>
+        </div>
+        <!-- Estado NO LOGUEADO: CTA visibles -->
+        <div id="heroButtonsOut" class="d-flex flex-column flex-sm-row gap-2 justify-content-center mt-3">
+          <button class="btn btn-warning btn-lg" data-auth-open="signup">
+            Registrarse GRATIS
+          </button>
+          <button class="btn btn-outline-secondary btn-lg" data-auth-open="login">
+            Ya tengo cuenta
+          </button>
+        </div>
+        <!-- Estado LOGUEADO: CTA de reserva -->
+        <div id="heroButtonsIn" class="d-none d-flex justify-content-center mt-3">
+          <button class="btn btn-warning btn-lg" id="heroReserveBtn">
+            Reservar Nuevo Turno
+          </button>
         </div>
       </div>
     </section>
@@ -654,6 +684,11 @@
               </div>
               <div class="invalid-feedback">La contraseña debe tener al menos 9 caracteres.</div>
             </div>
+            <div class="mb-2 form-check" data-auth-remember>
+              <input class="form-check-input" type="checkbox" id="loginRemember" checked>
+              <label class="form-check-label" for="loginRemember">Recordarme</label>
+            </div>
+            <div id="loginInlineError" class="alert alert-danger d-none" role="alert"></div>
             <div class="d-grid mt-3">
               <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-auth">
                 <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
@@ -704,6 +739,7 @@
                 Crear cuenta
               </button>
             </div>
+            <div id="signupInlineError" class="alert alert-danger d-none mt-2" role="alert"></div>
           </form>
         </div>
       </div>

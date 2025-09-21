@@ -22,7 +22,14 @@ async function http(path, opts={}){
     ...opts,
     headers: { 'Content-Type':'application/json', ...(opts.headers||{}), ...authHeaders() }
   });
-  if(!res.ok){ let err; try{ err = await res.json(); }catch{ err = { error: res.statusText } } throw new Error(err.error||'Request failed'); }
+  if(!res.ok){
+    let payload;
+    try{ payload = await res.json(); }catch{ payload = { error: res.statusText } }
+    const e = new Error(payload.error || payload.message || 'Request failed');
+    e.status = res.status;
+    e.payload = payload;
+    throw e;
+  }
   const ct = res.headers.get('content-type')||''; if(ct.includes('application/json')) return res.json(); return res.text();
 }
 

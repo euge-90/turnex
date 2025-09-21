@@ -303,3 +303,50 @@
   new ResizeObserver(update).observe(row);
   update();
 })();
+
+// Lightweight toast utility (non-blocking notifications)
+(() => {
+  function ensureContainer(){
+    let c = document.getElementById('txToastContainer');
+    if(!c){
+      c = document.createElement('div');
+      c.id = 'txToastContainer';
+      // A11y: announce updates politely
+      c.setAttribute('role', 'region');
+      c.setAttribute('aria-live', 'polite');
+      c.setAttribute('aria-atomic', 'true');
+      c.style.position = 'fixed';
+      c.style.top = '12px';
+      c.style.right = '12px';
+      c.style.zIndex = '1080';
+      c.style.display = 'flex';
+      c.style.flexDirection = 'column';
+      c.style.gap = '8px';
+      document.body.appendChild(c);
+    }
+    return c;
+  }
+  function toast({ type='info', text='', timeout=2800 }={}){
+    const c = ensureContainer();
+    const el = document.createElement('div');
+    el.className = `alert alert-${type} shadow-sm`; // uses Bootstrap alerts
+    el.textContent = text || '';
+    el.style.minWidth = '240px';
+    el.style.maxWidth = '420px';
+    el.style.margin = 0;
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-6px)';
+    el.style.transition = 'opacity .2s ease, transform .2s ease';
+    c.appendChild(el);
+    requestAnimationFrame(()=>{ el.style.opacity = '1'; el.style.transform = 'none'; });
+    const t = setTimeout(()=> close(), timeout);
+    function close(){
+      clearTimeout(t);
+      el.style.opacity = '0'; el.style.transform = 'translateY(-6px)';
+      setTimeout(()=> el.remove(), 200);
+    }
+    el.addEventListener('click', close);
+    return { close };
+  }
+  window.txToast = toast;
+})();

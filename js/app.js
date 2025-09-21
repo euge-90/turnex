@@ -25,6 +25,13 @@ const btnLogin = qs('#btnLogin');
 const btnSignup = qs('#btnSignup');
 const navMyBookings = qs('#navMyBookings');
 const btnLogout = qs('#btnLogout');
+const navLogout = document.getElementById('navLogout');
+const userMenu = document.getElementById('userMenu');
+const authButtons = document.getElementById('authButtons');
+const userNameEl = document.getElementById('userName');
+const userAvatarInitial = document.getElementById('userAvatarInitial');
+const heroButtonsOut = document.getElementById('heroButtonsOut');
+const heroButtonsIn = document.getElementById('heroButtonsIn');
 const yearEl = qs('#year');
 const navAdminItem = qs('#navAdminItem');
 const adminSection = qs('#admin');
@@ -333,6 +340,7 @@ function renderMyBookings(){
         try{
           await apiCancelBooking(id);
           Swal.fire('Cancelado','Tu turno fue cancelado','success');
+          if(window.txToast){ window.txToast({ type:'success', text:'Turno cancelado' }); }
           await Promise.all([
             syncMyBookings(),
             syncAdminBookings(),
@@ -349,21 +357,39 @@ function renderMyBookings(){
 
 function setupAuth(){
   const heroReserveCta = document.getElementById('heroReserveCta');
+  // Helper to toggle UI by auth state
+  const updateAuthUI = () => {
+    const logged = isLogged();
+    const session = getSession();
+    // Navbar groups
+    authButtons?.classList.toggle('d-none', logged);
+    userMenu?.classList.toggle('d-none', !logged);
+    if(userNameEl){ userNameEl.textContent = (session?.name && session.name.trim()) || (session?.email || 'Usuario'); }
+    if(userAvatarInitial){
+      const from = (session?.name && session.name.trim()) || (session?.email || 'U');
+      const init = (from.trim()[0] || 'U').toUpperCase();
+      userAvatarInitial.textContent = init;
+    }
+    // Legacy buttons
+    btnLogout?.classList.toggle('d-none', !logged);
+    btnLogin?.classList.toggle('d-none', logged);
+    btnSignup?.classList.toggle('d-none', logged);
+    // Hero states
+    heroButtonsOut?.classList.toggle('d-none', logged);
+    heroButtonsIn?.classList.toggle('d-none', !logged);
+    if(servicesSignupCard) servicesSignupCard.classList.toggle('d-none', logged);
+    // Sections and nav
+    ensureAdminNavVisible(isAdmin());
+    adminSection?.classList.toggle('d-none', !isAdmin());
+    calendarioSection?.classList.toggle('d-none', !logged);
+    misTurnosSection?.classList.toggle('d-none', !logged);
+    const myNavLi = navMyBookings?.closest('li');
+    if(myNavLi) myNavLi.classList.toggle('d-none', !logged);
+  };
   const auth = new AuthTurnex({
     onSuccess: async (event)=>{
       // Refresh UI on login/logout
-      const logged = isLogged();
-      btnLogout.classList.toggle('d-none', !logged);
-      btnLogin?.classList.toggle('d-none', logged);
-      btnSignup?.classList.toggle('d-none', logged);
-      if(heroReserveCta) heroReserveCta.classList.toggle('d-none', !logged);
-      if(servicesSignupCard) servicesSignupCard.classList.toggle('d-none', logged);
-      ensureAdminNavVisible(isAdmin());
-      adminSection?.classList.toggle('d-none', !isAdmin());
-      calendarioSection?.classList.toggle('d-none', !logged);
-      misTurnosSection?.classList.toggle('d-none', !logged);
-      const myNavLi = navMyBookings?.closest('li');
-      if(myNavLi) myNavLi.classList.toggle('d-none', !logged);
+      updateAuthUI();
 
       await Promise.all([syncMyBookings(), syncAdminBookings()]);
       renderMyBookings();
@@ -415,6 +441,53 @@ function setupAuth(){
     const m = modal ? new bootstrap.Modal(modal) : null;
     m?.show();
   }
+
+  // Initial UI state
+  updateAuthUI();
+
+  // Also react to global auth-success events
+  window.addEventListener('turnex:auth-success', async () => {
+    updateAuthUI();
+    await Promise.all([syncMyBookings(), syncAdminBookings()]);
+    renderMyBookings();
+    renderAdmin();
+  });
+
+  // Logout from dropdown
+  if(navLogout){
+    navLogout.addEventListener('click', (e)=>{
+      e.preventDefault();
+      logout();
+      // Reset UI state
+      authButtons?.classList.remove('d-none');
+      userMenu?.classList.add('d-none');
+      heroButtonsOut?.classList.remove('d-none');
+      heroButtonsIn?.classList.add('d-none');
+      ensureAdminNavVisible(false);
+      adminSection?.classList.add('d-none');
+      calendarioSection?.classList.add('d-none');
+      misTurnosSection?.classList.add('d-none');
+      const myNavLi = navMyBookings?.closest('li');
+      if(myNavLi) myNavLi.classList.add('d-none');
+      // Go back to servicios
+      location.hash = '#servicios';
+      if(window.txToast){ window.txToast({ type:'info', text:'Sesión cerrada' }); }
+      else { try{ Swal.fire('Sesión cerrada','Tu sesión fue cerrada correctamente','success'); }catch{} }
+    });
+  }
+
+  // Hero CTA: scroll to calendar for logged users
+  document.getElementById('heroReserveBtn')?.addEventListener('click', (e)=>{
+    e.preventDefault();
+    if(!isLogged()){
+      const modal = document.getElementById('authModal');
+      const m = modal ? new bootstrap.Modal(modal) : null;
+      m?.show();
+      return;
+    }
+    location.hash = '#calendario';
+    document.getElementById('calendario')?.scrollIntoView({ behavior:'smooth' });
+  });
 
   // Hero CTA signup opens modal in signup mode
   document.querySelectorAll('[data-open-auth="signup"]').forEach(btn=>{
@@ -504,6 +577,7 @@ function setupBookingForm(){
         html:`<b>${service?.name || 'Servicio'}</b><br>${descHtml}${item.date} · ${item.time}${durHtml}`,
         icon:'success', confirmButtonText:'Aceptar'
       });
+      if(window.txToast){ window.txToast({ type:'success', text:'Reserva confirmada' }); }
   await Promise.all([syncTakenForDate(selectedDateKey), syncMyBookings(), syncAdminBookings()]);
       renderTimeSlots(selectedDateKey);
       renderMyBookings();
@@ -532,6 +606,37 @@ function init(){
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// Global helpers for legacy inline handlers
+window.showDashboard = function(){
+  if(isAdmin()){
+    location.hash = '#admin';
+  } else if(isLogged()){
+    location.hash = '#mis-turnos';
+  } else {
+    const modal = document.getElementById('authModal');
+    const m = modal ? new bootstrap.Modal(modal) : null;
+    m?.show();
+  }
+};
+
+window.logout = function(){
+  logout();
+  if(window.txToast){ window.txToast({ type:'info', text:'Sesión cerrada' }); }
+  else { Swal.fire('Sesión cerrada','Tu sesión fue cerrada correctamente','success'); }
+  location.hash = '#servicios';
+};
+
+window.scrollToCalendar = function(){
+  if(!isLogged()){
+    const modal = document.getElementById('authModal');
+    const m = modal ? new bootstrap.Modal(modal) : null;
+    m?.show();
+    return;
+  }
+  location.hash = '#calendario';
+  document.getElementById('calendario')?.scrollIntoView({ behavior:'smooth' });
+};
 
 // Admin dashboard
 function renderAdmin(){
@@ -618,6 +723,7 @@ function renderAdmin(){
       try{
         await apiCancelBooking(id);
         Swal.fire('Cancelado','Turno cancelado','success');
+        if(window.txToast){ window.txToast({ type:'success', text:'Turno cancelado' }); }
         await Promise.all([
           syncMyBookings(),
           syncAdminBookings(),
@@ -664,7 +770,8 @@ function renderAdmin(){
           blockedDateRanges: saved.blockedDateRanges,
           blockedTimes: saved.blockedTimes
         });
-        Swal.fire('Guardado','Horarios actualizados','success');
+  Swal.fire('Guardado','Horarios actualizados','success');
+  if(window.txToast){ window.txToast({ type:'success', text:'Horarios actualizados' }); }
         renderHoursBanner();
       }catch(err){ Swal.fire('Error', err.message, 'error'); }
       if(selectedDateKey) renderTimeSlots(selectedDateKey);
@@ -698,6 +805,7 @@ function renderAdmin(){
           const saved = await apiPutConfig(newCfg);
           setConfig(saved);
           renderAdmin();
+          if(window.txToast){ window.txToast({ type:'success', text:`Día ${key} desbloqueado` }); }
           if(selectedDateKey) renderTimeSlots(selectedDateKey);
         }catch(err){ Swal.fire('Error', err.message, 'error'); }
       };
@@ -713,8 +821,9 @@ function renderAdmin(){
         setDays.add(val);
         newCfg.blockedDays = Array.from(setDays);
         const saved = await apiPutConfig(newCfg);
-        setConfig(saved);
-        Swal.fire('Bloqueado', `Se bloqueó ${val}`, 'success');
+  setConfig(saved);
+  Swal.fire('Bloqueado', `Se bloqueó ${val}`, 'success');
+  if(window.txToast){ window.txToast({ type:'success', text:`Día ${val} bloqueado` }); }
         renderAdmin();
         if(selectedDateKey) renderTimeSlots(selectedDateKey);
       }catch(err){ Swal.fire('Error', err.message, 'error'); }
@@ -734,6 +843,7 @@ function renderAdmin(){
           const saved = await apiPutConfig(newCfg);
           setConfig(saved);
           renderAdmin();
+          if(window.txToast){ window.txToast({ type:'success', text:'Rango desbloqueado' }); }
         }catch(err){ Swal.fire('Error', err.message, 'error'); }
       };
     });
@@ -746,9 +856,10 @@ function renderAdmin(){
       try{
         const newCfg = getConfig();
         newCfg.blockedDateRanges = [...(newCfg.blockedDateRanges||[]), { from, to }];
-        const saved = await apiPutConfig(newCfg);
-        setConfig(saved);
-        Swal.fire('Bloqueado', `Se bloqueó ${from} → ${to}`, 'success');
+  const saved = await apiPutConfig(newCfg);
+  setConfig(saved);
+  Swal.fire('Bloqueado', `Se bloqueó ${from} → ${to}`, 'success');
+  if(window.txToast){ window.txToast({ type:'success', text:`Rango ${from} → ${to} bloqueado` }); }
         renderAdmin();
       }catch(err){ Swal.fire('Error', err.message, 'error'); }
     };
@@ -773,6 +884,7 @@ function renderAdmin(){
           const saved = await apiPutConfig(newCfg);
           setConfig(saved);
           renderAdmin();
+          if(window.txToast){ window.txToast({ type:'success', text:'Bloqueo horario quitado' }); }
           if(selectedDateKey===key) renderTimeSlots(selectedDateKey);
         }catch(err){ Swal.fire('Error', err.message, 'error'); }
       };
@@ -790,9 +902,10 @@ function renderAdmin(){
         const list = newCfg.blockedTimes[key] || [];
         list.push([from,to]);
         newCfg.blockedTimes[key] = list;
-        const saved = await apiPutConfig(newCfg);
-        setConfig(saved);
-        Swal.fire('Bloqueado', `Se bloqueó ${key} ${from}→${to}`,'success');
+  const saved = await apiPutConfig(newCfg);
+  setConfig(saved);
+  Swal.fire('Bloqueado', `Se bloqueó ${key} ${from}→${to}`,'success');
+  if(window.txToast){ window.txToast({ type:'success', text:`Bloqueo ${from}→${to} en ${key}` }); }
         renderAdmin();
         if(selectedDateKey===key) renderTimeSlots(selectedDateKey);
       }catch(err){ Swal.fire('Error', err.message, 'error'); }
@@ -838,6 +951,7 @@ function renderAdmin(){
           await syncServices();
           renderServices();
           renderAdmin();
+          if(window.txToast){ window.txToast({ type:'success', text:'Servicio eliminado' }); }
         }catch(err){ Swal.fire('Error', err.message, 'error'); }
       };
     });
@@ -873,6 +987,7 @@ function renderAdmin(){
           renderServices();
           renderAdmin();
           Swal.fire('Guardado','Servicio actualizado','success');
+          if(window.txToast){ window.txToast({ type:'success', text:'Servicio actualizado' }); }
         }catch(err){ Swal.fire('Error', err.message, 'error'); }
       };
     });
@@ -895,6 +1010,7 @@ function renderAdmin(){
         renderServices();
         renderAdmin();
         Swal.fire('Guardado','Servicio agregado','success');
+        if(window.txToast){ window.txToast({ type:'success', text:'Servicio agregado' }); }
       }catch(err){ Swal.fire('Error', err.message, 'error'); }
     };
   }

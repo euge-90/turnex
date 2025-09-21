@@ -96,18 +96,16 @@ export function logout(){ apiClearSession(); }
       if (btn) btn.disabled = loading;
       if (btn && text) btn.lastChild.nodeValue = ` ${text}`;
     }
-    async function postJSON(url, data) {
-      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(data), credentials: 'include' });
-      let payload = null; try { payload = await res.json(); } catch {}
-      if (!res.ok) { const msg = payload?.message || payload?.error || res.statusText || 'Error al procesar la solicitud'; const err = new Error(msg); err.status = res.status; err.payload = payload; throw err; }
-      return payload;
-    }
+    // Use api.js helpers for login/signup to persist session/token correctly
 
   // Submit LOGIN (solo email y password)
     loginForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = loginForm.loginEmail.value.trim();
       const password = loginForm.loginPassword.value;
+      const remember = !!document.getElementById('loginRemember')?.checked;
+      const inlineError = document.getElementById('loginInlineError');
+      if(inlineError){ inlineError.classList.add('d-none'); inlineError.textContent = ''; }
 
       const vEmail = emailRe.test(email);
     const vPass = password.length >= 9;
@@ -120,13 +118,15 @@ export function logout(){ apiClearSession(); }
       const btn = document.getElementById('loginSubmitBtn');
       setLoading(btn, true, 'Ingresando...');
       try {
-        const data = await postJSON(`${API_BASE}/auth/login`, { email, password });
-        window.dispatchEvent(new CustomEvent('turnex:auth-success', { detail: { mode:'login', user: data.user } }));
-        if (window.Swal) Swal.fire({ icon:'success', title:'¡Bienvenido!', text:'Ingreso exitoso', timer:1400, showConfirmButton:false });
+        const { user } = await apiLogin({ email, password, remember });
+  window.dispatchEvent(new CustomEvent('turnex:auth-success', { detail: { mode:'login', user } }));
+  if (window.Swal) Swal.fire({ icon:'success', title:'¡Bienvenido!', text:'Ingreso exitoso', timer:1400, showConfirmButton:false });
+  if (window.txToast) window.txToast({ type:'success', text:'Sesión iniciada' });
         bootstrap.Modal.getOrCreateInstance($authModal).hide();
       } catch (err) {
         let text = err.message; if (err.status === 401) text = 'Credenciales inválidas.'; if (err.status === 429) text = 'Demasiados intentos.'; if (!navigator.onLine) text = 'Sin conexión.';
-        if (window.Swal) Swal.fire({ icon:'error', title:'No se pudo ingresar', text });
+        if (inlineError){ inlineError.textContent = text; inlineError.classList.remove('d-none'); }
+        else if (window.Swal) Swal.fire({ icon:'error', title:'No se pudo ingresar', text });
       } finally { setLoading(btn, false, 'Ingresar'); }
     });
 
@@ -156,14 +156,17 @@ export function logout(){ apiClearSession(); }
       const btn = document.getElementById('signupSubmitBtn');
       setLoading(btn, true, 'Creando...');
       try {
-        const data = await postJSON(`${API_BASE}/auth/signup`, { name, email, phone, password });
-        window.dispatchEvent(new CustomEvent('turnex:auth-success', { detail: { mode:'signup', user: data.user } }));
-        if (window.Swal) Swal.fire({ icon:'success', title:'Cuenta creada', text:'Ya podés iniciar sesión', timer:1600, showConfirmButton:false });
+        const { user } = await apiSignup({ name, email, phone, password });
+  window.dispatchEvent(new CustomEvent('turnex:auth-success', { detail: { mode:'signup', user } }));
+  if (window.Swal) Swal.fire({ icon:'success', title:'Cuenta creada', text:'Ya podés iniciar sesión', timer:1600, showConfirmButton:false });
+  if (window.txToast) window.txToast({ type:'success', text:'Cuenta creada' });
         bootstrap.Modal.getOrCreateInstance($authModal).hide();
         setMode('login');
       } catch (err) {
         let text = err.message; if (err.status === 409) text = 'Ese email ya está registrado.'; if (err.status === 400) text = 'Datos inválidos.'; if (!navigator.onLine) text = 'Sin conexión.';
-        if (window.Swal) Swal.fire({ icon:'error', title:'No se pudo crear la cuenta', text });
+        const inline = document.getElementById('signupInlineError');
+        if (inline){ inline.textContent = text; inline.classList.remove('d-none'); }
+        else if (window.Swal) Swal.fire({ icon:'error', title:'No se pudo crear la cuenta', text });
       } finally { setLoading(btn, false, 'Crear cuenta'); }
     });
 
