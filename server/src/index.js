@@ -1,4 +1,5 @@
-import 'dotenv/config';
+// Load .env if available (don't crash if not resolvable)
+try { await import('dotenv/config'); } catch { /* optional: console.warn('dotenv not loaded') */ }
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
@@ -35,6 +36,7 @@ app.get('/api', (req, res) => {
 			{ method: 'GET', path: '/api/bookings/day?date=YYYY-MM-DD', desc: 'Compact bookings for a day' },
 			{ method: 'POST', path: '/api/bookings', desc: 'Create booking (auth)' },
 			{ method: 'DELETE', path: '/api/bookings/:id', desc: 'Cancel booking (owner or admin)' },
+			{ method: 'PUT', path: '/api/bookings/:id', desc: 'Update booking status (admin)' },
 			{ method: 'GET', path: '/api/config', desc: 'Get availability config' },
 			{ method: 'PUT', path: '/api/config', desc: 'Update availability config (admin)' },
 			{ method: 'GET', path: '/api/admin/users/count', desc: 'Total users (admin)' }

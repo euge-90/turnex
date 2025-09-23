@@ -11,9 +11,18 @@ export default function bookingsRoutes({ prisma }){
   }
 
   router.get('/', authMiddleware(false), async (req,res)=>{
-    const { date } = req.query;
-    const where = date ? { date } : {};
-    let list = await prisma.booking.findMany({ where, orderBy:[{ date:'asc' },{ time:'asc' }] });
+    const { date, from, to, serviceId, status } = req.query;
+    const where = {
+      ...(date ? { date: String(date) } : {}),
+      ...(from || to ? { date: { ...(from?{ gte:String(from) }:{}), ...(to?{ lte:String(to) }: {}) } } : {}),
+      ...(serviceId ? { serviceId: String(serviceId) } : {}),
+      ...(status ? { status: String(status) } : {}),
+    };
+    let list = await prisma.booking.findMany({
+      where,
+      orderBy:[{ date:'asc' },{ time:'asc' }],
+      include:{ service: { select:{ id:true, name:true, duration:true, price:true } } }
+    });
     if(req.user?.role !== 'admin') list = list.filter(b=> b.userId === req.user?.sub);
     res.json(list);
   });
@@ -42,6 +51,7 @@ export default function bookingsRoutes({ prisma }){
       serviceId: String(serviceId),
       date, time, duration,
       customerName: name || null,
+      status: 'pending',
     }});
     res.status(201).json(booking);
   });
@@ -53,6 +63,19 @@ export default function bookingsRoutes({ prisma }){
     if(b.userId !== req.user?.sub && req.user?.role !== 'admin') return res.status(403).json({error:'Forbidden'});
     await prisma.booking.delete({ where:{ id } });
     res.status(204).end();
+  });
+
+  // Update booking status (admin only)
+  router.put('/:id', authMiddleware(true), async (req,res)=>{
+    const id = String(req.params.id);
+    if(req.user?.role !== 'admin') return res.status(403).json({ error:'Forbidden' });
+    const { status } = req.body || {};
+    const allowed = new Set(['pending','confirmed','in_progress','completed','cancelled','no_show']);
+    if(!status || !allowed.has(String(status))) return res.status(400).json({ error:'Invalid status' });
+    const exists = await prisma.booking.findUnique({ where:{ id } });
+    if(!exists) return res.status(404).json({ error:'Not found' });
+    const updated = await prisma.booking.update({ where:{ id }, data:{ status: String(status) } });
+    res.json(updated);
   });
 
   return router;
