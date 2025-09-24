@@ -124,118 +124,119 @@
 
   <main>
     <!-- Hero (Search-centric) -->
-    <section class="hero-search py-5 bg-body">
+    <section class="hero-search py-5 bg-body" role="region" aria-labelledby="heroTitle">
       <div class="container">
-        <h1 class="display-6 fw-semibold text-center mb-2">Reserva servicios de belleza en tu zona</h1>
+        <h1 id="heroTitle" class="display-6 fw-semibold text-center mb-2">Reserva servicios de belleza en tu zona</h1>
         <p class="text-center text-body-secondary mb-4">Encontrá y reservá con los mejores profesionales cerca de vos</p>
-        <div class="search-bar d-flex flex-column flex-md-row gap-2 justify-content-center">
+
+        <form class="search-bar d-flex flex-column flex-md-row gap-2 justify-content-center" role="search" aria-label="Buscar servicios">
           <div class="input-group input-group-lg" style="max-width:480px">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input id="heroServiceQuery" type="text" class="form-control" placeholder="¿Qué servicio necesitás? (corte, color, uñas...)" />
+            <span class="input-group-text" aria-hidden="true"><i class="bi bi-search"></i></span>
+            <label for="heroServiceQuery" class="visually-hidden">Servicio</label>
+            <input id="heroServiceQuery" name="q" type="search" class="form-control" placeholder="¿Qué servicio necesitás? (corte, color, uñas...)" aria-label="Servicio" />
           </div>
           <div class="input-group input-group-lg" style="max-width:360px">
-            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-            <input id="heroLocation" type="text" class="form-control" placeholder="¿Dónde?" value="Buenos Aires" />
+            <span class="input-group-text" aria-hidden="true"><i class="bi bi-geo-alt"></i></span>
+            <label for="heroLocation" class="visually-hidden">Ubicación</label>
+            <input id="heroLocation" name="location" type="text" class="form-control" placeholder="¿Dónde?" value="Buenos Aires" aria-label="Ubicación" />
           </div>
-          <button class="btn btn-primary btn-lg" id="btnHeroSearch"><i class="bi bi-search me-1"></i>Buscar disponibilidad</button>
-        </div>
+          <button type="submit" class="btn btn-primary btn-lg" id="btnHeroSearch" aria-label="Buscar disponibilidad"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar disponibilidad</button>
+        </form>
+
         <!-- Estado NO LOGUEADO: CTA visibles -->
         <div id="heroButtonsOut" class="d-flex flex-column flex-sm-row gap-2 justify-content-center mt-3">
-          <button class="btn btn-warning btn-lg" data-auth-open="signup">
-            Registrarse GRATIS
-          </button>
-          <button class="btn btn-outline-secondary btn-lg" data-auth-open="login">
-            Ya tengo cuenta
-          </button>
+          <button class="btn btn-warning btn-lg" data-auth-open="signup" aria-haspopup="dialog">Registrarse GRATIS</button>
+          <button class="btn btn-outline-secondary btn-lg" data-auth-open="login" aria-haspopup="dialog">Ya tengo cuenta</button>
         </div>
+
         <!-- Estado LOGUEADO: CTA de reserva -->
         <div id="heroButtonsIn" class="d-none d-flex justify-content-center mt-3">
-          <button class="btn btn-warning btn-lg" id="heroReserveBtn">
-            Reservar Nuevo Turno
-          </button>
+          <button class="btn btn-warning btn-lg" id="heroReserveBtn">Reservar Nuevo Turno</button>
         </div>
       </div>
     </section>
 
     <!-- Categories (Fresha-style) -->
-    <section class="categories py-5">
+    <section class="categories py-5" aria-labelledby="categoriesTitle">
       <div class="container">
-        <h2 class="h4 fw-semibold mb-3">Explorá por categoría</h2>
-        <div class="cat-scroll position-relative">
+        <h2 id="categoriesTitle" class="h4 fw-semibold mb-3">Explorá por categoría</h2>
+        <div class="cat-scroll position-relative" role="list" aria-label="Categorías de servicios">
           <div class="row g-3 m-0">
-          <div class="col-6 col-md-4 col-lg-2">
-            <a href="#servicios" class="cat-card" data-cat="corte" aria-label="Corte">
-              <span class="cat-bg" style="background-image:url('assets/images/categories/corte.svg')"></span>
-              <div class="cat-icon-wrap"><i class="bi bi-scissors"></i></div>
-              <div class="cat-text">
-                <div class="cat-name">Peluquería</div>
-                <div class="cat-count" id="catCount-corte">—</div>
-              </div>
-            </a>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <a href="#servicios" class="cat-card" data-cat="color" aria-label="Color">
-              <span class="cat-bg" style="background-image:url('assets/images/categories/color.svg')"></span>
-              <div class="cat-icon-wrap"><i class="bi bi-palette"></i></div>
-              <div class="cat-text">
-                <div class="cat-name">Color</div>
-                <div class="cat-count" id="catCount-color">—</div>
-              </div>
-            </a>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <a href="#servicios" class="cat-card" data-cat="tratamiento" aria-label="Estética y tratamientos">
-              <span class="cat-bg" style="background-image:url('assets/images/categories/tratamiento.svg')"></span>
-              <div class="cat-icon-wrap"><i class="bi bi-stars"></i></div>
-              <div class="cat-text">
-                <div class="cat-name">Estética</div>
-                <div class="cat-count" id="catCount-tratamiento">—</div>
-              </div>
-            </a>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <a href="#servicios" class="cat-card" data-cat="barba" aria-label="Barbería">
-              <span class="cat-bg" style="background-image:url('assets/images/categories/barba.svg')"></span>
-              <div class="cat-icon-wrap"><i class="bi bi-person-fill"></i></div>
-              <div class="cat-text">
-                <div class="cat-name">Barberías</div>
-                <div class="cat-count" id="catCount-barba">—</div>
-              </div>
-            </a>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <a href="#servicios" class="cat-card" data-cat="peinado" aria-label="Peinados">
-              <span class="cat-bg" style="background-image:url('assets/images/categories/peinado.svg')"></span>
-              <div class="cat-icon-wrap"><i class="bi bi-brush"></i></div>
-              <div class="cat-text">
-                <div class="cat-name">Peinados</div>
-                <div class="cat-count" id="catCount-peinado">—</div>
-              </div>
-            </a>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <a href="#servicios" class="cat-card" data-cat="uñas" aria-label="Uñas" data-cat-fallback="tratamiento">
-              <span class="cat-bg" style="background-image:url('assets/images/categories/unas.svg')"></span>
-              <div class="cat-icon-wrap"><i class="bi bi-heart"></i></div>
-              <div class="cat-text">
-                <div class="cat-name">Uñas</div>
-                <div class="cat-count" id="catCount-unas">—</div>
-              </div>
-            </a>
-          </div>
+            <!-- Category items: use role=button for accessibility and keep data-cat for JS hooks -->
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="#servicios" role="button" class="cat-card" data-cat="corte" aria-label="Corte" tabindex="0" aria-pressed="false">
+                <span class="cat-bg" style="background-image:url('assets/images/categories/corte.svg')" aria-hidden="true"></span>
+                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-scissors"></i></div>
+                <div class="cat-text">
+                  <div class="cat-name">Peluquería</div>
+                  <div class="cat-count" id="catCount-corte">—</div>
+                </div>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="#servicios" role="button" class="cat-card" data-cat="color" aria-label="Color" tabindex="0" aria-pressed="false">
+                <span class="cat-bg" style="background-image:url('assets/images/categories/color.svg')" aria-hidden="true"></span>
+                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-palette"></i></div>
+                <div class="cat-text">
+                  <div class="cat-name">Color</div>
+                  <div class="cat-count" id="catCount-color">—</div>
+                </div>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="#servicios" role="button" class="cat-card" data-cat="tratamiento" aria-label="Estética y tratamientos" tabindex="0" aria-pressed="false">
+                <span class="cat-bg" style="background-image:url('assets/images/categories/tratamiento.svg')" aria-hidden="true"></span>
+                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-stars"></i></div>
+                <div class="cat-text">
+                  <div class="cat-name">Estética</div>
+                  <div class="cat-count" id="catCount-tratamiento">—</div>
+                </div>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="#servicios" role="button" class="cat-card" data-cat="barba" aria-label="Barbería" tabindex="0" aria-pressed="false">
+                <span class="cat-bg" style="background-image:url('assets/images/categories/barba.svg')" aria-hidden="true"></span>
+                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-person-fill"></i></div>
+                <div class="cat-text">
+                  <div class="cat-name">Barberías</div>
+                  <div class="cat-count" id="catCount-barba">—</div>
+                </div>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="#servicios" role="button" class="cat-card" data-cat="peinado" aria-label="Peinados" tabindex="0" aria-pressed="false">
+                <span class="cat-bg" style="background-image:url('assets/images/categories/peinado.svg')" aria-hidden="true"></span>
+                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-brush"></i></div>
+                <div class="cat-text">
+                  <div class="cat-name">Peinados</div>
+                  <div class="cat-count" id="catCount-peinado">—</div>
+                </div>
+              </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="#servicios" role="button" class="cat-card" data-cat="unas" aria-label="Uñas" data-cat-fallback="tratamiento" tabindex="0" aria-pressed="false">
+                <span class="cat-bg" style="background-image:url('assets/images/categories/unas.svg')" aria-hidden="true"></span>
+                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-heart"></i></div>
+                <div class="cat-text">
+                  <div class="cat-name">Uñas</div>
+                  <div class="cat-count" id="catCount-unas">—</div>
+                </div>
+              </a>
+            </div>
 
-          <!-- See all -->
-          <div class="col-6 col-md-4 col-lg-2">
-            <a href="#servicios" class="cat-card cat-see-all" data-cat="all" aria-label="Ver todas las categorías">
-              <div class="cat-icon-wrap"><i class="bi bi-grid"></i></div>
-              <div class="cat-text">
-                <div class="cat-name">Ver todas</div>
-                <div class="cat-count small text-body-secondary">Explorar servicios</div>
-              </div>
-            </a>
+            <!-- See all -->
+            <div class="col-6 col-md-4 col-lg-2">
+              <a href="#servicios" role="button" class="cat-card cat-see-all" data-cat="all" aria-label="Ver todas las categorías" tabindex="0" aria-pressed="false">
+                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-grid"></i></div>
+                <div class="cat-text">
+                  <div class="cat-name">Ver todas</div>
+                  <div class="cat-count small text-body-secondary">Explorar servicios</div>
+                </div>
+              </a>
+            </div>
+            <span class="cat-fade cat-fade-left d-sm-none"></span>
+            <span class="cat-fade cat-fade-right d-sm-none"></span>
           </div>
-          <span class="cat-fade cat-fade-left d-sm-none"></span>
-          <span class="cat-fade cat-fade-right d-sm-none"></span>
         </div>
       </div>
     </section>
@@ -420,27 +421,29 @@
     </section>
 
     <!-- Servicios -->
-    <section id="servicios" class="py-5">
+    <section id="servicios" class="py-5" aria-labelledby="serviciosTitle">
       <div class="container">
-  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
-    <div class="d-flex align-items-center gap-2">
-      <h2 class="h3 fw-semibold m-0">Servicios destacados</h2>
-      <span class="badge text-bg-primary d-none" id="servicesNewBadge"></span>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <label for="svcCategory" class="small text-body-secondary m-0">Filtrar por:</label>
-      <select id="svcCategory" class="form-select form-select-sm" style="width:auto; min-width:180px">
-        <option value="">Todas las categorías</option>
-        <option value="corte">Corte</option>
-        <option value="color">Color</option>
-        <option value="tratamiento">Tratamiento</option>
-        <option value="barba">Barba</option>
-        <option value="peinado">Peinado</option>
-      </select>
-      <span class="small text-body-secondary" id="svcCount"></span>
-    </div>
-  </div>
-  <p class="text-body-secondary mb-3">Explorá cortes, color, tratamientos y más — encontrá el ideal para vos.</p>
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <h2 id="serviciosTitle" class="h3 fw-semibold m-0">Servicios destacados</h2>
+            <span class="badge text-bg-primary d-none" id="servicesNewBadge"></span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <label for="svcCategory" class="small text-body-secondary m-0">Filtrar por:</label>
+            <select id="svcCategory" class="form-select form-select-sm" style="width:auto; min-width:180px">
+              <option value="">Todas las categorías</option>
+              <option value="corte">Corte</option>
+              <option value="color">Color</option>
+              <option value="tratamiento">Tratamiento</option>
+              <option value="barba">Barba</option>
+              <option value="peinado">Peinado</option>
+            </select>
+            <span class="small text-body-secondary" id="svcCount"></span>
+          </div>
+        </div>
+
+        <p class="text-body-secondary mb-3">Explorá cortes, color, tratamientos y más — encontrá el ideal para vos.</p>
+
         <div class="card border-0 bg-body-tertiary mb-3" id="servicesSignupCard">
           <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
             <div class="d-flex align-items-start gap-3">
@@ -460,7 +463,32 @@
             </div>
           </div>
         </div>
-        <div class="row g-3" id="servicesList" aria-live="polite"></div>
+
+        <!-- Service grid: JS will populate #servicesList with cards; keep a graceful template fallback -->
+        <div class="row g-3" id="servicesList" aria-live="polite">
+          <div class="col-12 col-md-6 col-lg-4" data-service-placeholder>
+            <article class="service-card card h-100" data-service="example-service" aria-labelledby="svc-example-title">
+              <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="svc-thumb rounded" style="width:72px;height:72px;background-image:url('assets/images/logo.svg');background-size:cover;background-position:center" aria-hidden="true"></div>
+                  <div class="flex-grow-1">
+                    <h3 id="svc-example-title" class="h6 mb-1">Corte + Peinado</h3>
+                    <div class="small text-body-secondary">Salon Ejemplo · <span class="svc-duration">45 min</span></div>
+                    <div class="mt-2 d-flex align-items-center gap-2">
+                      <div class="svc-rating small text-warning">★★★★☆</div>
+                      <div class="svc-price fw-semibold ms-auto">$1200</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-3 mt-auto d-flex gap-2">
+                  <button class="btn btn-outline-secondary btn-sm flex-grow-1" data-action="details" aria-label="Ver detalles del servicio">Detalles</button>
+                  <button class="btn btn-warning btn-sm" data-action="book" data-service-id="example-service">Reservar</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -814,6 +842,7 @@
       reflect();
     })();
   </script>
+  <!-- Design tokens moved to css/styles.css for maintainability -->
   <script>
     // Theme toggle logic with persistence
     (function(){
@@ -822,8 +851,11 @@
       const setIcon = () => {
         const isDark = html.getAttribute('data-bs-theme') === 'dark';
         if(btn){
-          btn.querySelector('i')?.classList.toggle('bi-moon-stars', !isDark);
-          btn.querySelector('i')?.classList.toggle('bi-sun', isDark);
+          const ic = btn.querySelector('i');
+          if(ic){
+            ic.classList.toggle('bi-moon-stars', !isDark);
+            ic.classList.toggle('bi-sun', isDark);
+          }
         }
       };
       function toggle(){

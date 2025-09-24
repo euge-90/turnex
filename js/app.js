@@ -69,6 +69,61 @@ const svcPriceInput = qs('#svcPrice');
 const mainEl = document.querySelector('main');
 const servicesSignupCard = document.getElementById('servicesSignupCard');
 
+// Delegated handler for actions inside servicesList (details, book)
+if(servicesList){
+  servicesList.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-action], button[data-service-id], [data-service]');
+    if(!btn) return;
+    // 'details' button
+    if(btn.matches('[data-action="details"]')){
+      const card = btn.closest('.service-card');
+      const svcId = card?.querySelector('[data-service-id]')?.getAttribute('data-service-id') || card?.querySelector('[data-service]')?.getAttribute('data-service');
+      if(svcId){
+        const svc = getServiceByIdCached(svcId);
+        try{ Swal.fire({ title: svc?.name||'Servicio', html: `<p class="text-start">${svc?.description||'Sin descripción'}</p><p class="small text-muted">Duración: ${svc?.duration||'-'} min · Precio: $${svc?.price||'—'}</p>` }); }catch(_){ }
+      }
+      return;
+    }
+    // 'book' button (explicit)
+    if(btn.matches('[data-action="book"]') || btn.matches('[data-service]') || btn.matches('[data-service-id]')){
+      const svcId = btn.getAttribute('data-service') || btn.getAttribute('data-service-id') || (btn.closest('.service-card')?.querySelector('[data-service]')?.getAttribute('data-service'));
+      if(svcId){
+        // set select and navigate to calendario
+        serviceSelect.value = svcId;
+        serviceSelect.dispatchEvent(new Event('change'));
+        // If user logged, go to calendario; otherwise open auth modal for booking
+        if(isLogged()){
+          location.hash = '#calendario';
+          document.getElementById('calendario').scrollIntoView({ behavior:'smooth' });
+        }else{
+          // open auth modal in signup flow to encourage account creation
+          const evt = new CustomEvent('turnex:open-auth', { detail: { mode: 'signup' } });
+          window.dispatchEvent(evt);
+        }
+      }
+    }
+  });
+  // Keyboard accessibility: Enter or Space on focused article triggers book action
+  servicesList.addEventListener('keydown', (e)=>{
+    const el = e.target.closest('.service-card');
+    if(!el) return;
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      const svcId = el.getAttribute('data-service-id');
+      if(svcId){
+        serviceSelect.value = svcId;
+        serviceSelect.dispatchEvent(new Event('change'));
+        if(isLogged()){
+          location.hash = '#calendario';
+          document.getElementById('calendario').scrollIntoView({ behavior:'smooth' });
+        }else{
+          window.dispatchEvent(new CustomEvent('turnex:open-auth', { detail:{ mode:'signup' } }));
+        }
+      }
+    }
+  });
+}
+
 // Admin route guard (top-level)
 function guardAdminRoute(){
   if(location.hash === '#admin' && !isAdmin()){
@@ -182,19 +237,22 @@ function renderServices(){
     servicesList.innerHTML = `<div class="col-12"><div class="card card-glass"><div class="card-body text-center text-body-secondary">No hay servicios para mostrar${filter? ' en esta categoría' : ''}. ${isAdmin()? 'Agregá servicios desde el panel Admin.' : ''}</div></div></div>`;
   }else{
     servicesList.innerHTML = SERVICES.map(s=>`
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="card card-glass service-card h-100">
-        <div class="card-body">
+    <div class="col-12 col-sm-6 col-lg-3" role="listitem">
+      <article class="card card-glass service-card h-100" data-service-id="${s.id}" aria-labelledby="svc-${s.id}-title" tabindex="0">
+        <div class="card-body d-flex flex-column">
           <div class="d-flex justify-content-between align-items-start mb-2">
-            <h3 class="h6 m-0">${s.name} ${highlightIds.has(String(s.id)) ? '<span class="badge text-bg-warning ms-1">Nuevo</span>' : ''}</h3>
+            <h3 id="svc-${s.id}-title" class="h6 m-0">${s.name} ${highlightIds.has(String(s.id)) ? '<span class="badge text-bg-warning ms-1">Nuevo</span>' : ''}</h3>
             <span class="badge service-badge">$${s.price}</span>
           </div>
-          ${s.__cat ? `<div class="mb-1"><span class="badge rounded-pill text-bg-secondary">${s.__cat}</span></div>` : ''}
-          ${s.description ? `<div class="d-none d-sm-block"><p class="small m-0">${s.description}</p></div>` : ''}
-          <p class="text-body-secondary small">Duración aprox. ${s.duration} min</p>
-          <button class="btn btn-sm btn-primary w-100" data-service="${s.id}">Seleccionar</button>
+          ${s.__cat ? `<div class="mb-1"><span class="badge rounded-pill text-bg-secondary text-capitalize">${s.__cat}</span></div>` : ''}
+          ${s.description ? `<div class="d-none d-sm-block"><p class="small m-0 desc">${s.description}</p></div>` : ''}
+          <p class="text-body-secondary small mt-2">Duración aprox. ${s.duration} min</p>
+          <div class="mt-3 d-grid gap-2">
+            <button class="btn btn-outline-secondary btn-sm" data-action="details" type="button" aria-label="Ver detalles de ${s.name}">Detalles</button>
+            <button class="btn btn-warning btn-sm" data-action="book" data-service-id="${s.id}" type="button">Reservar</button>
+          </div>
         </div>
-      </div>
+      </article>
     </div>`).join('');
   }
 
@@ -206,13 +264,9 @@ function renderServices(){
   }
 
   // Select service from card
-  qsa('[data-service]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      serviceSelect.value = btn.getAttribute('data-service');
-      serviceSelect.dispatchEvent(new Event('change'));
-      document.getElementById('calendario').scrollIntoView({ behavior:'smooth' });
-    });
-  });
+    // NOTE: we use event delegation instead of binding many listeners
+    // A single delegated handler (registered once during init) handles clicks on buttons inside #servicesList
+    // See top-level handler registration (below) which reacts to data-action/data-service-id
 
   // Notify that services list has been rendered
   try{ window.dispatchEvent(new CustomEvent('turnex:services-rendered', { detail: { total: (window.__services_cache||[]).length } })); }catch(_){ }

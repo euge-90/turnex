@@ -39,6 +39,31 @@ npm run dev
 # API en: http://localhost:3000/api (health: http://localhost:3000/api/health)
 ```
 
+Playwright smoke tests (optional)
+1. Instalar dependencias (Node.js required):
+```powershell
+cd "c:\Users\ojeda\OneDrive\Escritorio\UADE\2do Cuatri 2025\TESTING DE APLICACIONES (15861)\app_turnex\turnex"
+npm install
+npx playwright install
+```
+2. Levantar un servidor estático para el frontend (ejemplo con Python):
+```powershell
+python -m http.server 8000
+```
+3. Ejecutar tests Playwright:
+```powershell
+npm run test:playwright
+```
+
+CI (GitHub Actions)
+The repository includes a workflow that runs the Playwright smoke tests on pushes and PRs to `main`. The workflow is at `.github/workflows/playwright.yml` and will:
+- Install Node dependencies
+- Start a simple Python static server
+- Run the Playwright test suite
+
+If you prefer different CI behavior (e.g., matrix of browsers or a Docker-based static server), I can update the workflow accordingly.
+
+
 Backend (API con SQLite por defecto):
 1. Abrir una terminal y ubicarse en `server/`.
 2. Instalar dependencias:

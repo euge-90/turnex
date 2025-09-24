@@ -30,3 +30,8 @@ server/node_modules/
 server/.env
 server/.env.*
 !server/.env.example
+
+# Playwright / test artifacts
+playwright-report/
+node_modules/
+tests/playwright/test-results/
