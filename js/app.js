@@ -435,12 +435,8 @@ function setupAuth(){
   window.addEventListener('hashchange', protectHashes);
   protectHashes();
 
-  // Auto show auth modal if not logged on load
-  if(!isLogged()){
-    const modal = document.getElementById('authModal');
-    const m = modal ? new bootstrap.Modal(modal) : null;
-    m?.show();
-  }
+  // Do NOT auto-show auth modal on page load; users should open it manually.
+  // (This intentionally leaves the modal closed by default.)
 
   // Initial UI state
   updateAuthUI();
@@ -480,6 +476,7 @@ function setupAuth(){
   document.getElementById('heroReserveBtn')?.addEventListener('click', (e)=>{
     e.preventDefault();
     if(!isLogged()){
+      // Open login modal when not logged
       const modal = document.getElementById('authModal');
       const m = modal ? new bootstrap.Modal(modal) : null;
       m?.show();
@@ -503,6 +500,48 @@ function setupAuth(){
         if(title && title.textContent?.includes('Ingresar')) toggle.click();
       }
       m?.show();
+    });
+  });
+
+  // Hero search wiring: use hero fields to filter services
+  const heroSearchBtn = document.getElementById('btnHeroSearch');
+  const heroQuery = document.getElementById('heroServiceQuery');
+  const heroLocation = document.getElementById('heroLocation');
+  if(heroSearchBtn){
+    heroSearchBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      // Simple client-side filter by name/description
+      const q = (heroQuery?.value||'').trim().toLowerCase();
+      const loc = (heroLocation?.value||'').trim().toLowerCase();
+      // If user is not logged, encourage signup via modal
+      if(!isLogged() && q.length===0){
+        const modal = document.getElementById('authModal');
+        const m = modal ? new bootstrap.Modal(modal) : null;
+        m?.show();
+        return;
+      }
+      // If a category-like term matches known categories, set the select
+      const categories = ['corte','color','tratamiento','barba','peinado','unas'];
+      const foundCat = categories.find(c=> q.includes(c) || (q.length===0 && loc.length>0));
+      if(foundCat){
+        svcCategory.value = foundCat;
+      }else{
+        svcCategory.value = '';
+      }
+      renderServices();
+      // Scroll to services
+      document.getElementById('servicios')?.scrollIntoView({ behavior:'smooth' });
+    });
+  }
+
+  // Category card clicks: set select and render
+  qsa('.cat-card').forEach(card=>{
+    card.addEventListener('click', (e)=>{
+      const cat = card.dataset.cat || card.getAttribute('data-cat') || '';
+      if(!cat) return;
+      if(svcCategory) svcCategory.value = cat;
+      renderServices();
+      document.getElementById('servicios')?.scrollIntoView({ behavior:'smooth' });
     });
   });
 }
