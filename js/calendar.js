@@ -1,4 +1,4 @@
-import { startOfMonth, endOfMonth, addDays, isWorkingDay, isPast, fmtDateKey, qs, isDateBlocked, getWorkingHoursForDate, SLOT_MINUTES, minutesToTime, timeToMinutes } from './utils.js'
+import { startOfMonth, endOfMonth, addDays, isWorkingDay, isPast, fmtDateKey, /* qs, */ isDateBlocked, getWorkingHoursForDate, SLOT_MINUTES, minutesToTime, timeToMinutes } from './utils.js'
 import { apiGetBookingsByDate } from './api.js'
 
 const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']

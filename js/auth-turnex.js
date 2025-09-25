@@ -1,4 +1,4 @@
-import { isLogged, login, signup, logout, isAdmin, getSession } from './auth.js'
+import { isLogged, login, signup, logout } from './auth.js'
 
 // AuthTurnex: Gestiona modal, validaciones, remember me, loading states y feedback
 export class AuthTurnex {
@@ -143,9 +143,7 @@ export class AuthTurnex {
     } finally { this.setLoading(false) }
   }
 
-  validateEmail (email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  }
+  validateEmail (email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) }
 
   validatePasswords (reset = false) {
     if (!this.isSignup) {

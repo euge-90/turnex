@@ -25,7 +25,7 @@ function fullNameOk (name) {
 }
 
 const phoneRe = /^(?:\+?\d[\d\s().-]{6,}\d)$/
-
+;
 (function initAuthBootstrap () {
   const start = () => {
     const isLocalhost = /^(localhost|127\.0\.0\.1)/.test(location.hostname)
@@ -69,7 +69,7 @@ const phoneRe = /^(?:\+?\d[\d\s().-]{6,}\d)$/
 
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     // Login no requiere nombre ni teléfono; solo email y password
-    const passStrong = (v) => v.length >= 9 && /[a-z]/.test(v) && /[A-Z]/.test(v) && /\d/.test(v) // passStrong remains an arrow function
+    const passStrong = (v) => v.length >= 9 && /[a-z]/.test(v) && /[A-Z]/.test(v) && /\d/.test(v)
 
     function findFeedback (input) {
       return input.parentElement.querySelector('.invalid-feedback') ||
@@ -108,7 +108,6 @@ const phoneRe = /^(?:\+?\d[\d\s().-]{6,}\d)$/
       if (btn) btn.disabled = loading
       if (btn && text) btn.lastChild.nodeValue = ` ${text}`
     }
-    // Use api.js helpers for login/signup to persist session/token correctly
 
     // Submit LOGIN (solo email y password)
     loginForm?.addEventListener('submit', async (e) => {
