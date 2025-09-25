@@ -1,0 +1,23 @@
+[
+  {
+    "id": "svc-1",
+    "name": "Corte clásico",
+    "description": "Corte para dama o caballero",
+    "duration": 45,
+    "price": 1200
+  },
+  {
+    "id": "svc-2",
+    "name": "Coloración balayage",
+    "description": "Balayage con acabado profesional",
+    "duration": 120,
+    "price": 8500
+  },
+  {
+    "id": "svc-3",
+    "name": "Manicura básica",
+    "description": "Manicura rápida y esmaltado",
+    "duration": 40,
+    "price": 1500
+  }
+]
