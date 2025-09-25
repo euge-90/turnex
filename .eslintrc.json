@@ -1,0 +1,15 @@
+{
+  "env": { "browser": true, "es2021": true },
+  "extends": ["standard"],
+  "globals": {
+    "Swal": "readonly",
+    "bootstrap": "readonly",
+    "txToast": "readonly",
+    "QRCode": "readonly",
+    "serviceWorker": "readonly"
+  },
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-console": "off"
+  }
+}
