@@ -38,432 +38,293 @@ const adminSection = qs('#admin');
 const calendarioSection = qs('#calendario');
 const misTurnosSection = qs('#mis-turnos');
 const adminSummaryEl = qs('#adminSummary');
-const adminByDayEl = qs('#adminByDay');
-const adminBookingsEl = qs('#adminBookings');
-const adminHoursEl = qs('#adminHours');
-const btnSaveHours = qs('#btnSaveHours');
-const adminFilterService = qs('#adminFilterService');
-const adminFilterFrom = qs('#adminFilterFrom');
-const adminFilterTo = qs('#adminFilterTo');
-const adminFilterClear = qs('#adminFilterClear');
-const blockedDaysList = qs('#blockedDaysList');
-const adminBlockDate = qs('#adminBlockDate');
-const btnAddBlocked = qs('#btnAddBlocked');
-const blockedRangesList = qs('#blockedRangesList');
-const adminRangeFrom = qs('#adminRangeFrom');
-const adminRangeTo = qs('#adminRangeTo');
-const btnAddRange = qs('#btnAddRange');
-const blockedTimesList = qs('#blockedTimesList');
-const adminTimeDate = qs('#adminTimeDate');
-const adminTimeFrom = qs('#adminTimeFrom');
-const adminTimeTo = qs('#adminTimeTo');
-const btnAddTimeBlock = qs('#btnAddTimeBlock');
-const hoursBanner = qs('#hoursBanner');
-// Admin services
-const adminServicesEl = qs('#adminServices');
-const btnAddService = qs('#btnAddService');
-const svcNameInput = qs('#svcName');
-const svcDescInput = qs('#svcDesc');
-const svcDurationInput = qs('#svcDuration');
-const svcPriceInput = qs('#svcPrice');
-const mainEl = document.querySelector('main');
-const servicesSignupCard = document.getElementById('servicesSignupCard');
+// Configuración de colores para efectos dinámicos
+const colorPalette = {
+  primary: '#FF6B6B',
+  secondary: '#4ECDC4', 
+  accent: '#FFE66D',
+  pastels: [
+    '#FFD6E8', '#B3E5FC', '#C8E6C9', 
+    '#FFF9C4', '#E1BEE7', '#FFCCBC'
+  ]
+};
 
-// Delegated handler for actions inside servicesList (details, book)
-if(servicesList){
-  servicesList.addEventListener('click', (e)=>{
-    const btn = e.target.closest('button[data-action], button[data-service-id], [data-service]');
-    if(!btn) return;
-    // 'details' button
-    if(btn.matches('[data-action="details"]')){
-      const card = btn.closest('.service-card');
-      const svcId = card?.querySelector('[data-service-id]')?.getAttribute('data-service-id') || card?.querySelector('[data-service]')?.getAttribute('data-service');
-      if(svcId){
-        const svc = getServiceByIdCached(svcId);
-        try{ Swal.fire({ title: svc?.name||'Servicio', html: `<p class="text-start">${svc?.description||'Sin descripción'}</p><p class="small text-muted">Duración: ${svc?.duration||'-'} min · Precio: $${svc?.price||'—'}</p>` }); }catch(_){ }
-      }
-      return;
-    }
-    // 'book' button (explicit)
-    if(btn.matches('[data-action="book"]') || btn.matches('[data-service]') || btn.matches('[data-service-id]')){
-      const svcId = btn.getAttribute('data-service') || btn.getAttribute('data-service-id') || (btn.closest('.service-card')?.querySelector('[data-service]')?.getAttribute('data-service'));
-      if(svcId){
-        // set select and navigate to calendario
-        serviceSelect.value = svcId;
-        serviceSelect.dispatchEvent(new Event('change'));
-        // If user logged, go to calendario; otherwise open auth modal for booking
-        if(isLogged()){
-          location.hash = '#calendario';
-          document.getElementById('calendario').scrollIntoView({ behavior:'smooth' });
-        }else{
-          // open auth modal in signup flow to encourage account creation
-          const evt = new CustomEvent('turnex:open-auth', { detail: { mode: 'signup' } });
-          window.dispatchEvent(evt);
-        }
-      }
-    }
-  });
-  // Keyboard accessibility: Enter or Space on focused article triggers book action
-  servicesList.addEventListener('keydown', (e)=>{
-    const el = e.target.closest('.service-card');
-    if(!el) return;
-    if(e.key === 'Enter' || e.key === ' '){
-      e.preventDefault();
-      const svcId = el.getAttribute('data-service-id');
-      if(svcId){
-        serviceSelect.value = svcId;
-        serviceSelect.dispatchEvent(new Event('change'));
-        if(isLogged()){
-          location.hash = '#calendario';
-          document.getElementById('calendario').scrollIntoView({ behavior:'smooth' });
-        }else{
-          window.dispatchEvent(new CustomEvent('turnex:open-auth', { detail:{ mode:'signup' } }));
-        }
-      }
-    }
-  });
-}
+// Datos de profesionales para servicios
+const professionals = [
+  { name: 'Maria González', rating: 4.9, reviews: 127, avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5bb?w=40&h=40&fit=crop&crop=face' },
+  { name: 'Carlos Mendez', rating: 4.8, reviews: 89, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face' },
+  { name: 'Ana Rodriguez', rating: 4.9, reviews: 203, avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face' },
+  { name: 'Laura Martinez', rating: 4.8, reviews: 98, avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=40&h=40&fit=crop&crop=face' },
+  { name: 'Diego Lopez', rating: 4.6, reviews: 74, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face' }
+];
 
-// Admin route guard (top-level)
-function guardAdminRoute(){
-  if(location.hash === '#admin' && !isAdmin()){
-    location.hash = '#servicios';
-    try{ Swal.fire('Acceso restringido','Sección solo para administradores','info'); }catch{}
-  }
-}
+// Inicialización principal
+document.addEventListener('DOMContentLoaded', function() {
+  initColorfulAnimations();
+  initInteractiveElements();
+  initSearchFunctionality();
+  initServiceCardEffects();
+  initScrollEffects();
+  initCategoryFilters();
+  initBusinessFeatures();
+});
 
-// Ensure Admin nav item exists or is removed based on role
-function ensureAdminNavVisible(show){
-  const existing = document.getElementById('navAdminItem');
-  if(show){
-    if(!existing){
-      const ul = document.querySelector('#nav .navbar-nav');
-      if(!ul) return;
-      const li = document.createElement('li');
-      li.className = 'nav-item';
-      li.id = 'navAdminItem';
-      const a = document.createElement('a');
-      a.className = 'nav-link';
-      a.href = '#admin';
-      a.id = 'navAdmin';
-      a.textContent = 'Admin';
-      li.appendChild(a);
-      const buttonsLi = ul.querySelector('li.nav-item.d-flex');
-      if(buttonsLi) ul.insertBefore(li, buttonsLi); else ul.appendChild(li);
-    }
-  }else{
-    if(existing) existing.remove();
-  }
-}
-
-let selectedDateKey = null;
-let selectedTime = null;
-
-async function syncServices(){
-  try{ window.__services_cache = await apiListServices(); }
-  catch{ window.__services_cache = []; }
-  // Notify listeners that services cache is ready
-  try{ window.dispatchEvent(new CustomEvent('turnex:services-synced', { detail: { count: (window.__services_cache||[]).length } })); }catch(_){ }
-}
-
-async function syncMyBookings(){
-  try{ window.__my_bookings = await apiGetMyBookings(); }
-  catch{ window.__my_bookings = []; }
-}
-
-async function syncAdminBookings(){
-  if(!isAdmin()){ window.__admin_bookings = []; return; }
-  try{ window.__admin_bookings = await apiGetMyBookings(); }
-  catch{ window.__admin_bookings = []; }
-}
-
-async function syncTakenForDate(dateKey){
-  try{ const list = await apiGetBookingsByDate(dateKey); window.__taken_slots = window.__taken_slots||{}; window.__taken_slots[dateKey] = list.flatMap(b=>{ const segs = Math.ceil((b.duration||30)/SLOT_MINUTES); const start = timeToMinutes(b.time); return Array.from({length:segs},(_,i)=> minutesToTime(start + i*SLOT_MINUTES)); }); }
-  catch{ /* noop */ }
-}
-
-async function syncConfig(){
-  try{
-    const cfg = await apiGetConfig();
-    setConfig({
-      workingHours: cfg.workingHours || {},
-      blockedDays: cfg.blockedDays || [],
-      blockedDateRanges: cfg.blockedDateRanges || [],
-      blockedTimes: cfg.blockedTimes || {}
-    });
-  }catch{ /* keep local defaults */ }
-}
-
-function getServiceByIdCached(id){
-  const arr = window.__services_cache || [];
-  let svc = arr.find(s=> String(s.id)===String(id));
-  return svc || null;
-}
-
-function detectCategory(s){
-  const name = (s.name||'').toLowerCase();
-  const desc = (s.description||'').toLowerCase();
-  const text = `${name} ${desc}`;
-  if(/barba|perfilado/.test(text)) return 'barba';
-  if(/balayage|mechas|color|ra[ií]z|tinte/.test(text)) return 'color';
-  if(/tratamiento|botox|alisado|anti[- ]?frizz|hidrataci[óo]n/.test(text)) return 'tratamiento';
-  if(/peinado|brushing|plancha|ondas/.test(text)) return 'peinado';
-  if(/corte|caballero|dama|niñ/.test(text)) return 'corte';
-  return '';
-}
-
-function renderServices(){
-  // Render services list from cache (called after sync); if cache empty but loading, a skeleton might be shown elsewhere
-  // Fill service select (prefer API, fallback to local list)
-  const ALL = (window.__services_cache || []).map(s=> ({...s, __cat: detectCategory(s)}));
-  const filter = (svcCategory?.value||'').toLowerCase();
-  const SERVICES = filter ? ALL.filter(s=> s.__cat===filter) : ALL;
-  // Badge: show if we have many services
-  if(servicesNewBadge){
-    if(SERVICES.length > 8){
-      servicesNewBadge.textContent = `+${Math.max(0, SERVICES.length-8)} servicios nuevos`;
-      servicesNewBadge.classList.remove('d-none');
-    }else{
-      servicesNewBadge.classList.add('d-none');
-    }
-  }
-  serviceSelect.innerHTML = `<option value="" disabled selected>Elegí un servicio</option>` +
-    (ALL).map(s=>`<option value="${s.id}">${s.name} — $${s.price}</option>`).join('');
-
-  // Cards
-  const highlightCount = Math.min(4, Math.max(0, ALL.length - 8));
-  const highlightIds = new Set(ALL.slice(-highlightCount).map(s=> String(s.id)));
-  if(SERVICES.length === 0){
-    servicesList.innerHTML = `<div class="col-12"><div class="card card-glass"><div class="card-body text-center text-body-secondary">No hay servicios para mostrar${filter? ' en esta categoría' : ''}. ${isAdmin()? 'Agregá servicios desde el panel Admin.' : ''}</div></div></div>`;
-  }else{
-    servicesList.innerHTML = SERVICES.map(s=>`
-    <div class="col-12 col-sm-6 col-lg-3" role="listitem">
-      <article class="card card-glass service-card h-100" data-service-id="${s.id}" aria-labelledby="svc-${s.id}-title" tabindex="0">
-        <div class="card-body d-flex flex-column">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <h3 id="svc-${s.id}-title" class="h6 m-0">${s.name} ${highlightIds.has(String(s.id)) ? '<span class="badge text-bg-warning ms-1">Nuevo</span>' : ''}</h3>
-            <span class="badge service-badge">$${s.price}</span>
-          </div>
-          ${s.__cat ? `<div class="mb-1"><span class="badge rounded-pill text-bg-secondary text-capitalize">${s.__cat}</span></div>` : ''}
-          ${s.description ? `<div class="d-none d-sm-block"><p class="small m-0 desc">${s.description}</p></div>` : ''}
-          <p class="text-body-secondary small mt-2">Duración aprox. ${s.duration} min</p>
-          <div class="mt-3 d-grid gap-2">
-            <button class="btn btn-outline-secondary btn-sm" data-action="details" type="button" aria-label="Ver detalles de ${s.name}">Detalles</button>
-            <button class="btn btn-warning btn-sm" data-action="book" data-service-id="${s.id}" type="button">Reservar</button>
-          </div>
-        </div>
-      </article>
-    </div>`).join('');
-  }
-
-  // Count label
-  if(svcCount){
-    const total = ALL.length;
-    const shown = SERVICES.length;
-    svcCount.textContent = filter ? `${shown} de ${total}` : `${total} servicios`;
-  }
-
-  // Select service from card
-    // NOTE: we use event delegation instead of binding many listeners
-    // A single delegated handler (registered once during init) handles clicks on buttons inside #servicesList
-    // See top-level handler registration (below) which reacts to data-action/data-service-id
-
-  // Notify that services list has been rendered
-  try{ window.dispatchEvent(new CustomEvent('turnex:services-rendered', { detail: { total: (window.__services_cache||[]).length } })); }catch(_){ }
-}
-
-// Category filter change
-svcCategory && (svcCategory.onchange = renderServices);
-
-function renderServicesSkeleton(){
-  if(!servicesList) return;
-  servicesList.innerHTML = Array.from({length:8}).map(()=>`
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="card card-glass service-card h-100">
-        <div class="card-body">
-          <div class="skeleton skeleton-text" style="width:60%"></div>
-          <div class="skeleton skeleton-text" style="width:90%"></div>
-          <div class="skeleton skeleton-text" style="width:40%"></div>
-          <div class="skeleton skeleton-btn mt-2"></div>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-function renderHoursBanner(){
-  if(!hoursBanner) return;
-  const cfg = getConfig();
-  // working days are Tue-Sat (2..6)
-  const daysLabel = 'Mar–Sáb';
-  // Build min-max range based on configured working hours
-  const hours = cfg.workingHours || {};
-  const opens = [2,3,4,5,6].map(d=> hours[d]?.[0]).filter(Number.isFinite);
-  const closes = [2,3,4,5,6].map(d=> hours[d]?.[1]).filter(Number.isFinite);
-  const minOpen = opens.length? Math.min(...opens): 9;
-  const maxClose = closes.length? Math.max(...closes): 18;
-  const pad = (n)=> String(n).padStart(2,'0');
-  hoursBanner.innerHTML = `<i class="bi bi-clock"></i><span>Horarios laborales: ${daysLabel} · ${pad(minOpen)}:00–${pad(maxClose)}:00</span>`;
-}
-
-function renderTimeSlots(dateKey){
-  const taken = new Set(window.__taken_slots?.[dateKey] || []);
-  const slots = generateTimeSlots(new Date(dateKey));
-  const slotSet = new Set(slots);
-  const svcId = serviceSelect.value;
-  const svc = svcId ? getServiceByIdCached(svcId) : null;
-  const duration = Number.isFinite(svc?.duration) ? svc.duration : 0;
-
-  function canStartAt(t){
-    if(!duration) return true; // if no service selected yet
-    const start = timeToMinutes(t);
-    const segments = Math.ceil(duration / SLOT_MINUTES);
-    for(let i=0;i<segments;i++){
-      const tt = minutesToTime(start + i*SLOT_MINUTES);
-      if(!slotSet.has(tt)) return false; // outside working hours or blocked time
-      if(taken.has(tt)) return false;    // already occupied by some booking
-    }
-    return true;
-  }
-
-  const buttons = slots.map(t=>{
-    const disabled = taken.has(t) || !canStartAt(t);
-    return { t, disabled };
-  });
-  const anyEnabled = buttons.some(b=> !b.disabled);
-  if(buttons.length===0 || !anyEnabled){
-    slotsEl.innerHTML = `<div class="text-body-secondary">No hay horarios disponibles para este día${svc? ' y servicio seleccionado' : ''}. Probá otro día o cambiá el servicio.</div>`;
-  }else{
-    slotsEl.innerHTML = buttons.map(({t,disabled})=>`<button type="button" class="slot ${disabled?'disabled':''}" data-time="${t}" aria-disabled="${disabled}">${t}</button>`).join('');
-  }
-
-  qsa('.slot').forEach(el=>{
-    el.addEventListener('click',()=>{
-      if(el.classList.contains('disabled')) return;
-      qsa('.slot').forEach(s=>s.classList.remove('active'));
-      el.classList.add('active');
-      selectedTime = el.getAttribute('data-time');
-      updateConfirmState();
-    });
-  });
-}
-
-function renderTimeSlotsSkeleton(){
-  if(!slotsEl) return;
-  slotsEl.innerHTML = Array.from({length:8}).map(()=>`<div class="skeleton skeleton-btn"></div>`).join('');
-}
-
-function updateConfirmState(){
-  const hasAll = selectedDateKey && selectedTime && serviceSelect.value && nameInput.value?.trim().length>=2;
-  btnConfirm.disabled = !hasAll;
-}
-
-function renderMyBookings(){
-  const session = getSession();
-  if(!session){ myBookingsEl.innerHTML = '<div class="text-body-secondary">Iniciá sesión para ver tus turnos.</div>'; return; }
-  const items = window.__my_bookings || [];
-  if(!items.length){ myBookingsEl.innerHTML = '<div class="text-body-secondary">Sin turnos por ahora.</div>'; return; }
-  myBookingsEl.innerHTML = items.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)).map(b=>{
-    const svc = getServiceByIdCached(b.serviceId);
-    const desc = svc?.description && svc.description.trim().length? `<div class="small text-body-secondary">${svc.description}</div>` : '';
-    const dur = Number.isFinite(svc?.duration) ? `<div class="small text-body-secondary">Duración aprox. ${svc.duration} min</div>` : '';
-      const extras = (desc || dur) ? `<div class="d-none d-sm-block">${desc}${dur}</div>` : '';
-      return `
-    <div class="col-12 col-md-6">
-      <div class="card booking-card">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-semibold">${svc?.name || 'Servicio'}</div>
-                ${extras}
-            <div class="small text-body-secondary">${b.date} · ${b.time}</div>
-          </div>
-          <button class="btn btn-sm btn-outline-danger" data-cancel="${b.id}">Cancelar</button>
-        </div>
-      </div>
-    </div>`
-  }).join('');
-
-  qsa('[data-cancel]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const id = btn.getAttribute('data-cancel');
-      const res = await Swal.fire({
-        title:'¿Cancelar turno?',
-        text:'Esta acción no se puede deshacer',
-        icon:'warning', showCancelButton:true, confirmButtonText:'Sí, cancelar', cancelButtonText:'No'
-      });
-      if(res.isConfirmed){
-        try{
-          await apiCancelBooking(id);
-          Swal.fire('Cancelado','Tu turno fue cancelado','success');
-          if(window.txToast){ window.txToast({ type:'success', text:'Turno cancelado' }); }
-          await Promise.all([
-            syncMyBookings(),
-            syncAdminBookings(),
-            selectedDateKey ? syncTakenForDate(selectedDateKey) : Promise.resolve()
-          ]);
-          renderMyBookings();
-          if(selectedDateKey) renderTimeSlots(selectedDateKey);
-          renderAdmin();
-        }catch(err){ Swal.fire('Error', err.message, 'error'); }
-      }
-    });
-  });
-}
-
-function setupAuth(){
-  const heroReserveCta = document.getElementById('heroReserveCta');
-  // Helper to toggle UI by auth state
-  const updateAuthUI = () => {
-    const logged = isLogged();
-    const session = getSession();
-    // Navbar groups
-    authButtons?.classList.toggle('d-none', logged);
-    userMenu?.classList.toggle('d-none', !logged);
-    if(userNameEl){ userNameEl.textContent = (session?.name && session.name.trim()) || (session?.email || 'Usuario'); }
-    if(userAvatarInitial){
-      const from = (session?.name && session.name.trim()) || (session?.email || 'U');
-      const init = (from.trim()[0] || 'U').toUpperCase();
-      userAvatarInitial.textContent = init;
-    }
-    // Legacy buttons
-    btnLogout?.classList.toggle('d-none', !logged);
-    btnLogin?.classList.toggle('d-none', logged);
-    btnSignup?.classList.toggle('d-none', logged);
-    // Hero states
-    heroButtonsOut?.classList.toggle('d-none', logged);
-    heroButtonsIn?.classList.toggle('d-none', !logged);
-    if(servicesSignupCard) servicesSignupCard.classList.toggle('d-none', logged);
-    // Sections and nav
-    ensureAdminNavVisible(isAdmin());
-    adminSection?.classList.toggle('d-none', !isAdmin());
-    calendarioSection?.classList.toggle('d-none', !logged);
-    misTurnosSection?.classList.toggle('d-none', !logged);
-    const myNavLi = navMyBookings?.closest('li');
-    if(myNavLi) myNavLi.classList.toggle('d-none', !logged);
+// Animaciones coloridas al aparecer elementos
+function initColorfulAnimations() {
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
   };
-  const auth = new AuthTurnex({
-    onSuccess: async (event)=>{
-      // Refresh UI on login/logout
-      updateAuthUI();
 
-      await Promise.all([syncMyBookings(), syncAdminBookings()]);
-      renderMyBookings();
-      renderAdmin();
-
-      if(event==='login'){
-        if(isAdmin()){
-          location.hash = '#admin';
-        }else{
-          location.hash = '#calendario';
-          document.getElementById('calendario')?.scrollIntoView({ behavior:'smooth' });
-        }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, index) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0) scale(1)';
+        }, index * 150);
       }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.service-card, .testimonial-card, .stat-item, .how-it-works-card, .feature-card, .business-card').forEach((el) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px) scale(0.95)';
+    el.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    observer.observe(el);
+  });
+}
+
+// Inicializar filtros de categorías
+function initCategoryFilters() {
+  const categoryButtons = document.querySelectorAll('.category-btn');
+  const serviceCards = document.querySelectorAll('.service-card');
+
+  categoryButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const category = this.dataset.category;
+            
+      categoryButtons.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+            
+      serviceCards.forEach((card, index) => {
+        const cardCategory = card.dataset.category || 'all';
+                
+        if (category === 'all' || cardCategory === category) {
+          card.style.display = 'block';
+          setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0) scale(1)';
+          }, index * 100);
+        } else {
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(20px) scale(0.95)';
+          setTimeout(() => {
+            card.style.display = 'none';
+          }, 300);
+        }
+      });
+    });
+  });
+}
+
+// Funciones de negocio
+function initBusinessFeatures() {
+  document.querySelectorAll('.app-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const platform = this.textContent.includes('App Store') ? 'iOS' : 'Android';
+      showAppDownloadModal(platform);
+    });
+  });
+
+  document.querySelectorAll('.business-card .btn-business').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const cardTitle = this.closest('.business-card').querySelector('h4').textContent;
+      showBusinessInfoModal(cardTitle);
+    });
+  });
+}
+
+// Elementos interactivos
+function initInteractiveElements() {
+  document.querySelectorAll('.service-card').forEach((card, index) => {
+    const pastelColor = colorPalette.pastels[index % colorPalette.pastels.length];
+        
+    card.addEventListener('mouseenter', function() {
+      this.style.background = `linear-gradient(135deg, ${pastelColor}20 0%, ${colorPalette.primary}10 100%)`;
+      this.style.borderColor = pastelColor;
+    });
+
+    card.addEventListener('mouseleave', function() {
+      this.style.background = '#FFFFFF';
+      this.style.borderColor = 'transparent';
+    });
+  });
+
+  document.querySelectorAll('.btn-accent, .btn-book').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      createColorfulRipple(this, e);
+    });
+  });
+}
+
+// Búsqueda interactiva
+function initSearchFunctionality() {
+  const searchInputs = document.querySelectorAll('.search-form input');
+  const searchButton = document.querySelector('.search-form .btn-accent');
+
+  searchInputs.forEach(input => {
+    input.addEventListener('focus', function() {
+      this.style.borderColor = colorPalette.secondary;
+      this.style.boxShadow = `0 0 0 3px ${colorPalette.secondary}30`;
+    });
+
+    input.addEventListener('blur', function() {
+      this.style.borderColor = '#E2E8F0';
+      this.style.boxShadow = 'none';
+    });
+  });
+
+  searchButton.addEventListener('click', function() {
+    const servicio = searchInputs[0].value.toLowerCase();
+    const zona = searchInputs[1].value.toLowerCase();
+    performColorfulSearch(servicio, zona);
+  });
+
+  // Suggestion tags
+  document.querySelectorAll('.suggestion-tag').forEach(tag => {
+    tag.addEventListener('click', function() {
+      searchInputs[0].value = this.textContent;
+      performColorfulSearch(this.textContent.toLowerCase(), '');
+    });
+  });
+}
+
+// Efectos en service cards
+function initServiceCardEffects() {
+  document.querySelectorAll('.service-card').forEach(card => {
+    const img = card.querySelector('img');
+    if (img) {
+      img.addEventListener('mouseenter', function() {
+        this.style.filter = 'brightness(110%) saturate(120%)';
+      });
+      img.addEventListener('mouseleave', function() {
+        this.style.filter = 'brightness(100%) saturate(100%)';
+      });
     }
   });
 
-  // Gate protected links when not logged
-  document.querySelectorAll('#nav a.nav-link, .hero a.btn, a[href="#calendario"], a[href="#mis-turnos"], a[href="#admin"]').forEach(a=>{
-    a.addEventListener('click', (e)=>{
-      if(!isLogged()){
+  document.querySelectorAll('.btn-book').forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      const serviceCard = this.closest('.service-card');
+      const serviceName = serviceCard.querySelector('.service-title').textContent;
+      const servicePrice = serviceCard.querySelector('.price-amount').textContent;
+      showBookingModal(serviceName, servicePrice);
+    });
+  });
+}
+
+// Efectos de scroll
+function initScrollEffects() {
+  window.addEventListener('scroll', function() {
+    const scrolled = window.pageYOffset;
+    const navbar = document.querySelector('.navbar');
+        
+    if (scrolled > 100) {
+      navbar.style.background = `linear-gradient(135deg, ${colorPalette.primary}95 0%, ${colorPalette.secondary}95 100%)`;
+      navbar.style.backdropFilter = 'blur(20px)';
+    } else {
+      navbar.style.background = `linear-gradient(135deg, ${colorPalette.primary} 0%, ${colorPalette.secondary} 100%)`;
+    }
+  });
+}
+
+// Modal de reserva
+function showBookingModal(serviceName, price) {
+  const modalHTML = `
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: 3px solid ${colorPalette.primary};">
+          <div class="modal-header" style="background: ${colorPalette.pastels[0]}40; border-radius: 17px 17px 0 0;">
+            <h5 class="modal-title" style="color: ${colorPalette.primary}; font-weight: 700;">
+              🎉 ¡Reservar ${serviceName}!
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center" style="padding: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">✨</div>
+            <h4 style="color: ${colorPalette.primary}; margin-bottom: 1rem;">${serviceName}</h4>
+            <p style="font-size: 2rem; color: ${colorPalette.secondary}; font-weight: 700; margin-bottom: 1.5rem;">${price}</p>
+            <p style="color: #4A5568; margin-bottom: 2rem;">
+              ¡Pronto tendrás acceso al sistema completo de reservas! 
+              Mientras tanto, puedes contactarnos directamente.
+            </p>
+            <div class="d-grid gap-2">
+              <button class="btn" onclick="contactWhatsApp('${serviceName}')" 
+                  style="background: ${colorPalette.primary}; color: white; border-radius: 25px; padding: 12px; font-weight: 600;">
+                📱 Contactar por WhatsApp
+              </button>
+              <button class="btn" onclick="contactPhone('${serviceName}')"
+                  style="background: ${colorPalette.accent}; color: #2D3748; border-radius: 25px; padding: 12px; font-weight: 600;">
+                📞 Llamar Ahora
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+    
+  showModal(modalHTML, 'bookingModal');
+}
+
+// Modal para descarga de app
+function showAppDownloadModal(platform) {
+  const modalHTML = `
+    <div class="modal fade" id="appModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: 3px solid ${colorPalette.secondary};">
+          <div class="modal-header" style="background: ${colorPalette.pastels[1]}40; border-radius: 17px 17px 0 0;">
+            <h5 class="modal-title" style="color: ${colorPalette.primary}; font-weight: 700;">
+              📱 Descarga Turnex para ${platform}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center" style="padding: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
+            <h4 style="color: ${colorPalette.primary}; margin-bottom: 1rem;">¡Próximamente en ${platform}!</h4>
+            <p style="color: #4A5568; margin-bottom: 2rem;">
+              Estamos desarrollando nuestra app móvil. Mientras tanto, usa nuestra versión web.
+            </p>
+            <button class="btn" onclick="subscribeToUpdates()" 
+                style="background: ${colorPalette.secondary}; color: white; border-radius: 25px; padding: 12px 30px; font-weight: 600;">
+              🔔 Notificarme cuando esté lista
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+    
+  showModal(modalHTML, 'appModal');
+}
+
+// Modal para información de negocio
+function showBusinessInfoModal(feature) {
+  const businessInfo = {
+    'Gestión completa': 'Dashboard intuitivo, calendario sincronizado, base de datos de clientes',
+    'Aumenta tus ventas': 'Perfil en marketplace, marketing automatizado, sistema de reseñas',
+    'Reduce cancelaciones': 'Recordatorios automáticos, políticas de cancelación, estadísticas'
+  };
+    
+  const modalHTML = `
+    <div class="modal fade" id="businessInfoModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: 3px solid ${colorPalette.accent};">
+          <div class="modal-header" style="background: ${colorPalette.pastels[3]}40; border-radius: 17px 17px 0 0;">
+            <h5 class=
         const href = a.getAttribute('href')||'';
         if(href==='#servicios') return;
         e.preventDefault();

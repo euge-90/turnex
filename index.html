@@ -15,602 +15,674 @@
         }
       } catch(_){}
     })();
-  </script>
-  <meta name="description" content="Reservá servicios de peluquería y estética: corte, color, barbería, uñas y más. Elegí día y hora, confirmación al instante." />
-  <meta name="robots" content="index,follow" />
-  <meta property="og:title" content="Turnex — Turnos Peluquería" />
-  <meta property="og:description" content="Reservá servicios de peluquería y estética: corte, color, barbería, uñas y más. Elegí día y hora, confirmación al instante." />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://euge-90.github.io/turnex/assets/images/logo.svg" />
-  <meta property="og:url" content="https://euge-90.github.io/turnex/" />
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Turnex — Turnos Peluquería" />
-  <meta name="twitter:description" content="Reservá servicios de peluquería y estética: corte, color, barbería, uñas y más. Elegí día y hora, confirmación al instante." />
-  <meta name="twitter:image" content="https://euge-90.github.io/turnex/assets/images/logo.svg" />
-  <link rel="canonical" href="https://euge-90.github.io/turnex/" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <meta name="theme-color" content="#8B4A9C" />
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/styles.css?v=20250920-1">
-  <link rel="stylesheet" href="css/responsive.css?v=20250920-1">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "HairSalon",
-    "name": "Turnex",
-    "url": "https://euge-90.github.io/turnex/",
-    "logo": "https://euge-90.github.io/turnex/assets/images/logo.svg",
-    "description": "Reserva de turnos para peluquería unisex — simple, moderna y mobile-first.",
-    "openingHours": [
-      "Tu-Sa 09:00-18:00"
-    ],
-    "priceRange": "$$",
-    "sameAs": []
-  }
-  </script>
-  <!-- Optional: set API base via meta for production deployments -->
-  <!-- Backend en Render -->
-  <!-- <meta name="api-base" content="https://turnex-api.onrender.com/api"> -->
-  <!-- Temporal para desarrollo local: -->
-  <meta name="api-base" content="http://localhost:3000/api">
-  <script>
-    (function(){
-      var m = document.querySelector('meta[name="api-base"]');
-      if(m && m.content && m.content.trim()){
-        var content = m.content.trim();
-        var isPageLocal = ['localhost','127.0.0.1'].includes(location.hostname);
-        var pointsToLocal = /^http:\/\/(localhost|127\.0\.0\.1):\d+\/api$/.test(content);
-        // If the page is NOT local but meta points to localhost API, switch to production API to avoid failed fetch/mixed content
-        if(!isPageLocal && pointsToLocal){
-          window.API_BASE = 'https://turnex-api.onrender.com/api';
-        }else{
-          window.API_BASE = content;
-        }
-      }
-    })();
-  </script>
-</head>
-<body>
-  <a href="#servicios" class="visually-hidden-focusable skip-link">Saltar al contenido</a>
-  <header class="navbar navbar-expand-lg sticky-top bg-body">
-    <div class="container">
-    <a class="navbar-brand d-flex align-items-center gap-2" href="#" aria-label="Inicio">
-  <img src="assets/images/logo.svg" alt="Turnex logo" width="32" height="32" loading="lazy" />
-       <span class="fw-bold text-gradient">Turnex</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <nav class="collapse navbar-collapse" id="nav">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
-          <li class="nav-item"><a class="nav-link" href="#servicios">Servicios</a></li>
-          <li class="nav-item"><a class="nav-link" href="#calendario">Calendario</a></li>
-          <li class="nav-item"><a class="nav-link" href="#mis-turnos" id="navMyBookings">Mis turnos</a></li>
-          <li class="nav-item d-none" id="navAdminItem"><a class="nav-link" href="#admin" id="navAdmin">Admin</a></li>
-          <li class="nav-item">
-            <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2" id="btnThemeToggle" type="button" title="Tema claro/oscuro" aria-label="Cambiar tema">
-              <i class="bi bi-moon-stars" aria-hidden="true"></i>
-              <span class="d-none d-sm-inline">Tema</span>
-            </button>
-          </li>
-          <li class="nav-item d-flex gap-2 align-items-center">
-            <!-- Estado NO LOGUEADO -->
-            <div id="authButtons" class="d-flex gap-2">
-              <button class="btn btn-outline-secondary" id="btnSignup" data-auth-open="signup">Crear cuenta</button>
-              <button class="btn btn-primary" id="btnLogin" data-auth-open="login">Ingresar</button>
-            </div>
-            <!-- Estado LOGUEADO -->
-            <div id="userMenu" class="dropdown d-none">
-              <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="avatar-initial" id="userAvatarInitial" aria-hidden="true">U</span>
-                <span id="userName">Usuario</span>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#mis-turnos" id="navDashboard">Mi Dashboard</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#" id="navLogout">Cerrar sesión</a></li>
-              </ul>
-            </div>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
-  <main>
-    <!-- Hero (Search-centric) -->
-    <section class="hero-search py-5 bg-body" role="region" aria-labelledby="heroTitle">
+  <!doctype html>
+  <html lang="es" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Turnex — Reservá servicios de belleza y bienestar</title>
+    <script>
+      // Apply saved theme ASAP to avoid flash
+      (function(){
+        try {
+          var saved = localStorage.getItem('turnex-theme');
+          if(saved === 'dark' || saved === 'light') document.documentElement.setAttribute('data-bs-theme', saved);
+          else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+            document.documentElement.setAttribute('data-bs-theme','dark');
+          }
+        } catch(_){ }
+      })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
       <div class="container">
-        <h1 id="heroTitle" class="display-6 fw-semibold text-center mb-2">Reserva servicios de belleza en tu zona</h1>
-        <p class="text-center text-body-secondary mb-4">Encontrá y reservá con los mejores profesionales cerca de vos</p>
-
-        <form class="search-bar d-flex flex-column flex-md-row gap-2 justify-content-center" role="search" aria-label="Buscar servicios">
-          <div class="input-group input-group-lg" style="max-width:480px">
-            <span class="input-group-text" aria-hidden="true"><i class="bi bi-search"></i></span>
-            <label for="heroServiceQuery" class="visually-hidden">Servicio</label>
-            <input id="heroServiceQuery" name="q" type="search" class="form-control" placeholder="¿Qué servicio necesitás? (corte, color, uñas...)" aria-label="Servicio" />
-          </div>
-          <div class="input-group input-group-lg" style="max-width:360px">
-            <span class="input-group-text" aria-hidden="true"><i class="bi bi-geo-alt"></i></span>
-            <label for="heroLocation" class="visually-hidden">Ubicación</label>
-            <input id="heroLocation" name="location" type="text" class="form-control" placeholder="¿Dónde?" value="Buenos Aires" aria-label="Ubicación" />
-          </div>
-          <button type="submit" class="btn btn-primary btn-lg" id="btnHeroSearch" aria-label="Buscar disponibilidad"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar disponibilidad</button>
-        </form>
-
-        <!-- Estado NO LOGUEADO: CTA visibles -->
-        <div id="heroButtonsOut" class="d-flex flex-column flex-sm-row gap-2 justify-content-center mt-3">
-          <button class="btn btn-warning btn-lg" data-auth-open="signup" aria-haspopup="dialog">Registrarse GRATIS</button>
-          <button class="btn btn-outline-secondary btn-lg" data-auth-open="login" aria-haspopup="dialog">Ya tengo cuenta</button>
-        </div>
-
-        <!-- Estado LOGUEADO: CTA de reserva -->
-        <div id="heroButtonsIn" class="d-none d-flex justify-content-center mt-3">
-          <button class="btn btn-warning btn-lg" id="heroReserveBtn">Reservar Nuevo Turno</button>
+        <a class="navbar-brand" href="#">✂️ Turnex</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="#servicios">Servicios</a></li>
+            <li class="nav-item"><a class="nav-link" href="#como-funciona">Cómo funciona</a></li>
+            <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+            <li class="nav-item"><button class="btn btn-accent ms-2">Ingresar</button></li>
+          </ul>
         </div>
       </div>
-    </section>
+    </nav>
 
-    <!-- Categories (Fresha-style) -->
-    <section class="categories py-5" aria-labelledby="categoriesTitle">
+    <!-- Hero Section -->
+    <section class="hero">
       <div class="container">
-        <h2 id="categoriesTitle" class="h4 fw-semibold mb-3">Explorá por categoría</h2>
-        <div class="cat-scroll position-relative" role="list" aria-label="Categorías de servicios">
-          <div class="row g-3 m-0">
-            <!-- Category items: use role=button for accessibility and keep data-cat for JS hooks -->
-            <div class="col-6 col-md-4 col-lg-2">
-              <a href="#servicios" role="button" class="cat-card" data-cat="corte" aria-label="Corte" tabindex="0" aria-pressed="false">
-                <span class="cat-bg" style="background-image:url('assets/images/categories/corte.svg')" aria-hidden="true"></span>
-                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-scissors"></i></div>
-                <div class="cat-text">
-                  <div class="cat-name">Peluquería</div>
-                  <div class="cat-count" id="catCount-corte">—</div>
-                </div>
-              </a>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-              <a href="#servicios" role="button" class="cat-card" data-cat="color" aria-label="Color" tabindex="0" aria-pressed="false">
-                <span class="cat-bg" style="background-image:url('assets/images/categories/color.svg')" aria-hidden="true"></span>
-                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-palette"></i></div>
-                <div class="cat-text">
-                  <div class="cat-name">Color</div>
-                  <div class="cat-count" id="catCount-color">—</div>
-                </div>
-              </a>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-              <a href="#servicios" role="button" class="cat-card" data-cat="tratamiento" aria-label="Estética y tratamientos" tabindex="0" aria-pressed="false">
-                <span class="cat-bg" style="background-image:url('assets/images/categories/tratamiento.svg')" aria-hidden="true"></span>
-                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-stars"></i></div>
-                <div class="cat-text">
-                  <div class="cat-name">Estética</div>
-                  <div class="cat-count" id="catCount-tratamiento">—</div>
-                </div>
-              </a>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-              <a href="#servicios" role="button" class="cat-card" data-cat="barba" aria-label="Barbería" tabindex="0" aria-pressed="false">
-                <span class="cat-bg" style="background-image:url('assets/images/categories/barba.svg')" aria-hidden="true"></span>
-                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-person-fill"></i></div>
-                <div class="cat-text">
-                  <div class="cat-name">Barberías</div>
-                  <div class="cat-count" id="catCount-barba">—</div>
-                </div>
-              </a>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-              <a href="#servicios" role="button" class="cat-card" data-cat="peinado" aria-label="Peinados" tabindex="0" aria-pressed="false">
-                <span class="cat-bg" style="background-image:url('assets/images/categories/peinado.svg')" aria-hidden="true"></span>
-                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-brush"></i></div>
-                <div class="cat-text">
-                  <div class="cat-name">Peinados</div>
-                  <div class="cat-count" id="catCount-peinado">—</div>
-                </div>
-              </a>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-              <a href="#servicios" role="button" class="cat-card" data-cat="unas" aria-label="Uñas" data-cat-fallback="tratamiento" tabindex="0" aria-pressed="false">
-                <span class="cat-bg" style="background-image:url('assets/images/categories/unas.svg')" aria-hidden="true"></span>
-                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-heart"></i></div>
-                <div class="cat-text">
-                  <div class="cat-name">Uñas</div>
-                  <div class="cat-count" id="catCount-unas">—</div>
-                </div>
-              </a>
+        <div class="row align-items-center min-vh-100">
+          <div class="col-lg-6">
+            <div class="hero-badge mb-3"><span class="badge-icon">🔥</span><span>¡Más de 1,200 turnos reservados este mes!</span></div>
+            <h1 class="hero-title">Reservá servicios de <span class="text-accent">belleza y bienestar</span> cerca de ti</h1>
+            <p class="hero-subtitle">Descubrí los mejores salones, barberías y centros de estética en Buenos Aires. <strong>Reservá online, pagá fácil y disfrutá de tratamientos únicos.</strong></p>
+
+            <div class="hero-search">
+              <div class="search-form d-flex gap-2 align-items-center">
+                <div class="search-input-group"><span class="search-icon">🔍</span><input type="text" placeholder="Corte, color, tratamiento..." class="form-control"></div>
+                <div class="search-input-group"><span class="search-icon">📍</span><input type="text" placeholder="Palermo, Belgrano, Centro..." class="form-control"></div>
+                <button class="btn-accent">Encontrar <span class="btn-arrow">→</span></button>
+              </div>
+              <div class="quick-suggestions mt-3"><span class="suggestion-label">Populares:</span><button class="suggestion-tag">Corte mujer</button><button class="suggestion-tag">Barba</button><button class="suggestion-tag">Manicura</button><button class="suggestion-tag">Coloración</button></div>
             </div>
 
-            <!-- See all -->
-            <div class="col-6 col-md-4 col-lg-2">
-              <a href="#servicios" role="button" class="cat-card cat-see-all" data-cat="all" aria-label="Ver todas las categorías" tabindex="0" aria-pressed="false">
-                <div class="cat-icon-wrap" aria-hidden="true"><i class="bi bi-grid"></i></div>
-                <div class="cat-text">
-                  <div class="cat-name">Ver todas</div>
-                  <div class="cat-count small text-body-secondary">Explorar servicios</div>
-                </div>
-              </a>
+            <div class="trust-indicators d-flex gap-3 mt-4">
+              <div class="trust-item"><div class="trust-icon">⚡</div><div class="trust-content"><strong>Reserva instantánea</strong><span>Confirmación al instante</span></div></div>
+              <div class="trust-item"><div class="trust-icon">💳</div><div class="trust-content"><strong>Pago seguro</strong><span>Online o en el local</span></div></div>
+              <div class="trust-item"><div class="trust-icon">⭐</div><div class="trust-content"><strong>4.9/5 estrellas</strong><span>+500 reseñas verificadas</span></div></div>
             </div>
-            <span class="cat-fade cat-fade-left d-sm-none"></span>
-            <span class="cat-fade cat-fade-right d-sm-none"></span>
           </div>
-        </div>
-      </div>
-    </section>
 
-  <!-- Testimonios (con ubicaciones) -->
-    <section class="py-5 border-top border-bottom bg-body">
-      <div class="container">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-          <h2 class="h4 fw-semibold m-0">Lo que dicen nuestros clientes</h2>
-          <span class="badge text-bg-warning-subtle text-warning-emphasis d-none d-sm-inline"><i class="bi bi-stars me-1"></i>4.8/5</span>
-        </div>
-        <div class="row g-3 align-items-stretch">
-          <div class="col-12 col-md-4">
-            <div class="testimonial-card h-100 reveal" aria-label="Reseña de Sofía">
-              <div class="d-flex align-items-center gap-3 mb-2">
-                <div class="testimonial-avatar" aria-hidden="true">S</div>
-                <div>
-                  <div class="fw-semibold">Sofía</div>
-                  <div class="small text-body-secondary">Cliente</div>
-                </div>
+          <div class="col-lg-6">
+            <div class="hero-image-container">
+              <div class="floating-card floating-card-1"><div class="service-mini"><div class="service-mini-icon">💇‍♀️</div><div class="service-mini-info"><div class="service-mini-name">Corte y Peinado</div><div class="service-mini-price">Desde $3.500</div></div><div class="service-mini-rating">⭐ 4.9</div></div></div>
+              <div class="floating-card floating-card-2"><div class="service-mini"><div class="service-mini-icon">✂️</div><div class="service-mini-info"><div class="service-mini-name">Corte + Barba</div><div class="service-mini-price">Desde $3.800</div></div><div class="service-mini-rating">⭐ 4.8</div></div></div>
+              <div class="floating-card floating-card-3"><div class="availability-card"><div class="availability-header"><span class="availability-icon">📅</span><span>Disponible hoy</span></div><div class="availability-times"><span class="time-slot">14:30</span><span class="time-slot">16:00</span><span class="time-slot">18:30</span></div></div></div>
+              <div class="hero-image"><img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=500&fit=crop&crop=center" alt="Salón de belleza profesional" class="img-fluid">
+                <div class="floating-review"><div class="review-content"><div class="review-stars">⭐⭐⭐⭐⭐</div><div class="review-text">"¡Increíble servicio!"</div><div class="review-author">- María, Palermo</div></div></div>
               </div>
-              <div class="stars" aria-hidden="true">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-              </div>
-              <p class="m-0 mt-2">“Reservar es súper fácil, lo uso siempre para mis turnos.”<br><span class="small text-body-secondary">Buenos Aires, Argentina</span></p>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="testimonial-card h-100 reveal" aria-label="Reseña de Martín">
-              <div class="d-flex align-items-center gap-3 mb-2">
-                <div class="testimonial-avatar" aria-hidden="true">M</div>
-                <div>
-                  <div class="fw-semibold">Martín</div>
-                  <div class="small text-body-secondary">Cliente</div>
-                </div>
-              </div>
-              <div class="stars" aria-hidden="true">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
-              </div>
-              <p class="m-0 mt-2">“La mejor app para encontrar salones cerca de casa.”<br><span class="small text-body-secondary">Córdoba, Argentina</span></p>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="testimonial-card h-100 reveal" aria-label="Reseña de Camila">
-              <div class="d-flex align-items-center gap-3 mb-2">
-                <div class="testimonial-avatar" aria-hidden="true">C</div>
-                <div>
-                  <div class="fw-semibold">Camila</div>
-                  <div class="small text-body-secondary">Cliente</div>
-                </div>
-              </div>
-              <div class="stars" aria-hidden="true">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-              </div>
-              <p class="m-0 mt-2">“Los recordatorios me facilitan mucho la vida.”<br><span class="small text-body-secondary">Rosario, Argentina</span></p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Stats (confianza) -->
-    <section class="stats py-5 bg-body-tertiary">
+    <!-- Features & Services sections (trimmed for brevity in file) -->
+    <section class="services-section" id="como-funciona">
       <div class="container">
-        <div class="row g-3 text-center">
-          <div class="col-6 col-lg-3">
-            <div class="stat-card"><div class="stat-value">+10.000</div><div class="stat-label">Profesionales confían en Turnex</div></div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="stat-card"><div class="stat-value">+50.000</div><div class="stat-label">Turnos reservados</div></div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="stat-card"><div class="stat-value">+15</div><div class="stat-label">Ciudades en Argentina</div></div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="stat-card"><div class="stat-value">4.8★</div><div class="stat-label">Rating promedio</div></div>
-          </div>
+        <h2 class="section-title">¿Cómo funciona?</h2>
+        <p class="section-subtitle">Reservar tu turno es súper fácil en solo 3 pasos</p>
+        <div class="row mb-5">
+          <div class="col-lg-4 mb-4"><div class="how-it-works-card"><div class="step-number">1</div><div class="step-icon">🔍</div><h4>Encuentra tu servicio</h4><p>Explora servicios cerca de ti, compara precios, lee reseñas y elige el profesional ideal.</p></div></div>
+          <div class="col-lg-4 mb-4"><div class="how-it-works-card"><div class="step-number">2</div><div class="step-icon">📅</div><h4>Reserva al instante</h4><p>Selecciona tu fecha y horario preferido. Confirmación inmediata sin esperas ni llamadas.</p></div></div>
+          <div class="col-lg-4 mb-4"><div class="how-it-works-card"><div class="step-number">3</div><div class="step-icon">✨</div><h4>Disfruta tu experiencia</h4><p>Recibe recordatorios automáticos, paga fácil y califica tu experiencia.</p></div></div>
         </div>
       </div>
     </section>
 
-    <!-- App download -->
-    <section class="app-download py-5">
+    <!-- Footer + scripts -->
+    <footer class="mt-5 py-4 text-center">
+      <div class="container">© Turnex — Todos los derechos reservados</div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+  </html>
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-accent ms-2">Ingresar</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
       <div class="container">
-        <div class="row g-4 align-items-center">
-          <div class="col-12 col-md-6">
-            <h2 class="h4 fw-semibold mb-2">Descargá la app de Turnex</h2>
-            <p class="text-body-secondary">Reservá desde tu celular en cualquier momento.</p>
-            <div class="d-flex gap-2 mt-3 flex-wrap">
-              <a class="btn btn-dark" id="btnAppStore"><i class="bi bi-apple me-1"></i>App Store</a>
-              <a class="btn btn-dark" id="btnGooglePlay"><i class="bi bi-google-play me-1"></i>Google Play</a>
+        <div class="row align-items-center min-vh-100">
+          <div class="col-lg-6">
+            <div class="hero-badge mb-3">
+              <span class="badge-icon">🔥</span>
+              <span>¡Más de 1,200 turnos reservados este mes!</span>
             </div>
-          </div>
-          <div class="col-12 col-md-6 d-flex justify-content-center">
-            <div class="qr-mock" aria-label="QR para descargar app" data-qr="https://euge-90.github.io/turnex/">
-              <!-- Placeholder QR (ficticio) -->
-              <svg viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Código QR de ejemplo">
-                <rect width="33" height="33" fill="#ffffff"/>
-                <!-- Finder patterns -->
-                <g fill="#000000">
-                  <!-- Top-left -->
-                  <rect x="0" y="0" width="7" height="7"/>
-                  <rect x="1.5" y="1.5" width="4" height="4" fill="#ffffff"/>
-                  <rect x="2.5" y="2.5" width="2" height="2"/>
-                  <!-- Top-right -->
-                  <rect x="26" y="0" width="7" height="7"/>
-                  <rect x="27.5" y="1.5" width="4" height="4" fill="#ffffff"/>
-                  <rect x="28.5" y="2.5" width="2" height="2"/>
-                  <!-- Bottom-left -->
-                  <rect x="0" y="26" width="7" height="7"/>
-                  <rect x="1.5" y="27.5" width="4" height="4" fill="#ffffff"/>
-                  <rect x="2.5" y="28.5" width="2" height="2"/>
-                </g>
-                <!-- Random modules to simulate a QR pattern (purely decorativo) -->
-                <g fill="#000000">
-                  <rect x="9" y="2" width="1" height="1"/>
-                  <rect x="11" y="3" width="1" height="1"/>
-                  <rect x="13" y="2" width="1" height="1"/>
-                  <rect x="15" y="3" width="1" height="1"/>
-                  <rect x="17" y="2" width="1" height="1"/>
-                  <rect x="19" y="3" width="1" height="1"/>
-
-                  <rect x="9" y="7" width="1" height="1"/>
-                  <rect x="10" y="9" width="1" height="1"/>
-                  <rect x="12" y="8" width="1" height="1"/>
-                  <rect x="14" y="9" width="1" height="1"/>
-                  <rect x="16" y="8" width="1" height="1"/>
-                  <rect x="18" y="9" width="1" height="1"/>
-                  <rect x="20" y="8" width="1" height="1"/>
-
-                  <rect x="9" y="12" width="1" height="1"/>
-                  <rect x="11" y="12" width="1" height="1"/>
-                  <rect x="13" y="12" width="1" height="1"/>
-                  <rect x="15" y="12" width="1" height="1"/>
-                  <rect x="17" y="12" width="1" height="1"/>
-                  <rect x="19" y="12" width="1" height="1"/>
-
-                  <rect x="8" y="15" width="1" height="1"/>
-                  <rect x="10" y="16" width="1" height="1"/>
-                  <rect x="12" y="15" width="1" height="1"/>
-                  <rect x="14" y="16" width="1" height="1"/>
-                  <rect x="16" y="15" width="1" height="1"/>
-                  <rect x="18" y="16" width="1" height="1"/>
-                  <rect x="20" y="15" width="1" height="1"/>
-
-                  <rect x="8" y="19" width="1" height="1"/>
-                  <rect x="9" y="21" width="1" height="1"/>
-                  <rect x="11" y="20" width="1" height="1"/>
-                  <rect x="13" y="21" width="1" height="1"/>
-                  <rect x="15" y="20" width="1" height="1"/>
-                  <rect x="17" y="21" width="1" height="1"/>
-                  <rect x="19" y="20" width="1" height="1"/>
-                  <rect x="21" y="21" width="1" height="1"/>
-
-                  <rect x="9" y="24" width="1" height="1"/>
-                  <rect x="11" y="25" width="1" height="1"/>
-                  <rect x="13" y="24" width="1" height="1"/>
-                  <rect x="15" y="25" width="1" height="1"/>
-                  <rect x="17" y="24" width="1" height="1"/>
-                  <rect x="19" y="25" width="1" height="1"/>
-                  <rect x="21" y="24" width="1" height="1"/>
-                  <rect x="23" y="25" width="1" height="1"/>
-                </g>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- How it works -->
-    <section class="how-it-works py-5 bg-body">
-      <div class="container">
-        <h2 class="h4 fw-semibold mb-3 text-center">¿Cómo funciona?</h2>
-        <div class="row g-3 text-center">
-          <div class="col-6 col-lg-3"><div class="how-card"><div class="hiw-emoji">🔍</div><div class="hiw-title">Encontrá tu servicio</div></div></div>
-          <div class="col-6 col-lg-3"><div class="how-card"><div class="hiw-emoji">📅</div><div class="hiw-title">Elegí fecha y horario</div></div></div>
-          <div class="col-6 col-lg-3"><div class="how-card"><div class="hiw-emoji">✅</div><div class="hiw-title">Confirmá tu reserva</div></div></div>
-          <div class="col-6 col-lg-3"><div class="how-card"><div class="hiw-emoji">💇‍♀️</div><div class="hiw-title">Disfrutá la experiencia</div></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Servicios -->
-    <section id="servicios" class="py-5" aria-labelledby="serviciosTitle">
-      <div class="container">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
-          <div class="d-flex align-items-center gap-2">
-            <h2 id="serviciosTitle" class="h3 fw-semibold m-0">Servicios destacados</h2>
-            <span class="badge text-bg-primary d-none" id="servicesNewBadge"></span>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <label for="svcCategory" class="small text-body-secondary m-0">Filtrar por:</label>
-            <select id="svcCategory" class="form-select form-select-sm" style="width:auto; min-width:180px">
-              <option value="">Todas las categorías</option>
-              <option value="corte">Corte</option>
-              <option value="color">Color</option>
-              <option value="tratamiento">Tratamiento</option>
-              <option value="barba">Barba</option>
-              <option value="peinado">Peinado</option>
-            </select>
-            <span class="small text-body-secondary" id="svcCount"></span>
-          </div>
-        </div>
-
-        <p class="text-body-secondary mb-3">Explorá cortes, color, tratamientos y más — encontrá el ideal para vos.</p>
-
-        <div class="card border-0 bg-body-tertiary mb-3" id="servicesSignupCard">
-          <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-            <div class="d-flex align-items-start gap-3">
-              <div class="text-primary fs-3"><i class="bi bi-stars"></i></div>
-              <div>
-                <div class="fw-semibold">Reservá en 1 minuto</div>
-                <div class="small text-body-secondary">Creá tu cuenta gratis y accedé a disponibilidad en vivo.</div>
-                <ul class="small text-body-secondary m-0 mt-2 ps-3">
-                  <li><i class="bi bi-check2-circle text-success me-1"></i>Sin costo de reserva</li>
-                  <li><i class="bi bi-check2-circle text-success me-1"></i>Cancelación simple</li>
-                  <li><i class="bi bi-check2-circle text-success me-1"></i>Tus turnos siempre a mano</li>
-                </ul>
+                    
+            <h1 class="hero-title">
+              Reservá servicios de <span class="text-accent">belleza y bienestar</span> 
+              cerca de ti
+            </h1>
+            <p class="hero-subtitle">
+              Descubrí los mejores salones, barberías y centros de estética en Buenos Aires. 
+              <strong>Reservá online, pagá fácil y disfrutá de tratamientos únicos.</strong>
+            </p>
+                    
+            <!-- Search form principal -->
+            <div class="hero-search">
+              <div class="search-form">
+                <div class="search-input-group">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" placeholder="Corte, color, tratamiento..." class="form-control">
+                </div>
+                <div class="search-input-group">
+                  <span class="search-icon">📍</span>
+                  <input type="text" placeholder="Palermo, Belgrano, Centro..." class="form-control">
+                </div>
+                <button class="btn-accent">
+                  <span>Encontrar</span>
+                  <span class="btn-arrow">→</span>
+                </button>
+              </div>
+                        
+              <!-- Quick suggestions -->
+              <div class="quick-suggestions mt-3">
+                <span class="suggestion-label">Populares:</span>
+                <button class="suggestion-tag">Corte mujer</button>
+                <button class="suggestion-tag">Barba</button>
+                <button class="suggestion-tag">Manicura</button>
+                <button class="suggestion-tag">Coloración</button>
               </div>
             </div>
-            <div class="d-grid d-md-inline">
-              <button class="btn btn-primary" data-auth-open="signup">Crear cuenta gratis</button>
+                    
+            <!-- Trust indicators -->
+            <div class="trust-indicators">
+              <div class="trust-item">
+                <div class="trust-icon">⚡</div>
+                <div class="trust-content">
+                  <strong>Reserva instantánea</strong>
+                  <span>Confirmación al instante</span>
+                </div>
+              </div>
+              <div class="trust-item">
+                <div class="trust-icon">💳</div>
+                <div class="trust-content">
+                  <strong>Pago seguro</strong>
+                  <span>Online o en el local</span>
+                </div>
+              </div>
+              <div class="trust-item">
+                <div class="trust-icon">⭐</div>
+                <div class="trust-content">
+                  <strong>4.9/5 estrellas</strong>
+                  <span>+500 reseñas verificadas</span>
+                </div>
+              </div>
+            </div>
+                    
+            <!-- Social proof -->
+            <div class="social-proof mt-4">
+              <div class="client-avatars">
+                <img src="https://images.unsplash.com/photo-1494790108755-2616b612b5bb?w=40&h=40&fit=crop&crop=face" alt="Cliente" class="client-avatar">
+                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="Cliente" class="client-avatar">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face" alt="Cliente" class="client-avatar">
+                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=40&h=40&fit=crop&crop=face" alt="Cliente" class="client-avatar">
+                <div class="more-clients">+500</div>
+              </div>
+              <div class="social-proof-text">
+                <span class="highlight-text">Más de 500 personas</span> ya reservaron su turno esta semana
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- Service grid: JS will populate #servicesList with cards; keep a graceful template fallback -->
-        <div class="row g-3" id="servicesList" aria-live="polite">
-          <div class="col-12 col-md-6 col-lg-4" data-service-placeholder>
-            <article class="service-card card h-100" data-service="example-service" aria-labelledby="svc-example-title">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="svc-thumb rounded" style="width:72px;height:72px;background-image:url('assets/images/logo.svg');background-size:cover;background-position:center" aria-hidden="true"></div>
-                  <div class="flex-grow-1">
-                    <h3 id="svc-example-title" class="h6 mb-1">Corte + Peinado</h3>
-                    <div class="small text-body-secondary">Salon Ejemplo · <span class="svc-duration">45 min</span></div>
-                    <div class="mt-2 d-flex align-items-center gap-2">
-                      <div class="svc-rating small text-warning">★★★★☆</div>
-                      <div class="svc-price fw-semibold ms-auto">$1200</div>
-                    </div>
+                
+          <div class="col-lg-6">
+            <div class="hero-image-container">
+              <!-- Floating cards -->
+              <div class="floating-card floating-card-1">
+                <div class="service-mini">
+                  <div class="service-mini-icon">💇‍♀️</div>
+                  <div class="service-mini-info">
+                    <div class="service-mini-name">Corte y Peinado</div>
+                    <div class="service-mini-price">Desde $3.500</div>
+                  </div>
+                  <div class="service-mini-rating">⭐ 4.9</div>
+                </div>
+              </div>
+                        
+              <div class="floating-card floating-card-2">
+                <div class="service-mini">
+                  <div class="service-mini-icon">✂️</div>
+                  <div class="service-mini-info">
+                    <div class="service-mini-name">Corte + Barba</div>
+                    <div class="service-mini-price">Desde $3.800</div>
+                  </div>
+                  <div class="service-mini-rating">⭐ 4.8</div>
+                </div>
+              </div>
+                        
+              <div class="floating-card floating-card-3">
+                <div class="availability-card">
+                  <div class="availability-header">
+                    <span class="availability-icon">📅</span>
+                    <span>Disponible hoy</span>
+                  </div>
+                  <div class="availability-times">
+                    <span class="time-slot">14:30</span>
+                    <span class="time-slot">16:00</span>
+                    <span class="time-slot">18:30</span>
                   </div>
                 </div>
-
-                <div class="mt-3 mt-auto d-flex gap-2">
-                  <button class="btn btn-outline-secondary btn-sm flex-grow-1" data-action="details" aria-label="Ver detalles del servicio">Detalles</button>
-                  <button class="btn btn-warning btn-sm" data-action="book" data-service-id="example-service">Reservar</button>
+              </div>
+                        
+              <div class="hero-image">
+                <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=500&fit=crop&crop=center" 
+                   alt="Salón de belleza profesional" class="img-fluid">
+                            
+                <!-- Review popup -->
+                <div class="floating-review">
+                  <div class="review-content">
+                    <div class="review-stars">⭐⭐⭐⭐⭐</div>
+                    <div class="review-text">"¡Increíble servicio!"</div>
+                    <div class="review-author">- María, Palermo</div>
+                  </div>
                 </div>
               </div>
-            </article>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Calendario y Turnos -->
-  <section id="calendario" class="py-5 bg-body-tertiary d-none">
+    <!-- How it Works Section -->
+    <section class="services-section" id="como-funciona">
       <div class="container">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3">
-          <div>
-            <h2 class="h3 fw-semibold mb-1">Calendario de turnos</h2>
-            <p class="text-body-secondary mb-0">Selecciona un día y luego un horario disponible</p>
+        <h2 class="section-title">¿Cómo funciona?</h2>
+        <p class="section-subtitle">
+          Reservar tu turno es súper fácil en solo 3 pasos
+        </p>
+            
+        <div class="row mb-5">
+          <div class="col-lg-4 mb-4">
+            <div class="how-it-works-card">
+              <div class="step-number">1</div>
+              <div class="step-icon">🔍</div>
+              <h4>Encuentra tu servicio</h4>
+              <p>Explora servicios cerca de ti, compara precios, lee reseñas y elige el profesional ideal.</p>
+            </div>
           </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary" id="prevMonth" aria-label="Mes anterior">«</button>
-            <div class="month-label" id="monthLabel" aria-live="polite"></div>
-            <button class="btn btn-outline-secondary" id="nextMonth" aria-label="Mes siguiente">»</button>
+          <div class="col-lg-4 mb-4">
+            <div class="how-it-works-card">
+              <div class="step-number">2</div>
+              <div class="step-icon">📅</div>
+              <h4>Reserva al instante</h4>
+              <p>Selecciona tu fecha y horario preferido. Confirmación inmediata sin esperas ni llamadas.</p>
+            </div>
+          </div>
+          <div class="col-lg-4 mb-4">
+            <div class="how-it-works-card">
+              <div class="step-number">3</div>
+              <div class="step-icon">✨</div>
+              <h4>Disfruta tu experiencia</h4>
+              <p>Recibe recordatorios automáticos, paga fácil y califica tu experiencia.</p>
+            </div>
           </div>
         </div>
 
-        <div class="calendar" role="grid" aria-label="Calendario">
-          <div id="hoursBanner" class="d-flex align-items-center gap-2 small text-body-secondary mb-2">
-            <i class="bi bi-clock"></i>
-            <span>Horarios laborales: Mar–Sáb · 09:00–18:00</span>
-          </div>
-          <div class="calendar-grid" id="calendarGrid"></div>
-        </div>
-
-        <div class="mt-4">
-          <h3 class="h5 fw-semibold">Horarios disponibles</h3>
-          <div id="timeSlots" class="time-slots" aria-live="polite"></div>
-        </div>
-
-        <form id="bookingForm" class="mt-4 needs-validation" novalidate>
-          <div class="row g-3">
-            <div class="col-12 col-md-6">
-              <label for="service" class="form-label">Servicio</label>
-              <select id="service" class="form-select" required aria-describedby="serviceHelp"></select>
-              <div class="invalid-feedback">Seleccioná un servicio</div>
-              <div id="serviceHelp" class="form-text">Elegí el servicio para calcular la duración.</div>
-            </div>
-            <div class="col-12 col-md-6">
-              <label for="name" class="form-label">Nombre</label>
-              <input id="name" class="form-control" required minlength="2" />
-              <div class="invalid-feedback">Ingresá tu nombre</div>
-            </div>
-            <div class="col-12">
-              <button type="submit" class="btn btn-primary btn-lg w-100" id="btnConfirm" disabled>Confirmar turno</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <!-- Mis turnos -->
-  <section id="mis-turnos" class="py-5 d-none">
-      <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2 class="h3 fw-semibold">Mis turnos</h2>
-          <button class="btn btn-outline-danger d-none" id="btnLogout">Cerrar sesión</button>
-        </div>
-        <div id="myBookings" class="row g-3" aria-live="polite"></div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Admin -->
-  <section id="admin" class="py-5 bg-body-tertiary d-none">
-    <div class="container">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h3 fw-semibold">Panel de administración</h2>
-        <span class="badge text-bg-secondary" id="adminBadge">Solo admin</span>
-      </div>
-      <div class="row g-3">
-        <div class="col-12 col-lg-4">
-          <div class="card h-100">
-            <div class="card-body">
-              <h3 class="h6">Resumen</h3>
-              <ul class="list-unstyled m-0 small" id="adminSummary"></ul>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-lg-4">
-          <div class="card h-100">
-            <div class="card-body">
-              <h3 class="h6">Turnos por día (próx. 7)</h3>
-              <ul class="list-unstyled m-0 small" id="adminByDay"></ul>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-lg-4">
-          <div class="card h-100">
-            <div class="card-body">
-              <h3 class="h6">Horarios por día</h3>
-              <div class="small text-body-secondary mb-2">Editar rango (24h) para cada día laboral</div>
-              <div class="vstack gap-2" id="adminHours"></div>
-              <div class="d-grid gap-2 mt-3">
-                <button class="btn btn-sm btn-success" id="btnSaveHours">Guardar cambios</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12">
-          <div class="card">
-            <div class="card-body">
-              <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 align-items-lg-center mb-2">
-                <h3 class="h6 m-0">Próximos turnos</h3>
-                <div class="d-flex flex-wrap gap-2">
-                  <select class="form-select form-select-sm" id="adminFilterService" style="width:auto; min-width:220px">
-                    <option value="">Todos los servicios</option>
-                  </select>
-                  <input type="date" class="form-control form-control-sm" id="adminFilterFrom" />
-                  <input type="date" class="form-control form-control-sm" id="adminFilterTo" />
-                  <button class="btn btn-sm btn-outline-secondary" id="adminFilterClear">Limpiar</button>
+        <!-- Features Section -->
+        <div class="features-grid mb-5">
+          <div class="row">
+            <div class="col-lg-6 mb-4">
+              <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <div class="feature-content">
+                  <h5>Reserva 24/7</h5>
+                  <p>Agenda tu cita en cualquier momento, incluso cuando el salón está cerrado</p>
                 </div>
               </div>
-              <div class="table-responsive">
-                <table class="table table-sm align-middle">
-                  <thead>
-                    <tr><th>Fecha</th><th>Hora</th><th>Servicio</th><th>Cliente</th><th></th></tr>
-                  </thead>
-                  <tbody id="adminBookings"></tbody>
-                </table>
+            </div>
+            <div class="col-lg-6 mb-4">
+              <div class="feature-card">
+                <div class="feature-icon">🔔</div>
+                <div class="feature-content">
+                  <h5>Recordatorios automáticos</h5>
+                  <p>Recibe notificaciones por SMS y email antes de tu cita</p>
+                </div>
               </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+              <div class="feature-card">
+                <div class="feature-icon">💳</div>
+                <div class="feature-content">
+                  <h5>Pago seguro online</h5>
+                  <p>Paga fácil con tarjeta, MercadoPago o efectivo en el local</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+              <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <div class="feature-content">
+                  <h5>Reseñas verificadas</h5>
+                  <p>Lee opiniones reales de otros clientes para elegir mejor</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+              <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-content">
+                  <h5>Servicios cerca de ti</h5>
+                  <p>Encuentra los mejores profesionales en tu zona con geolocalización</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+              <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-content">
+                  <h5>Reagenda fácil</h5>
+                  <p>Cambia o cancela tu cita desde la app sin complicaciones</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="section-title" id="servicios">Nuestros Servicios</h2>
+        <p class="section-subtitle">
+          Servicios profesionales de belleza para toda la familia. Calidad garantizada y atención personalizada.
+        </p>
+            
+        <!-- Service Categories Filter -->
+        <div class="service-categories mb-4">
+          <button class="category-btn active" data-category="all">
+            <span class="category-icon">💫</span>
+            Todos
+          </button>
+          <button class="category-btn" data-category="women">
+            <span class="category-icon">👩</span>
+            Mujer
+          </button>
+          <button class="category-btn" data-category="men">
+            <span class="category-icon">👨</span>
+            Hombre
+          </button>
+          <button class="category-btn" data-category="kids">
+            <span class="category-icon">👶</span>
+            Niños
+          </button>
+          <button class="category-btn" data-category="events">
+            <span class="category-icon">💐</span>
+            Eventos
+          </button>
+        </div>
+            
+        <div class="row" id="services-container">
+          <!-- Service Card 1 -->
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="service-card" data-category="women">
+              <div class="service-image">
+                <img src="https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400&h=300&fit=crop&crop=face" alt="Corte y Peinado Mujer">
+                <div class="service-badge">Popular</div>
+                <div class="service-category">Mujer</div>
+              </div>
+              <div class="service-content">
+                <h3 class="service-title">Corte y Peinado</h3>
+                <p class="service-description">
+                  Corte personalizado y peinado profesional con productos de calidad premium
+                </p>
+                <div class="service-meta">
+                  <div class="service-duration">
+                    ⏱️ 60 min
+                  </div>
+                  <div class="service-price">
+                    <div class="price-amount">$4.500</div>
+                  </div>
+                </div>
+                <div class="service-professional mb-3">
+                  <div class="professional-avatar">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b612b5bb?w=40&h=40&fit=crop&crop=face" alt="Profesional">
+                  </div>
+                  <div class="professional-info">
+                    <div class="professional-name">Maria González</div>
+                    <div class="professional-rating">⭐ 4.9 (127 reseñas)</div>
+                  </div>
+                </div>
+                <button class="btn-book">Reservar Turno</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Service Card 2 -->
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="service-card" data-category="men">
+              <div class="service-image">
+                <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&h=300&fit=crop&crop=face" alt="Corte Hombre + Barba">
+                <div class="service-category">Hombre</div>
+              </div>
+              <div class="service-content">
+                <h3 class="service-title">Corte + Barba</h3>
+                <p class="service-description">
+                  Corte moderno y arreglo de barba con técnicas profesionales y acabado perfecto
+                </p>
+                <div class="service-meta">
+                  <div class="service-duration">
+                    ⏱️ 45 min
+                  </div>
+                  <div class="service-price">
+                    <div class="price-amount">$3.800</div>
+                  </div>
+                </div>
+                <div class="service-professional mb-3">
+                  <div class="professional-avatar">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="Profesional">
+                  </div>
+                  <div class="professional-info">
+                    <div class="professional-name">Carlos Mendez</div>
+                    <div class="professional-rating">⭐ 4.8 (89 reseñas)</div>
+                  </div>
+                </div>
+                <button class="btn-book">Reservar Turno</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Service Card 3 -->
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="service-card" data-category="women">
+              <div class="service-image">
+                <img src="https://images.unsplash.com/photo-1559599101-f09722fb4948?w=400&h=300&fit=crop&crop=face" alt="Color + Tratamiento">
+                <div class="service-badge">Promoción</div>
+                <div class="service-category">Mujer</div>
+              </div>
+              <div class="service-content">
+                <h3 class="service-title">Color + Tratamiento</h3>
+                <p class="service-description">
+                  Coloración completa con tratamiento nutritivo para un cabello saludable y brillante
+                </p>
+                <div class="service-meta">
+                  <div class="service-duration">
+                    ⏱️ 120 min
+                  </div>
+                  <div class="service-price">
+                    <div class="price-amount">$8.200</div>
+                  </div>
+                </div>
+                <div class="service-professional mb-3">
+                  <div class="professional-avatar">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face" alt="Profesional">
+                  </div>
+                  <div class="professional-info">
+                    <div class="professional-name">Ana Rodriguez</div>
+                    <div class="professional-rating">⭐ 4.9 (203 reseñas)</div>
+                  </div>
+                </div>
+                <button class="btn-book">Reservar Turno</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Service Card 4 -->
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="service-card" data-category="kids">
+              <div class="service-image">
+                <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=face" alt="Corte Niños">
+                <div class="service-category">Niños</div>
+              </div>
+              <div class="service-content">
+                <h3 class="service-title">Corte para Niños</h3>
+                <p class="service-description">
+                  Cortes especializados para niños en ambiente cómodo y divertido
+                </p>
+                <div class="service-meta">
+                  <div class="service-duration">
+                    ⏱️ 30 min
+                  </div>
+                  <div class="service-price">
+                    <div class="price-amount">$2.500</div>
+                  </div>
+                </div>
+                <div class="service-professional mb-3">
+                  <div class="professional-avatar">
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=40&h=40&fit=crop&crop=face" alt="Profesional">
+                  </div>
+                  <div class="professional-info">
+                    <div class="professional-name">Laura Martinez</div>
+                    <div class="professional-rating">⭐ 4.8 (98 reseñas)</div>
+                  </div>
+                </div>
+                <button class="btn-book">Reservar Turno</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Service Card 5 -->
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="service-card" data-category="events">
+              <div class="service-image">
+                <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=300&fit=crop&crop=face" alt="Peinado Eventos">
+                <div class="service-category">Eventos</div>
+              </div>
+              <div class="service-content">
+                <h3 class="service-title">Peinado para Eventos</h3>
+                <p class="service-description">
+                  Peinados elegantes para bodas, fiestas y ocasiones especiales
+                </p>
+                <div class="service-meta">
+                  <div class="service-duration">
+                    ⏱️ 75 min
+                  </div>
+                  <div class="service-price">
+                    <div class="price-amount">$5.800</div>
+                  </div>
+                </div>
+                <div class="service-professional mb-3">
+                  <div class="professional-avatar">
+                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face" alt="Profesional">
+                  </div>
+                  <div class="professional-info">
+                    <div class="professional-name">Diego Lopez</div>
+                    <div class="professional-rating">⭐ 4.6 (74 reseñas)</div>
+                  </div>
+                </div>
+                <button class="btn-book">Reservar Turno</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Service Card 6 -->
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="service-card" data-category="women">
+              <div class="service-image">
+                <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400&h=300&fit=crop&crop=face" alt="Tratamientos Capilares">
+                <div class="service-category">Unisex</div>
+              </div>
+              <div class="service-content">
+                <h3 class="service-title">Tratamientos Capilares</h3>
+                <p class="service-description">
+                  Tratamientos reconstructivos y nutritivos para todo tipo de cabello
+                </p>
+                <div class="service-meta">
+                  <div class="service-duration">
+                    ⏱️ 50 min
+                  </div>
+                  <div class="service-price">
+                    <div class="price-amount">$4.200</div>
+                  </div>
+                </div>
+                <div class="service-professional mb-3">
+                  <div class="professional-avatar">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b612b5bb?w=40&h=40&fit=crop&crop=face" alt="Profesional">
+                  </div>
+                  <div class="professional-info">
+                    <div class="professional-name">Maria González</div>
+                    <div class="professional-rating">⭐ 4.9 (127 reseñas)</div>
+                  </div>
+                </div>
+                <button class="btn-book">Reservar Turno</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- App Download Section -->
+    <section class="app-download-section">
+      <div class="container">
+        <div class="app-download-content">
+          <h2 class="section-title">Descarga nuestra app</h2>
+          <p>Lleva Turnex contigo y reserva desde cualquier lugar, en cualquier momento</p>
+          <div class="app-buttons">
+            <a href="#" class="app-btn">
+              <div class="app-btn-icon">📱</div>
+              <div>
+                <div style="font-size: 12px; opacity: 0.8;">Descargar en</div>
+                <div>App Store</div>
+              </div>
+            </a>
+            <a href="#" class="app-btn">
+              <div class="app-btn-icon">🤖</div>
+              <div>
+                <div style="font-size: 12px; opacity: 0.8;">Disponible en</div>
+                <div>Google Play</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Business Section -->
+    <section class="business-section">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="section-title">¿Tienes un negocio de belleza?</h2>
+          <p class="section-subtitle">
+            Únete a cientos de profesionales que ya usan Turnex para hacer crecer su negocio
+          </p>
+        </div>
+            
+        <div class="row">
+          <div class="col-lg-4 mb-4">
+            <div class="business-card">
+              <div class="business-icon">💼</div>
+              <h4>Gestión completa</h4>
+              <p>Administra citas, clientes, servicios y pagos desde una sola plataforma</p>
+              <button class="btn-business">Más información</button>
+            </div>
+          </div>
+                
+          <div class="col-lg-4 mb-4">
+            <div class="business-card">
+              <div class="business-icon">📈</div>
+              <h4>Aumenta tus ventas</h4>
+              <p>Atrae nuevos clientes con presencia online y herramientas de marketing</p>
+              <button class="btn-business">Más información</button>
+            </div>
+          </div>
+                
+          <div class="col-lg-4 mb-4">
+            <div class="business-card">
+              <div class="business-icon">🎯</div>
+              <h4>Reduce cancelaciones</h4>
+              <p>Recordatorios automáticos y políticas de depósito reducen las inasistencias</p>
+              <button class="btn-business">Más información</button>
+            </div>
+          </div>
+        </div>
+            
+        <div class="text-center mt-4">
+          <button class="btn-accent btn-lg px-5 py-3" onclick="showBusinessModal()">
+            🚀 Registra tu negocio GRATIS
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+      <div class="container">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <h3>1,200+ (See <attachments> above for file contents. You may not need to search or read the file again.)
             </div>
           </div>
         </div>
