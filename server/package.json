@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node src/index.js",
-    "test:unit": "jest --runInBand",
-    "test": "jest",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "postinstall": "node -e \"if(process.env.NODE_ENV!=='test'){require('child_process').execSync('prisma generate',{stdio:'inherit'})}\"",
     "migrate:deploy": "prisma migrate deploy",
     "start:render": "npx prisma migrate deploy && node src/index.js",
