@@ -761,7 +761,7 @@ function renderAdmin () {
     const key = d.toISOString().slice(0, 10)
     const count = all.filter(b => b.date === key).length
     const label = d.toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: '2-digit' })
-    return `<li>${label}: <b>${count}</b></li>`
+    return `<li>${label}: <b>${counts.total}</b></li>`
   }).join(''))
 
   // Upcoming bookings table
@@ -1123,4 +1123,128 @@ function toggleEditRow (id, editing, restoreView = false) {
   btnSave.classList.toggle('d-none', !editing)
   btnCancel.classList.toggle('d-none', !editing)
 }
+
+// Implementación real de updateAuthUI
+window.updateAuthUI = function() {
+  const user = sessionManager.getUser();
+  const isAuth = sessionManager.isAuthenticated();
+  
+  console.log('🔄 Actualizando UI - Usuario:', user);
+  
+  const navbarList = document.querySelector('#navbarNav .navbar-nav');
+  
+  if (isAuth && user) {
+    // Ocultar botones de Ingresar y Crear cuenta
+    const loginBtn = document.querySelector('[data-auth-mode="login"]');
+    const signupBtn = document.querySelector('[data-auth-mode="signup"]');
+    
+    if (loginBtn) loginBtn.closest('li').style.display = 'none';
+    if (signupBtn) signupBtn.closest('li').style.display = 'none';
+    
+    // Agregar info de usuario si no existe
+    if (!document.getElementById('user-info-nav')) {
+      const userLi = document.createElement('li');
+      userLi.id = 'user-info-nav';
+      userLi.className = 'nav-item ms-lg-2';
+      
+      const roleLabel = user.role === 'ADMIN' ? '👑 ADMIN' : 
+                       user.role === 'BUSINESS' ? '🏢 NEGOCIO' : '';
+      
+      userLi.innerHTML = `
+        <div class="d-flex align-items-center">
+          <span class="text-white me-2">
+            ${user.name || user.email.split('@')[0]}
+            ${roleLabel ? `<span class="badge bg-warning text-dark ms-1">${roleLabel}</span>` : ''}
+          </span>
+          <button class="btn btn-sm btn-outline-light" onclick="sessionManager.logout()">Salir</button>
+        </div>
+      `;
+      
+      navbarList.appendChild(userLi);
+    }
+    
+    console.log(`✅ UI actualizada - Rol: ${user.role}`);
+    
+  } else {
+    // Mostrar botones de login/signup
+    const loginBtn = document.querySelector('[data-auth-mode="login"]');
+    const signupBtn = document.querySelector('[data-auth-mode="signup"]');
+    
+    if (loginBtn) loginBtn.closest('li').style.display = '';
+    if (signupBtn) signupBtn.closest('li').style.display = '';
+    
+    // Remover info de usuario
+    const userInfo = document.getElementById('user-info-nav');
+    if (userInfo) userInfo.remove();
+  }
+}
+
+// Al final de app.js
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Inicializando sistema de login con roles...');
+  
+  setTimeout(() => {
+    const loginForm = document.getElementById('loginForm');
+    
+    if (loginForm) {
+      // Remover TODOS los listeners anteriores
+      const newForm = loginForm.cloneNode(true);
+      loginForm.parentNode.replaceChild(newForm, loginForm);
+      
+      console.log('✅ Formulario de login clonado - listeners limpios');
+      
+      newForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const email = document.getElementById('loginEmail')?.value?.trim();
+        const password = document.getElementById('loginPassword')?.value;
+        
+        console.log('📧 Intentando login con:', email);
+        
+        if (!email || !password) {
+          Swal.fire('Error', 'Completa todos los campos', 'error');
+          return;
+        }
+        
+        try {
+          const response = await api.login({ email, password });
+          console.log('✅ LOGIN EXITOSO:', response);
+          console.log('👤 Usuario:', sessionManager.getUser());
+          
+          // Cerrar modal
+          const modal = document.getElementById('authModal');
+          if (modal) {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+          }
+          
+          updateAuthUI();
+          await Promise.all([syncMyBookings(), syncAdminBookings()]);
+          renderMyBookings();
+          renderAdmin();
+          
+          Swal.fire({
+            title: 'Bienvenido',
+            text: `Hola ${response.user.name || response.user.email}`,
+            icon: 'success',
+            timer: 2000
+          });
+          
+        } catch (error) {
+          console.error('❌ ERROR:', error);
+          Swal.fire('Error', error.message, 'error');
+        }
+      });
+    }
+  }, 500); // Esperar a que validation.js termine de inicializar
+});
+
+
+
+
+
+
+
+
 

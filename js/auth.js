@@ -48,7 +48,26 @@ function setupAPIBase() {
   window.API_BASE = API_BASE;
 }
 
+// Manejar cambio de rol en signup
+const roleSelect = document.getElementById('signupRole');
+const businessContainer = document.getElementById('businessNameContainer');
+const businessNameInput = document.getElementById('signupBusinessName');
+
+if (roleSelect && businessContainer && businessNameInput) {
+  roleSelect.addEventListener('change', (e) => {
+    if (e.target.value === 'BUSINESS') {
+      businessContainer.style.display = 'block';
+      businessNameInput.setAttribute('required', 'required');
+    } else {
+      businessContainer.style.display = 'none';
+      businessNameInput.removeAttribute('required');
+      businessNameInput.value = '';
+    }
+  });
+}
+
 setupAPIBase();
 
 // Exportar sessionManager para uso directo
 export { sessionManager };
+

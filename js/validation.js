@@ -141,33 +141,20 @@ function setupFieldValidation(inputId, validationFn) {
 }
 
 // Init Login
+// Init Login Form
 function initLoginForm() {
   const form = document.getElementById('loginForm');
   if (!form) return;
   
+  // Setup validations visuales solamente
   setupFieldValidation('loginEmail', validateEmail);
   setupFieldValidation('loginPassword', validatePassword);
+  
+  // Setup password toggle
   setupPasswordToggle('[data-toggle-password="loginPassword"]', 'loginPassword');
   
-  const newForm = form.cloneNode(true);
-  form.parentNode.replaceChild(newForm, form);
-  
-  newForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const emailInput = document.getElementById('loginEmail');
-    const passwordInput = document.getElementById('loginPassword');
-    
-    const emailResult = validateEmail(emailInput.value);
-    const passwordResult = validatePassword(passwordInput.value);
-    
-    showFieldFeedback(emailInput, emailResult.valid, emailResult.message);
-    showFieldFeedback(passwordInput, passwordResult.valid, passwordResult.message);
-    
-    if (emailResult.valid && passwordResult.valid) {
-      console.log('Login válido');
-    }
-  });
+  // NO interceptar el submit - dejarlo para app.js
+  console.log('Login form validación visual activada - submit manejado por app.js');
 }
 
 // Init Signup
