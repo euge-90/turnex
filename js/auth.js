@@ -171,7 +171,7 @@ const passValid = (v) => v.length >= 8
       showPasswordRequirements(this, false)
     })
 
-    // Signup realtime
+  // Signup realtime
     signupForm?.addEventListener('input', e => {
       const t = e.target
       const pass1 = document.getElementById('signupPassword')
@@ -198,6 +198,29 @@ const passValid = (v) => v.length >= 8
         markValid(t, t.value === pass1.value, 'Las contraseñas no coinciden.')
       }
     })
+
+    // Show/hide business fields when role changes
+    const roleSelect = signupForm?.querySelector('#signupRole')
+    const businessContainer = document.getElementById('businessFields')
+    function updateBusinessVisibility () {
+      const role = roleSelect?.value || 'CLIENT'
+      if (businessContainer) businessContainer.classList.toggle('d-none', role !== 'BUSINESS')
+      // toggle required attributes
+      const nameEl = document.getElementById('businessName')
+      const addrEl = document.getElementById('businessAddress')
+      const phoneEl = document.getElementById('businessPhone')
+      if (role === 'BUSINESS') {
+        nameEl?.setAttribute('required', '')
+        addrEl?.setAttribute('required', '')
+        phoneEl?.setAttribute('required', '')
+      } else {
+        nameEl?.removeAttribute('required')
+        addrEl?.removeAttribute('required')
+        phoneEl?.removeAttribute('required')
+      }
+    }
+    roleSelect?.addEventListener('change', updateBusinessVisibility)
+    updateBusinessVisibility()
 
     // Mostrar requisitos al hacer focus en contraseña de signup
     signupForm?.querySelector('#signupPassword')?.addEventListener('focus', function() {
@@ -276,18 +299,35 @@ const passValid = (v) => v.length >= 8
       const vPass1 = passValid(password)
       const vPass2 = password2 === password
 
+      // business validation when role is BUSINESS
+      const role = signupForm.signupRole?.value || 'CLIENT'
+      const businessName = signupForm.businessName?.value?.trim()
+      const businessAddress = signupForm.businessAddress?.value?.trim()
+      const businessPhone = signupForm.businessPhone?.value?.trim()
+      let vBusiness = true
+      if (role === 'BUSINESS') {
+        vBusiness = !!businessName && businessName.length >= 2 && !!businessAddress && phoneRe.test(businessPhone)
+      }
+
       markValid(signupForm.signupName, vName, 'Ingresá nombre y apellido.')
       markValid(signupForm.signupEmail, vEmail, 'Ingresá un email válido.')
       markValid(signupForm.signupPhone, vPhone, 'Ingresá un teléfono válido (mín. 8 dígitos).')
       markValid(signupForm.signupPassword, vPass1, 'Mínimo 8 caracteres.')
       markValid(signupForm.signupPassword2, vPass2, 'Las contraseñas no coinciden.')
 
-      if (!(vName && vEmail && vPhone && vPass1 && vPass2)) return
+  if (!(vName && vEmail && vPhone && vPass1 && vPass2 && vBusiness)) return
 
       const btn = document.getElementById('signupSubmitBtn')
       setLoading(btn, true, 'Creando...')
       try {
-        const { user } = await apiSignup({ name, email, phone, password })
+        const signupExtras = { name, email, phone, password }
+        if (role) signupExtras.role = role
+        if (role === 'BUSINESS') {
+          signupExtras.businessName = businessName
+          signupExtras.businessAddress = businessAddress
+          signupExtras.businessPhone = businessPhone
+        }
+        const { user } = await apiSignup(signupExtras)
         window.dispatchEvent(new CustomEvent('turnex:auth-success', { detail: { mode: 'signup', user } }))
         if (window.Swal) Swal.fire({ icon: 'success', title: 'Cuenta creada', text: 'Ya podés iniciar sesión', timer: 1600, showConfirmButton: false })
         if (window.txToast) window.txToast({ type: 'success', text: 'Cuenta creada' })

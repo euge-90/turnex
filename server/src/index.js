@@ -100,7 +100,7 @@ app.use('/api/config', configRoutes({ prisma }));
 // Admin minimal endpoints
 const adminRouter = Router();
 adminRouter.get('/users/count', authMiddleware(false), async (req, res)=>{
-	if(req.user?.role !== 'admin') return res.status(403).json({ error:'Forbidden' });
+	if((req.user?.role||'').toString().toUpperCase() !== 'ADMIN') return res.status(403).json({ error:'Forbidden' });
 	const total = await prisma.user.count();
 	res.json({ total });
 });

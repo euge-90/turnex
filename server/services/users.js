@@ -23,13 +23,13 @@ async function findByEmail(email) {
   return memory.users.get(email) || null;
 }
 
-async function createUser({ name, email, phone, password, role = 'client' }) {
+async function createUser({ name, email, phone, password, role = 'CLIENT', businessName, businessAddress, businessPhone }) {
   const exists = await findByEmail(email);
   if (exists) throw new Error('UserExists');
   const passwordHash = await bcrypt.hash(password, 10);
   if (prisma) {
     return prisma.user.create({
-      data: { name, email, phone, role, passwordHash },
+      data: { name, email, phone, role, passwordHash, businessName, businessAddress, businessPhone },
     });
   }
   const user = {
@@ -39,6 +39,9 @@ async function createUser({ name, email, phone, password, role = 'client' }) {
     phone,
     role,
     passwordHash,
+    businessName,
+    businessAddress,
+    businessPhone,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

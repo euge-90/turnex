@@ -34,8 +34,12 @@ async function http (path, opts = {}) {
 
 // Auth
 // extras (e.g., name, phone) are currently client-side only; backend accepts email/password
-export async function apiSignup ({ email, password, name, phone, remember = true }) {
+export async function apiSignup ({ email, password, name, phone, remember = true, role, businessName, businessAddress, businessPhone } = {}) {
   const payload = { name, email, phone, password }
+  if (role) payload.role = role
+  if (businessName) payload.businessName = businessName
+  if (businessAddress) payload.businessAddress = businessAddress
+  if (businessPhone) payload.businessPhone = businessPhone
   const data = await http('/auth/signup', { method: 'POST', body: JSON.stringify(payload) })
   setSession({ email: data.user.email, role: data.user.role, token: data.token, name: data.user.name || name || '', phone: data.user.phone || phone || '' }, { remember })
   return data

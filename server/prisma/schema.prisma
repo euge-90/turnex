@@ -12,8 +12,12 @@ model User {
   name         String    @default("Usuario")
   email        String    @unique
   phone        String?
+  // Business-specific info (optional; required when role == BUSINESS)
+  businessName    String?
+  businessAddress String?
+  businessPhone   String?
   passwordHash String
-  role         String    @default("user")
+  role         UserRole  @default(CLIENT)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @default(now()) @updatedAt
   bookings     Booking[]
@@ -48,4 +52,10 @@ model Config {
   blockedDays       String
   blockedDateRanges String
   blockedTimes      String
+}
+
+enum UserRole {
+  CLIENT
+  BUSINESS
+  ADMIN
 }
