@@ -8,40 +8,29 @@
     "test:playwright": "npx playwright test --project=chromium",
     "test:playwright:headed": "npx playwright test --project=chromium --headed",
     "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:ui": "vitest --ui"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.1",
+    "@playwright/test": "^1.40.0",
     "@vitest/ui": "^1.6.1",
+    "vitest": "^1.6.1",
+    "jsdom": "^22.1.0",
     "eslint": "^8.57.1",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.6.0",
-    "jsdom": "^22.1.0",
     "stylelint": "^16.24.0",
-    "stylelint-config-standard": "^39.0.0",
-    "vitest": "^1.6.1"
+    "stylelint-config-standard": "^39.0.0"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2"
   },
-  "description": "[![Latest Release](https://img.shields.io/github/v/release/euge-90/turnex?sort=semver)](https://github.com/euge-90/turnex/releases)\r [![Deploy Status](https://github.com/euge-90/turnex/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/euge-90/turnex/actions/workflows/deploy-pages.yml)\r [Ver Changelog](./CHANGELOG.md)",
-  "main": "playwright.config.js",
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
+  "description": "Aplicación de turnos - Testing UADE",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/euge-90/turnex.git"
   },
-  "keywords": [],
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/euge-90/turnex/issues"
-  },
-  "homepage": "https://github.com/euge-90/turnex#readme"
+  "license": "ISC"
 }
