@@ -21,6 +21,20 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="css/styles.css" rel="stylesheet">
+  <!-- Small UI fixes: reserve space for bottom nav and ensure footer is visible on mobile -->
+  <style>
+    /* Reserve space so fixed bottom-nav does not cover footer */
+    body { padding-bottom: 120px !important; }
+    .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; background: #fff; border-top: 1px solid rgba(0,0,0,.06); height: 64px; }
+    /* Ensure footer sits above bottom-nav (keep background from CSS.styles.css) */
+    .site-footer { position: relative !important; z-index: 10000 !important; }
+    @media (min-width: 768px) {
+      body { padding-bottom: 0 !important; }
+      .bottom-nav { position: static; border-top: none; height: auto; }
+    }
+    /* When the signup form is visible (no d-none), allow business container to show */
+    .auth-form:not(.d-none) #businessNameContainer { display: block !important; }
+  </style>
 </head>
 <body>
   <!-- Navbar -->
@@ -591,121 +605,7 @@
     </div>
   </section>
 
-  <!-- Auth Modal -->
-  <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="authModalLabel">Ingresar</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Login Form -->
-          <form id="loginForm" novalidate autocomplete="on" data-mode="login" class="auth-form">
-            <div class="mb-3">
-              <label for="loginEmail" class="form-label">Email</label>
-              <input type="email" class="form-control" id="loginEmail" name="email" required inputmode="email" autocomplete="email" />
-            </div>
-            <div class="mb-2 position-relative">
-              <label for="loginPassword" class="form-label">Contraseña</label>
-              <div class="password-wrap">
-                <input type="password" class="form-control" id="loginPassword" name="password" required minlength="8" autocomplete="current-password" />
-                <button type="button" class="btn btn-eye" data-toggle-password="loginPassword" aria-label="Mostrar/ocultar contraseña">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </div>
-            </div>
-            <div class="mb-2 form-check" data-auth-remember>
-              <input class="form-check-input" type="checkbox" id="loginRemember" checked>
-              <label class="form-check-label" for="loginRemember">Recordarme</label>
-            </div>
-            <div id="loginInlineError" class="alert alert-danger d-none" role="alert"></div>
-            <div class="d-grid mt-3">
-              <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-auth">
-                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                Ingresar
-              </button>
-            </div>
-          </form>
-          
-          <hr class="text-body-tertiary my-3">
-          
-          <!-- Signup Form -->
-          <form id="signupForm" novalidate autocomplete="on" data-mode="signup" class="auth-form d-none">
-            <div class="mb-3">
-              <label for="signupName" class="form-label">Nombre y apellido</label>
-              <input type="text" class="form-control" id="signupName" required autocomplete="name" />
-            </div>
-            <div class="mb-3">
-              <label for="signupEmail" class="form-label">Email</label>
-              <input type="email" class="form-control" id="signupEmail" required autocomplete="email" />
-            </div>
-            <div class="mb-3">
-              <label for="signupPhone" class="form-label">Teléfono</label>
-              <input type="tel" class="form-control" id="signupPhone" required inputmode="tel" autocomplete="tel" />
-            </div>
-            <div class="mb-3 position-relative">
-              <label for="signupPassword" class="form-label">Contraseña</label>
-              <div class="password-wrap">
-                <input type="password" class="form-control" id="signupPassword" required minlength="8" autocomplete="new-password" />
-                <button type="button" class="btn btn-eye" data-toggle-password="signupPassword" aria-label="Mostrar/ocultar contraseña">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </div>
-            <div class="row mb-3">
-              <div class="col-12">
-                <label for="signupRole" class="form-label">Tipo de cuenta</label>
-                <select id="signupRole" class="form-select">
-                  <option value="CLIENT">Cliente</option>
-                  <option value="BUSINESS">Negocio</option>
-                </select>
-              </div>
-            </div>
-
-            <div id="businessFields" class="d-none">
-              <div class="row mb-3">
-                <div class="col-12">
-                  <label for="businessName" class="form-label">Nombre del negocio</label>
-                  <input type="text" class="form-control" id="businessName" autocomplete="organization" />
-                </div>
-              </div>
-              <div class="row mb-3">
-                <div class="col-12">
-                  <label for="businessAddress" class="form-label">Dirección del negocio</label>
-                  <input type="text" class="form-control" id="businessAddress" />
-                </div>
-              </div>
-              <div class="row mb-3">
-                <div class="col-12">
-                  <label for="businessPhone" class="form-label">Teléfono del negocio</label>
-                  <input type="tel" class="form-control" id="businessPhone" inputmode="tel" />
-                </div>
-              </div>
-            </div>
-            </div>
-            <div class="mb-3 position-relative">
-              <label for="signupPassword2" class="form-label">Repetir contraseña</label>
-              <div class="password-wrap">
-                <input type="password" class="form-control" id="signupPassword2" required minlength="8" autocomplete="new-password" />
-                <button type="button" class="btn btn-eye" data-toggle-password="signupPassword2" aria-label="Mostrar/ocultar contraseña">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </div>
-            </div>
-            <div class="d-grid mt-3">
-              <button id="signupSubmitBtn" type="submit" class="btn btn-success btn-auth">
-                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                Crear cuenta
-              </button>
-            </div>
-            <div id="signupInlineError" class="alert alert-danger d-none mt-2" role="alert"></div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
+    <!-- Footer -->
   <footer class="site-footer" id="contacto">
     <div class="container py-5">
       <div class="row g-4 mb-4">
@@ -810,44 +710,247 @@
     </a>
   </nav>
 
-  <!-- Scripts -->
+
+  <!-- Auth Modal -->
+  <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="authModalLabel">Ingresar</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Login Form -->
+          <form id="loginForm" novalidate autocomplete="on" data-mode="login" class="auth-form">
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="loginEmail" name="email" required inputmode="email" autocomplete="email" />
+            </div>
+            <div class="mb-2 position-relative">
+              <label for="loginPassword" class="form-label">Contraseña</label>
+              <div class="password-wrap">
+                <input type="password" class="form-control" id="loginPassword" name="password" required minlength="8" autocomplete="current-password" />
+                <button type="button" class="btn btn-eye" data-toggle-password="loginPassword" aria-label="Mostrar/ocultar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="mb-2 form-check" data-auth-remember>
+              <input class="form-check-input" type="checkbox" id="loginRemember" checked>
+              <label class="form-check-label" for="loginRemember">Recordarme</label>
+            </div>
+            <div id="loginInlineError" class="alert alert-danger d-none" role="alert"></div>
+            <div class="d-grid mt-3">
+              <button id="loginSubmitBtn" type="submit" class="btn btn-primary btn-auth">
+                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                Ingresar
+              </button>
+            </div>
+          </form>
+          
+          <hr class="text-body-tertiary my-3">
+          
+          <!-- Signup Form -->
+        
+        
+        <!-- Signup Form -->
+        <form id="signupForm" novalidate autocomplete="on" data-mode="signup" class="auth-form d-none">
+          <!-- Nombre -->
+          <div class="mb-3">
+            <label for="signupName" class="form-label">Nombre y apellido</label>
+            <input type="text" class="form-control" id="signupName" required autocomplete="name" />
+          </div>
+
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="signupEmail" class="form-label">Email</label>
+            <input type="email" class="form-control" id="signupEmail" required autocomplete="email" />
+          </div>
+
+          <!-- Teléfono -->
+          <div class="mb-3">
+            <label for="signupPhone" class="form-label">Teléfono</label>
+            <input type="tel" class="form-control" id="signupPhone" required inputmode="tel" autocomplete="tel" />
+          </div>
+
+          <!-- Tipo de cuenta -->
+          <div class="mb-3">
+            <label for="signupRole" class="form-label">Tipo de cuenta</label>
+            <select id="signupRole" class="form-select" required>
+              <option value="CLIENT">Cliente (reservar turnos)</option>
+              <option value="BUSINESS">Negocio / Profesional (ofrecer servicios)</option>
+            </select>
+            <small class="text-muted">Selecciona el tipo de cuenta según tu necesidad</small>
+          </div>
+        
+          <!-- Nombre del negocio (solo para BUSINESS) -->
+          <div class="mb-3" id="businessNameContainer" style="display: none;">
+            <label for="signupBusinessName" class="form-label">
+              Nombre del Negocio <span class="text-danger">*</span>
+            </label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="signupBusinessName"
+              placeholder="Ej: Peluquería Moderna"
+              autocomplete="organization"
+            >
+            <small class="text-muted">Este será el nombre visible de tu negocio</small>
+            <div class="invalid-feedback">El nombre del negocio es requerido</div>
+          </div>
+
+          <!-- Contraseña -->
+          <div class="mb-3 position-relative">
+            <label for="signupPassword" class="form-label">Contraseña</label>
+            <div class="password-wrap">
+              <input type="password" class="form-control" id="signupPassword" required minlength="8" autocomplete="new-password" />
+              <button type="button" class="btn btn-eye" data-toggle-password="signupPassword" aria-label="Mostrar/ocultar contraseña">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Repetir contraseña -->
+          <div class="mb-3 position-relative">
+            <label for="signupPassword2" class="form-label">Repetir contraseña</label>
+            <div class="password-wrap">
+              <input type="password" class="form-control" id="signupPassword2" required minlength="8" autocomplete="new-password" />
+              <button type="button" class="btn btn-eye" data-toggle-password="signupPassword2" aria-label="Mostrar/ocultar contraseña">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Botón de submit -->
+          <div class="d-grid mt-3">
+            <button id="signupSubmitBtn" type="submit" class="btn btn-success btn-auth">
+              <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+              Crear cuenta
+            </button>
+          </div>
+
+          <div id="signupInlineError" class="alert alert-danger d-none mt-2" role="alert"></div>
+        </form>
+        
+      </div>
+    </div>
+  </div>
+          
+
+
+<!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   
-  <!-- Validaciones en tiempo real -->
-  <script src="js/validation.js"></script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+<!-- Validaciones en tiempo real -->
+<script src="js/validation.js"></script>
+
+<script type="module" src="js/auth.js?v=20250920-3"></script>
+<script type="module" src="js/app.js?v=20250920-1"></script>
+<script src="js/ux.js?v=20250920-1"></script>
+<script src="js/inline-scripts.js?v=20250924-1"></script>
+
+<!-- Footer Year Script -->
+<script>
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
   
-  <script type="module" src="js/auth.js?v=20250920-3"></script>
-  <script type="module" src="js/app.js?v=20250920-1"></script>
-  <script src="js/ux.js?v=20250920-1"></script>
-  <script src="js/inline-scripts.js?v=20250924-1"></script>
-  
-  <!-- Footer Year Script -->
-  <script>
-    document.getElementById('footerYear').textContent = new Date().getFullYear();
-    
-    // Handle auth modal mode switching
-    document.querySelectorAll('[data-auth-mode]').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const mode = this.getAttribute('data-auth-mode');
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-        const modalTitle = document.getElementById('authModalLabel');
-        
-        if (mode === 'login') {
-          loginForm.classList.remove('d-none');
-          signupForm.classList.add('d-none');
-          modalTitle.textContent = 'Ingresar';
-        } else if (mode === 'signup') {
-          loginForm.classList.add('d-none');
-          signupForm.classList.remove('d-none');
-          modalTitle.textContent = 'Crear cuenta';
-        }
-      });
+  // Handle auth modal mode switching
+  document.querySelectorAll('[data-auth-mode]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const mode = this.getAttribute('data-auth-mode');
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      const modalTitle = document.getElementById('authModalLabel');
+      
+      if (mode === 'login') {
+        loginForm.classList.remove('d-none');
+        signupForm.classList.add('d-none');
+        modalTitle.textContent = 'Ingresar';
+      } else if (mode === 'signup') {
+        loginForm.classList.add('d-none');
+        signupForm.classList.remove('d-none');
+        modalTitle.textContent = 'Crear cuenta';
+      }
     });
-  </script>
-  <!-- Antes del cierre de </body> -->
+  });
+</script>
+
+<!-- Defensive enforcement: while auth modal open, ensure business field visible -->
+<script>
+  (function(){
+    var enforceTimer = null;
+    var authModalEl = document.getElementById('authModal');
+    function enforce(){
+      var role = document.getElementById('signupRole');
+      var container = document.getElementById('businessNameContainer');
+      var input = document.getElementById('signupBusinessName');
+      if(!role || !container || !input) return;
+      if(role.value === 'BUSINESS'){
+        container.style.display = 'block';
+        input.setAttribute('required','required');
+      }
+    }
+    function start(){ if(enforceTimer) return; enforceTimer = setInterval(enforce,150); }
+    function stop(){ if(enforceTimer){ clearInterval(enforceTimer); enforceTimer = null; } }
+    if(authModalEl){
+      authModalEl.addEventListener('shown.bs.modal', start);
+      authModalEl.addEventListener('hidden.bs.modal', stop);
+    }
+    window.addEventListener('pagehide', stop);
+  })();
+</script>
+
+<!-- Immediate UI toggle for business fields (non-module, runs early) -->
+<script>
+  (function(){
+    function applyBusinessVisibility() {
+      var role = document.getElementById('signupRole');
+      var container = document.getElementById('businessNameContainer');
+      var input = document.getElementById('signupBusinessName');
+      if(!role || !container || !input) return;
+      if(role.value === 'BUSINESS'){
+        container.style.display = 'block';
+        input.setAttribute('required','required');
+      } else {
+        container.style.display = 'none';
+        input.removeAttribute('required');
+        input.value = '';
+      }
+    }
+
+    // Toggle when the select changes
+    var roleSel = document.getElementById('signupRole');
+    if(roleSel) roleSel.addEventListener('change', applyBusinessVisibility);
+
+    // When the modal is shown, ensure the correct visibility
+    var authModalEl = document.getElementById('authModal');
+    if(window.bootstrap && authModalEl){
+      authModalEl.addEventListener('shown.bs.modal', function(){ setTimeout(applyBusinessVisibility, 10); });
+    } else if(authModalEl){
+      // Fallback: periodically check while modal exists
+      authModalEl.addEventListener('shown.bs.modal', function(){ setTimeout(applyBusinessVisibility, 50); });
+    }
+
+    // Ensure visibility immediately when user clicks 'Crear cuenta' (covers timing quirks)
+    var signupTriggers = document.querySelectorAll('[data-auth-mode="signup"]');
+    Array.prototype.forEach.call(signupTriggers, function(btn){
+      btn.addEventListener('click', function(){ setTimeout(applyBusinessVisibility, 20); });
+    });
+
+    // Initial application in case the page already has the select value
+    document.addEventListener('DOMContentLoaded', applyBusinessVisibility);
+    // Also run immediately in case scripts run after DOMContentLoaded
+    setTimeout(applyBusinessVisibility, 50);
+  })();
+</script>
+
+<!-- Antes del cierre de </body> -->
 <script type="module">
   // Importar módulos
   import sessionManager from './js/session.js';
@@ -859,7 +962,56 @@
   window.api = api;
   window.authHelpers = { isLogged, login, signup, logout, hasRole };
   
-  // Inicializar app
+  // Control del campo "Nombre del Negocio" - simple y directo
+  let roleListenerAdded = false;
+  
+  const authModal = document.getElementById('authModal');
+  function applyBusinessVisibility(roleSelect, businessContainer, businessNameInput){
+    if (!roleSelect || !businessContainer || !businessNameInput) return;
+    if (roleSelect.value === 'BUSINESS') {
+      businessContainer.style.display = 'block';
+      businessNameInput.required = true;
+    } else {
+      businessContainer.style.display = 'none';
+      businessNameInput.required = false;
+      businessNameInput.value = '';
+    }
+  }
+
+  // Ensure visibility when modal is shown and when the select changes
+  authModal.addEventListener('shown.bs.modal', function() {
+    if (!roleListenerAdded) {
+      const roleSelect = document.getElementById('signupRole');
+      const businessContainer = document.getElementById('businessNameContainer');
+      const businessNameInput = document.getElementById('signupBusinessName');
+      if (roleSelect && businessContainer && businessNameInput) {
+        roleSelect.addEventListener('change', function() { applyBusinessVisibility(roleSelect, businessContainer, businessNameInput); });
+        // apply initial visibility immediately (covers case when select already on BUSINESS)
+        applyBusinessVisibility(roleSelect, businessContainer, businessNameInput);
+        roleListenerAdded = true;
+      }
+    } else {
+      // if listener already attached, still ensure visibility each time modal opens
+      const roleSelect = document.getElementById('signupRole');
+      const businessContainer = document.getElementById('businessNameContainer');
+      const businessNameInput = document.getElementById('signupBusinessName');
+      applyBusinessVisibility(roleSelect, businessContainer, businessNameInput);
+    }
+  });
+  
+  // Also handle switching modal mode buttons (in case the modal was already open and user toggles)
+  document.querySelectorAll('[data-auth-mode]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      // delay slightly to allow modal DOM to render, then apply visibility
+      setTimeout(()=> {
+        const roleSelect = document.getElementById('signupRole');
+        const businessContainer = document.getElementById('businessNameContainer');
+        const businessNameInput = document.getElementById('signupBusinessName');
+        applyBusinessVisibility(roleSelect, businessContainer, businessNameInput);
+      }, 50);
+    });
+  });
+ // Inicializar app
   import('./js/app.js').then(module => {
     console.log('App inicializada');
   });
