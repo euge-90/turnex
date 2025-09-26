@@ -1,5 +1,5 @@
 import { startOfMonth, endOfMonth, addDays, isWorkingDay, isPast, fmtDateKey, /* qs, */ isDateBlocked, getWorkingHoursForDate, SLOT_MINUTES, minutesToTime, timeToMinutes } from './utils.js'
-import { apiGetBookingsByDate } from './api.js'
+import api from './api.js';
 
 const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 // Base day names Sunday-first; we can rotate to Monday-first if needed
@@ -202,7 +202,7 @@ export class Calendar {
           allSlots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
         }
       }
-      const takenList = await apiGetBookingsByDate(dateKey)
+      const { bookings: takenList } = await api.getBookingsByDay(dateKey)
       // Expand taken segments by duration
       const taken = new Set()
       takenList.forEach(b => {
@@ -221,3 +221,4 @@ export class Calendar {
     }
   }
 }
+

@@ -3,7 +3,7 @@ import { CalendarioTurnex } from './calendario-turnex.js'
 // Legacy booking.js imports removed; API is the source of truth
 import { isLogged, login, signup, logout, getSession, isAdmin } from './auth.js'
 import { AuthTurnex } from './auth-turnex.js'
-import { apiListServices, apiCreateBooking, apiGetMyBookings, apiGetBookingsByDate, apiCancelBooking, apiGetConfig, apiPutConfig, apiCreateService, apiUpdateService, apiDeleteService, apiGetUsersCount } from './api.js'
+import api from './api.js';
 
 // DOM refs
 const grid = qs('#calendarGrid')
@@ -580,7 +580,7 @@ function setupBookingForm () {
     if (!selectedDateKey) { Swal.fire('Seleccioná un día', 'Elegí un día en el calendario', 'info'); return }
     if (!selectedTime) { Swal.fire('Seleccioná un horario', 'Elegí un horario disponible', 'info'); return }
     try {
-      const item = await apiCreateBooking({ serviceId, date: selectedDateKey, time: selectedTime, name: nameInput.value.trim() })
+      const item = await api.createBooking({ serviceId, date: selectedDateKey, time: selectedTime, name: nameInput.value.trim() })
       const descHtml = service?.description && service.description.trim().length > 0 ? `${service.description}<br>` : ''
       const durHtml = Number.isFinite(service?.duration) ? `<div class="text-body-secondary">Duración aprox. ${service.duration} min</div>` : ''
       await Swal.fire({
@@ -745,7 +745,7 @@ function renderAdmin () {
   (async () => {
     let usersTotal = '—'
     try {
-      const { total: count } = await apiGetUsersCount()
+      const { total: count } = await api.getUsersCount()
       usersTotal = count
     } catch {}
     adminSummaryEl && (adminSummaryEl.innerHTML = `
@@ -789,7 +789,7 @@ function renderAdmin () {
       const res = await Swal.fire({ title: '¿Cancelar turno?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sí, cancelar' })
       if (!res.isConfirmed) return
       try {
-        await apiCancelBooking(id)
+        await api.cancelBooking(id)
         Swal.fire('Cancelado', 'Turno cancelado', 'success')
         if (window.txToast) { window.txToast({ type: 'success', text: 'Turno cancelado' }) }
         await Promise.all([
@@ -831,7 +831,7 @@ function renderAdmin () {
         }
       })
       try {
-        const saved = await apiPutConfig(newCfg)
+        const saved = await api.updateConfig(newCfg)
         setConfig({
           workingHours: saved.workingHours,
           blockedDays: saved.blockedDays,
@@ -870,7 +870,7 @@ function renderAdmin () {
         try {
           const newCfg = getConfig()
           newCfg.blockedDays = (newCfg.blockedDays || []).filter(x => x !== key)
-          const saved = await apiPutConfig(newCfg)
+          const saved = await api.updateConfig(newCfg)
           setConfig(saved)
           renderAdmin()
           if (window.txToast) { window.txToast({ type: 'success', text: `Día ${key} desbloqueado` }) }
@@ -888,7 +888,7 @@ function renderAdmin () {
         const setDays = new Set(newCfg.blockedDays || [])
         setDays.add(val)
         newCfg.blockedDays = Array.from(setDays)
-        const saved = await apiPutConfig(newCfg)
+        const saved = await api.updateConfig(newCfg)
         setConfig(saved)
         Swal.fire('Bloqueado', `Se bloqueó ${val}`, 'success')
         if (window.txToast) { window.txToast({ type: 'success', text: `Día ${val} bloqueado` }) }
@@ -908,7 +908,7 @@ function renderAdmin () {
           const idx = parseInt(btn.getAttribute('data-unrange'), 10)
           const newCfg = getConfig()
           newCfg.blockedDateRanges = (newCfg.blockedDateRanges || []).filter((_, i) => i !== idx)
-          const saved = await apiPutConfig(newCfg)
+          const saved = await api.updateConfig(newCfg)
           setConfig(saved)
           renderAdmin()
           if (window.txToast) { window.txToast({ type: 'success', text: 'Rango desbloqueado' }) }
@@ -924,7 +924,7 @@ function renderAdmin () {
       try {
         const newCfg = getConfig()
         newCfg.blockedDateRanges = [...(newCfg.blockedDateRanges || []), { from, to }]
-        const saved = await apiPutConfig(newCfg)
+        const saved = await api.updateConfig(newCfg)
         setConfig(saved)
         Swal.fire('Bloqueado', `Se bloqueó ${from} → ${to}`, 'success')
         if (window.txToast) { window.txToast({ type: 'success', text: `Rango ${from} → ${to} bloqueado` }) }
@@ -951,7 +951,7 @@ function renderAdmin () {
           list.splice(idx, 1)
           if (!newCfg.blockedTimes) newCfg.blockedTimes = {}
           newCfg.blockedTimes[key] = list
-          const saved = await apiPutConfig(newCfg)
+          const saved = await api.updateConfig(newCfg)
           setConfig(saved)
           renderAdmin()
           if (window.txToast) { window.txToast({ type: 'success', text: 'Bloqueo horario quitado' }) }
@@ -972,7 +972,7 @@ function renderAdmin () {
         const list = newCfg.blockedTimes[key] || []
         list.push([from, to])
         newCfg.blockedTimes[key] = list
-        const saved = await apiPutConfig(newCfg)
+        const saved = await api.updateConfig(newCfg)
         setConfig(saved)
         Swal.fire('Bloqueado', `Se bloqueó ${key} ${from}→${to}`, 'success')
         if (window.txToast) { window.txToast({ type: 'success', text: `Bloqueo ${from}→${to} en ${key}` }) }
@@ -1019,7 +1019,7 @@ function renderAdmin () {
       btn.onclick = async () => {
         const id = btn.getAttribute('data-del-service')
         try {
-          await apiDeleteService(id)
+          await api.deleteService(id)
           await syncServices()
           renderServices()
           renderAdmin()
@@ -1054,7 +1054,7 @@ function renderAdmin () {
         if (!name) { Swal.fire('Error', 'Nombre requerido', 'error'); return }
         if (!Number.isFinite(duration) || duration <= 0 || duration % 30 !== 0) { Swal.fire('Error', 'La duración debe ser múltiplo de 30', 'error'); return }
         try {
-          await apiUpdateService(id, { name, description, duration, price })
+          await api.updateService(id, { name, description, duration, price })
           await syncServices()
           renderServices()
           renderAdmin()
@@ -1073,7 +1073,7 @@ function renderAdmin () {
       if (!name) { Swal.fire('Error', 'Completá el nombre del servicio', 'error'); return }
       if (!Number.isFinite(duration) || duration <= 0 || duration % 30 !== 0) { Swal.fire('Error', 'La duración debe ser un múltiplo de 30 minutos', 'error'); return }
       try {
-        await apiCreateService({ name, description, duration, price: priceSafe })
+        await api.createService({ name, description, duration, price: priceSafe })
         await syncServices()
         svcNameInput.value = ''
         if (svcDescInput) svcDescInput.value = ''
@@ -1123,3 +1123,4 @@ function toggleEditRow (id, editing, restoreView = false) {
   btnSave.classList.toggle('d-none', !editing)
   btnCancel.classList.toggle('d-none', !editing)
 }
+

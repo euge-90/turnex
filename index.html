@@ -847,5 +847,22 @@
       });
     });
   </script>
+  <!-- Antes del cierre de </body> -->
+<script type="module">
+  // Importar módulos
+  import sessionManager from './js/session.js';
+  import api from './js/api.js';
+  import { isLogged, login, signup, logout, hasRole } from './js/auth.js';
+  
+  // Hacer disponibles globalmente
+  window.sessionManager = sessionManager;
+  window.api = api;
+  window.authHelpers = { isLogged, login, signup, logout, hasRole };
+  
+  // Inicializar app
+  import('./js/app.js').then(module => {
+    console.log('App inicializada');
+  });
+</script>
 </body>
 </html>
