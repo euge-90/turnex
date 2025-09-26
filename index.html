@@ -61,9 +61,9 @@
 
           <div class="hero-search">
             <div class="search-form d-flex gap-2 align-items-center">
-              <div class="search-input-group"><span class="search-icon">🔍</span><input type="text" placeholder="Corte, color, tratamiento..." class="form-control"></div>
-              <div class="search-input-group"><span class="search-icon">📍</span><input type="text" placeholder="Palermo, Belgrano, Centro..." class="form-control"></div>
-              <button class="btn-accent">Encontrar <span class="btn-arrow">→</span></button>
+              <div class="search-input-group"><span class="search-icon">🔍</span><input id="heroServiceQuery" type="text" placeholder="Corte, color, tratamiento..." class="form-control"></div>
+              <div class="search-input-group"><span class="search-icon">📍</span><input id="heroLocation" type="text" placeholder="Palermo, Belgrano, Centro..." class="form-control"></div>
+              <button id="btnHeroSearch" class="btn-accent">Encontrar <span class="btn-arrow">→</span></button>
             </div>
             <div class="quick-suggestions mt-3"><span class="suggestion-label">Populares:</span><button class="suggestion-tag">Corte mujer</button><button class="suggestion-tag">Barba</button><button class="suggestion-tag">Manicura</button><button class="suggestion-tag">Coloración</button></div>
           </div>
@@ -250,29 +250,41 @@
           
       <!-- Service Categories Filter -->
       <div class="service-categories mb-4">
-        <button class="category-btn active" data-category="all">
+        <!-- Keep backward-compatible buttons but add .cat-card and data-cat for tests/scripts -->
+        <button class="category-btn cat-card active" data-category="all" data-cat="all">
           <span class="category-icon">💫</span>
           Todos
         </button>
-        <button class="category-btn" data-category="women">
+        <button class="category-btn cat-card" data-category="women" data-cat="corte">
           <span class="category-icon">👩</span>
           Mujer
         </button>
-        <button class="category-btn" data-category="men">
+        <button class="category-btn cat-card" data-category="men" data-cat="barba">
           <span class="category-icon">👨</span>
           Hombre
         </button>
-        <button class="category-btn" data-category="kids">
+        <button class="category-btn cat-card" data-category="kids" data-cat="peinado">
           <span class="category-icon">👶</span>
           Niños
         </button>
-        <button class="category-btn" data-category="events">
+        <button class="category-btn cat-card" data-category="events" data-cat="tratamiento">
           <span class="category-icon">💐</span>
           Eventos
         </button>
       </div>
-          
-      <div class="row" id="services-container">
+
+      <!-- Hidden select used by scripts to store the current category filter -->
+      <select id="svcCategory" class="d-none" aria-hidden="true">
+        <option value="">Todos</option>
+        <option value="corte">Corte</option>
+        <option value="color">Color</option>
+        <option value="tratamiento">Tratamiento</option>
+        <option value="barba">Barba</option>
+        <option value="peinado">Peinado</option>
+        <option value="unas">Uñas</option>
+      </select>
+
+      <div class="row" id="servicesList">
         <!-- Service Card 1 -->
         <div class="col-lg-4 col-md-6 mb-4">
           <div class="service-card" data-category="women">
@@ -303,7 +315,7 @@
                   <div class="professional-rating">⭐ 4.9 (127 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book">Reservar Turno</button>
+              <button class="btn-book" data-action="book">Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -337,7 +349,7 @@
                   <div class="professional-rating">⭐ 4.8 (89 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book">Reservar Turno</button>
+              <button class="btn-book" data-action="book">Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -372,7 +384,7 @@
                   <div class="professional-rating">⭐ 4.9 (203 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book">Reservar Turno</button>
+              <button class="btn-book" data-action="book">Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -406,7 +418,7 @@
                   <div class="professional-rating">⭐ 4.8 (98 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book">Reservar Turno</button>
+              <button class="btn-book" data-action="book">Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -440,7 +452,7 @@
                   <div class="professional-rating">⭐ 4.6 (74 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book">Reservar Turno</button>
+              <button class="btn-book" data-action="book">Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -474,7 +486,7 @@
                   <div class="professional-rating">⭐ 4.9 (127 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book">Reservar Turno</button>
+              <button class="btn-book" data-action="book">Reservar Turno</button>
             </div>
           </div>
         </div>

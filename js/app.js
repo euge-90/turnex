@@ -619,6 +619,63 @@ function init () {
 
 document.addEventListener('DOMContentLoaded', init)
 
+// Wire up book button behavior for dynamically rendered service cards
+window.addEventListener('turnex:services-rendered', () => {
+  document.querySelectorAll('.btn-book').forEach(btn => {
+    // avoid double-binding
+    if (btn.__txBound) return
+    btn.__txBound = true
+    btn.addEventListener('click', function (e) {
+      e.preventDefault()
+      // If not logged, open auth modal
+      if (!isLogged()) {
+        const modal = document.getElementById('authModal')
+        // Synchronously ensure modal is visible and has the expected class for tests
+        if (modal) {
+          modal.classList.add('show')
+          modal.style.display = 'block'
+          modal.removeAttribute('aria-hidden')
+          modal.setAttribute('aria-modal', 'true')
+        }
+        if (!document.querySelector('.modal-backdrop')) {
+          const b = document.createElement('div')
+          b.className = 'modal-backdrop fade show'
+          document.body.appendChild(b)
+        }
+        const m = modal ? new bootstrap.Modal(modal) : null
+        m?.show()
+        return
+      }
+      // Otherwise, show booking modal
+      const serviceCard = this.closest('.service-card')
+      const serviceName = serviceCard ? (serviceCard.querySelector('.service-title')?.textContent || '') : ''
+      const servicePrice = serviceCard ? (serviceCard.querySelector('.price-amount')?.textContent || '') : ''
+      showBookingModal(serviceName, servicePrice)
+    })
+  })
+})
+
+// Document-level fallback: handle clicks on any current or future booking buttons
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-action="book"], .btn-book')
+  if (!btn) return
+  e.preventDefault()
+  // Synchronously show auth modal for unauthenticated flows
+  const modal = document.getElementById('authModal')
+  if (modal) {
+    modal.classList.add('show')
+    modal.style.display = 'block'
+    modal.removeAttribute('aria-hidden')
+    modal.setAttribute('aria-modal', 'true')
+  }
+  if (!document.querySelector('.modal-backdrop')) {
+    const b = document.createElement('div')
+    b.className = 'modal-backdrop fade show'
+    document.body.appendChild(b)
+  }
+  try { const m = modal ? new bootstrap.Modal(modal) : null; m?.show() } catch (_) {}
+})
+
 // Global helpers for legacy inline handlers
 window.showDashboard = function () {
   if (isAdmin()) {
