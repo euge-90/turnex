@@ -3,12 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "start:static": "node ./scripts/start-static.js",
-  "test:playwright": "npx playwright test --project=chromium",
-  "test:playwright:headed": "npx playwright test --project=chromium --headed"
+    "start:static": "node ./scripts/start-static.js",
+    "test:playwright": "npx playwright test --project=chromium",
+    "test:playwright:headed": "npx playwright test --project=chromium --headed",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
+  "@playwright/test": "^1.40.0",
+  "vitest": "^1.6.1",
+  "jsdom": "^22.1.0",
     "eslint": "^8.57.1",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.32.0",
