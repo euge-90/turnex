@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test:playwright": "npx playwright test --project=chromium",
-    "test:playwright:headed": "npx playwright test --project=chromium --headed"
+  "start:static": "node ./scripts/start-static.js",
+  "test:playwright": "npx playwright test --project=chromium",
+  "test:playwright:headed": "npx playwright test --project=chromium --headed"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
