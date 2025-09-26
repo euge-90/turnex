@@ -1,5 +1,7 @@
 // Sistema centralizado de manejo de errores
 
+import sessionManager from './session.js'
+
 export class ErrorHandler {
   static handle(error, context = '') {
     console.error(`[Error en ${context}]:`, error);
@@ -24,7 +26,11 @@ export class ErrorHandler {
   }
 
   static showAuthError() {
-    return Swal.fire({ icon: 'warning', title: 'Sesión expirada', text: 'Tu sesión ha caducado. Por favor, inicia sesión nuevamente.', confirmButtonText: 'Iniciar sesión' }).then(() => { try { sessionManager.logout() } catch(_){}; window.location.href = 'index.html' })
+    // In test environments (jsdom) navigation is not implemented; only attempt logout
+    return Swal.fire({ icon: 'warning', title: 'Sesión expirada', text: 'Tu sesión ha caducado. Por favor, inicia sesión nuevamente.', confirmButtonText: 'Iniciar sesión' }).then(() => {
+      try { sessionManager.logout() } catch(_){}
+      try { if (typeof window !== 'undefined' && window.location) window.location.href = 'index.html' } catch(_){}
+    })
   }
 
   static showPermissionError() {

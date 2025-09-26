@@ -1,6 +1,7 @@
 {
   "name": "turnex-frontend-tests",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "start:static": "node ./scripts/start-static.js",
@@ -11,18 +12,36 @@
     "test:coverage": "vitest --coverage"
   },
   "devDependencies": {
-  "@playwright/test": "^1.40.0",
-  "vitest": "^1.6.1",
-  "jsdom": "^22.1.0",
+    "@playwright/test": "^1.55.1",
+    "@vitest/ui": "^1.6.1",
     "eslint": "^8.57.1",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.6.0",
+    "jsdom": "^22.1.0",
     "stylelint": "^16.24.0",
-    "stylelint-config-standard": "^39.0.0"
+    "stylelint-config-standard": "^39.0.0",
+    "vitest": "^1.6.1"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2"
-  }
+  },
+  "description": "[![Latest Release](https://img.shields.io/github/v/release/euge-90/turnex?sort=semver)](https://github.com/euge-90/turnex/releases)\r [![Deploy Status](https://github.com/euge-90/turnex/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/euge-90/turnex/actions/workflows/deploy-pages.yml)\r [Ver Changelog](./CHANGELOG.md)",
+  "main": "playwright.config.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/euge-90/turnex.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/euge-90/turnex/issues"
+  },
+  "homepage": "https://github.com/euge-90/turnex#readme"
 }
