@@ -124,7 +124,9 @@ class APIClient {
   }
 
   async createBooking(bookingData) {
-    return this.post('/bookings', bookingData);
+    const res = await this.post('/bookings', bookingData);
+    try { showSuccessToast && showSuccessToast('✅ Turno reservado exitosamente') } catch (e) {}
+    return res;
   }
 
   async cancelBooking(id) {
@@ -161,3 +163,15 @@ class APIClient {
 
 const api = new APIClient();
 export default api;
+
+// Small visual helper used by UI flows
+function showSuccessToast(message) {
+  try {
+    if (window.Swal) {
+      window.Swal.fire({ icon: 'success', title: message, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true })
+      return
+    }
+    const ev = new CustomEvent('turnex:notification', { detail: { type: 'success', message } })
+    window.dispatchEvent(ev)
+  } catch (e) { console.error(e) }
+}

@@ -26,6 +26,13 @@ export async function signup(email, password, extras = {}, options = {}) {
 
 export async function login(email, password, options = {}) {
   const data = await api.login({ email, password, ...options });
+  // Redirect BUSINESS users to dashboard
+  try {
+    if (data && data.user && data.user.role === 'BUSINESS') {
+      window.location.href = 'dashboard.html'
+      return data
+    }
+  } catch (e) { /* ignore */ }
   return data;
 }
 
