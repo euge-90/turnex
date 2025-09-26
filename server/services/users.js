@@ -1,7 +1,8 @@
-const bcrypt = require('bcrypt');
+import bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client';
 
 let prisma = null;
-try { prisma = require('@prisma/client') ? new (require('@prisma/client').PrismaClient)() : null; } catch { prisma = null; }
+try { prisma = new PrismaClient(); } catch { prisma = null; }
 
 const memory = {
   users: new Map(), // key: email, value: user object
@@ -14,7 +15,7 @@ function pickUser(u) {
   return rest;
 }
 
-async function findByEmail(email) {
+export async function findByEmail(email) {
   if (prisma) {
     try {
       return await prisma.user.findUnique({ where: { email } });
@@ -23,7 +24,7 @@ async function findByEmail(email) {
   return memory.users.get(email) || null;
 }
 
-async function createUser({ name, email, phone, password, role = 'CLIENT', businessName, businessAddress, businessPhone }) {
+export async function createUser({ name, email, phone, password, role = 'CLIENT', businessName, businessAddress, businessPhone }) {
   const exists = await findByEmail(email);
   if (exists) throw new Error('UserExists');
   const passwordHash = await bcrypt.hash(password, 10);
@@ -49,16 +50,30 @@ async function createUser({ name, email, phone, password, role = 'CLIENT', busin
   return user;
 }
 
-async function verifyUser(email, password) {
+export async function getUserCountsAndRecent({ recentLimit = 20 } = {}) {
+  // counts per role
+  const roles = ['CLIENT', 'BUSINESS', 'ADMIN'];
+  const countsPromises = roles.map(async (r) => {
+    const count = prisma ? await prisma.user.count({ where: { role: r } }) : 0;
+    return { role: r, count };
+  });
+  const counts = await Promise.all(countsPromises);
+
+  // recent users
+  const recent = prisma ? await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: recentLimit,
+    select: { id: true, email: true, role: true, createdAt: true, name: true },
+  }) : [];
+
+  return { counts, recent };
+}
+
+export async function verifyUser(email, password) {
   const user = await findByEmail(email);
   if (!user) return null;
   const ok = await bcrypt.compare(password, user.passwordHash);
   return ok ? user : null;
 }
 
-module.exports = {
-  findByEmail,
-  createUser,
-  verifyUser,
-  pickUser,
-};
+export { pickUser };

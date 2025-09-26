@@ -153,6 +153,32 @@ Endpoints principales:
 - `PUT /api/config` — Actualizar configuración (admin)
 - `GET /api/admin/users/count` — Total de usuarios (admin)
 
+### Admin endpoint: `GET /api/admin/users`
+
+Returns a report for administrators containing counts per role and a short list of recent users.
+
+- Path: `GET /api/admin/users`
+- Auth: Requires `Authorization: Bearer <token>` where the JWT `role` claim must be `ADMIN`.
+- Response: 200 OK JSON with fields `counts` (array of {role,count}) and `recent` (array of recent users).
+
+Example response:
+
+```
+{
+	"counts": [
+		{ "role": "CLIENT", "count": 42 },
+		{ "role": "BUSINESS", "count": 7 },
+		{ "role": "ADMIN", "count": 1 }
+	],
+	"recent": [
+		{ "id": "cmg...", "email": "owner@example.com", "role": "BUSINESS", "createdAt": "2025-09-26T01:19:43.574Z", "name": "Owner Name" },
+		{ "id": "cmg...", "email": "admin@turnex.local", "role": "ADMIN", "createdAt": "2025-09-26T00:21:04.947Z", "name": "Admin" }
+	]
+}
+```
+
+Use this endpoint for quick role distribution checks or to display recent signups to administrators.
+
 Ejemplos rápidos (curl):
 
 Signup:
