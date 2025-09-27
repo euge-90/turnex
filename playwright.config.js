@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: 'html',
   
   use: {
-    baseURL: 'https://euge-90.github.io/turnex/',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'https://euge-90.github.io/turnex/',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

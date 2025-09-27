@@ -1,0 +1,36 @@
+﻿**********************
+Inicio de la transcripción de Windows PowerShell
+Hora de inicio: 20250927002708
+Nombre de usuario: LAPTOP-0CG47B4B\ojeda
+Usuario RunAs: LAPTOP-0CG47B4B\ojeda
+Nombre de la configuración: 
+Máquina: LAPTOP-0CG47B4B (Microsoft Windows NT 10.0.26100.0)
+Aplicación host: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Id. de proceso: 27720
+PSVersion: 5.1.26100.6584
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.6584
+BuildVersion: 10.0.26100.6584
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+La transcripción ha comenzado. El archivo de salida es .\automator-run.txt
+[2025-09-27 00:27:08] [INFO] Detected PostgreSQL install at C:\Program Files\PostgreSQL\17
+[2025-09-27 00:27:08] [INFO] Detected Postgres service: postgresql-x64-15
+[2025-09-27 00:27:08] [INFO] Service PathName: "C:\Program Files\PostgreSQL\15\bin\pg_ctl.exe" runservice -N "postgresql-x64-15" -D "C:\Program Files\PostgreSQL\15\data" -w
+[2025-09-27 00:27:08] [INFO] Detected PGDATA from service: C:\Program Files\PostgreSQL\15\data
+[2025-09-27 00:27:08] [INFO] Skipping pg_hba modifications and ALTER USER per -SkipPgHba flag
+[2025-09-27 00:27:08] [INFO] Stopping service postgresql-x64-15...
+[2025-09-27 00:27:10] [INFO] Starting service postgresql-x64-15...
+[2025-09-27 00:27:13] [INFO] Skipping restore because -SkipPgHba was set
+[2025-09-27 00:27:13] [INFO] Reloading Postgres configuration
+C:\Program Files\PostgreSQL\15\bin\pg_ctl.exe: illegal option -- E
+Use «pg_ctl --help» para obtener más información.
+PS>ErrorTerminación(Join-Path): "No se puede convertir 'System.Object[]' al tipo 'System.String' requerido por el parámetro 'ChildPath'. El método especificado no es compatible."
+[2025-09-27 00:27:16] [ERROR] Unhandled error: No se puede convertir 'System.Object[]' al tipo 'System.String' requerido por el parámetro 'ChildPath'. El método especificado no es compatible.
+**********************
+Fin de la transcripción de Windows PowerShell
+Hora de finalización: 20250927002716
+**********************

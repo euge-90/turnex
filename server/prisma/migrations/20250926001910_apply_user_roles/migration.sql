@@ -10,9 +10,13 @@
   This preserves existing role values and avoids data loss.
 */
 
--- 1) Create enum type
-CREATE TYPE "UserRole" AS ENUM ('CLIENT', 'BUSINESS', 'ADMIN');
--- 2-5) All subsequent operations should only run if the "User" table exists.
+-- Create enum type if it does not already exist (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE lower(typname) = 'userrole') THEN
+    CREATE TYPE "UserRole" AS ENUM ('CLIENT', 'BUSINESS', 'ADMIN');
+  END IF;
+END$$;
 DO $$
 BEGIN
   IF to_regclass('"User"') IS NOT NULL THEN

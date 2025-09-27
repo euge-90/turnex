@@ -111,6 +111,10 @@ npm run studio
 ### PostgreSQL (opcional)
 1. Instalar PostgreSQL localmente y crear una base:
 	- DB: `turnex`
+
+## Local vs CI / Production
+
+When developing locally, prefer using a local Postgres and keep production/staging credentials out of the repository. See `docs/CI.md` for recommended secret names and workflow notes. The repo's `server/.env` may be set to a local database for development; production credentials should live in GitHub Actions secrets (example: `DATABASE_URL`).
 	- Usuario: `postgres` (o el que uses), contraseña acorde.
 2. Editar `server/.env` y ajustar `DATABASE_URL`:
 	```
