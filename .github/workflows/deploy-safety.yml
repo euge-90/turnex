@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      run_migrations:
+        description: 'Run Prisma migrations and optional E2E (set true to run).'
+        required: false
+        default: 'false'
       run_e2e:
         description: 'Run E2E tests after migrations (use workflow_dispatch to enable)'
         required: false
@@ -13,6 +17,7 @@ on:
 
 jobs:
   migrate-and-check:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_migrations == 'true' }}
     runs-on: ubuntu-latest
     env:
       PRISMA_SCHEMA: server/prisma/schema.prisma
