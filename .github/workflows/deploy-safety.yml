@@ -1,0 +1,111 @@
+name: Deploy Safety
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  migrate-and-check:
+    runs-on: ubuntu-latest
+    env:
+      PRISMA_SCHEMA: server/prisma/schema.prisma
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prisma migrate deploy (safe non-destructive)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy --schema $PRISMA_SCHEMA
+
+      - name: Run unit tests
+        run: npm test
+
+  optional-e2e:
+    needs: migrate-and-check
+    runs-on: ubuntu-latest
+    if: ${{ env.RUN_E2E == 'true' || github.event.inputs.run_e2e == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start static server
+        run: node ./scripts/start-static.js &
+
+      - name: Wait for server
+        run: npx wait-on http://127.0.0.1:8080
+
+      - name: Install Playwright browsers
+        run: npx playwright install
+
+      - name: Run Playwright tests
+        run: npx playwright test --project=chromium --reporter=github
+name: Deploy Safety
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  migrate-and-check:
+    runs-on: ubuntu-latest
+    env:
+      PRISMA_SCHEMA: server/prisma/schema.prisma
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prisma migrate deploy (safe non-destructive)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy --schema $PRISMA_SCHEMA
+
+      - name: Run unit tests
+        run: npm test
+
+  optional-e2e:
+    needs: migrate-and-check
+    runs-on: ubuntu-latest
+    if: env.RUN_E2E == 'true' || github.event.inputs.run_e2e == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Start static server
+        run: node ./scripts/start-static.js &
+      - name: Wait for server
+        run: npx wait-on http://127.0.0.1:8080
+      - name: Install Playwright browsers
+        run: npx playwright install
+      - name: Run Playwright tests
+        run: npx playwright test --project=chromium --reporter=github
