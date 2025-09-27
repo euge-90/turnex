@@ -33,8 +33,10 @@ jobs:
       - name: Install dependencies
         run: "npm ci"
 
-      - name: Check for DB secret (prefer STAGING_DATABASE_URL)
+      - name: Run Prisma migrate deploy (safe non-destructive)
+        if: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.run_migrations == 'true') || (github.event_name == 'push' && secrets.STAGING_DATABASE_URL != '') }}
         run: |
+          # Prefer STAGING_DATABASE_URL for push-triggered CI; for manual dispatch allow DATABASE_URL fallback
           if [ -n "${{ secrets.STAGING_DATABASE_URL }}" ]; then
             DB_URL='${{ secrets.STAGING_DATABASE_URL }}'
           else
@@ -44,11 +46,9 @@ jobs:
             echo "::error::Missing database secret. Add STAGING_DATABASE_URL or DATABASE_URL at https://github.com/${{ github.repository }}/settings/secrets/actions and re-run this workflow."
             exit 1
           fi
-
-      - name: Run Prisma migrate deploy (safe non-destructive)
-        env:
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-        run: "npx prisma migrate deploy --schema $PRISMA_SCHEMA"
+          echo "Using DB_URL from secret (masked)"
+          export DATABASE_URL="${DB_URL}"
+          npx prisma migrate deploy --schema $PRISMA_SCHEMA
 
       - name: Run unit tests
         run: "npm test"
