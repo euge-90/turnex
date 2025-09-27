@@ -34,7 +34,7 @@ jobs:
         run: "npm ci"
 
       - name: Run Prisma migrate deploy (safe non-destructive)
-        if: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.run_migrations == 'true') || (github.event_name == 'push' && secrets.STAGING_DATABASE_URL != '') }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_migrations == 'true' || github.event_name == 'push' }}
         run: |
           # Prefer STAGING_DATABASE_URL for push-triggered CI; for manual dispatch allow DATABASE_URL fallback
           if [ -n "${{ secrets.STAGING_DATABASE_URL }}" ]; then
