@@ -21,3 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2025-09-18
 - Initial release: SPA, calendar, services, bookings, auth, basic styles.
+
+## [dev] - 2025-09-26
+### Changed
+- Make Prisma migrations tolerant: add existence checks to user-altering migration SQL to avoid hard failures when migrations are applied out-of-order or when the `User` table is not present during a run.
