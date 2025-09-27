@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turnex — Reservá servicios de belleza y bienestar</title>
   <meta name="description" content="La forma más simple de reservar servicios de belleza y bienestar. Conectamos clientes con los mejores profesionales de Buenos Aires.">
+  <meta name="api-base" content="http://localhost:3000/api">
   <script>
     // Apply saved theme ASAP to avoid flash
     (function(){
@@ -35,6 +36,15 @@
     /* When the signup form is visible (no d-none), allow business container to show */
     .auth-form:not(.d-none) #businessNameContainer { display: block !important; }
   </style>
+  <script>
+  // Auto-switch a producción
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    window.API_BASE = 'https://turnex-api.onrender.com/api';
+  } else {
+    window.API_BASE = 'http://localhost:3000/api';
+  }
+  console.log('API configurada en:', window.API_BASE);
+</script>
 </head>
 <body>
   <!-- Navbar -->
