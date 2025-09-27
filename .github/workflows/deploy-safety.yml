@@ -17,7 +17,6 @@ on:
 
 jobs:
   migrate-and-check:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_migrations == 'true' }}
     runs-on: ubuntu-latest
     env:
       PRISMA_SCHEMA: server/prisma/schema.prisma
