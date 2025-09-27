@@ -6,18 +6,21 @@ BEGIN
   END IF;
 END$$;
 
--- Add business columns if they're missing
-ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "businessName" TEXT;
-ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "businessAddress" TEXT;
-ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "businessPhone" TEXT;
-
--- If role column is missing, add it as enum with default
+-- Add business columns if they're missing, but only if the "User" table exists.
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'User' AND column_name = 'role'
-  ) THEN
-    ALTER TABLE "User" ADD COLUMN "role" "UserRole" NOT NULL DEFAULT 'CLIENT';
+  -- to_regclass returns the relation if it exists; quoted identifiers are checked as-is.
+  IF to_regclass('"User"') IS NOT NULL THEN
+    ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "businessName" TEXT;
+    ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "businessAddress" TEXT;
+    ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "businessPhone" TEXT;
+
+    -- If role column is missing, add it as enum with default
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'User' AND column_name = 'role'
+    ) THEN
+      ALTER TABLE "User" ADD COLUMN "role" "UserRole" NOT NULL DEFAULT 'CLIENT';
+    END IF;
   END IF;
 END$$;
