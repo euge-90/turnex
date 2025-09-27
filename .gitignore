@@ -34,4 +34,5 @@ server/.env.*
 # Playwright / test artifacts
 playwright-report/
 node_modules/
+test-results/
 tests/playwright/test-results/
