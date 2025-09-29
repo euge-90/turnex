@@ -1041,6 +1041,41 @@
     console.log('App inicializada');
   });
 </script>
+<script>
+  // Forzar ocultación del campo de negocio en modo cliente
+  document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('signupRole');
+    const businessContainer = document.getElementById('businessNameContainer');
+    const businessNameInput = document.getElementById('signupBusinessName');
+    
+    function updateBusinessField() {
+      if (roleSelect && businessContainer && businessNameInput) {
+        if (roleSelect.value === 'BUSINESS') {
+          businessContainer.classList.remove('d-none');
+          businessNameInput.required = true;
+        } else {
+          businessContainer.classList.add('d-none');
+          businessNameInput.required = false;
+          businessNameInput.value = '';
+        }
+      }
+    }
+    
+    // Aplicar inmediatamente
+    updateBusinessField();
+    
+    // Aplicar cuando cambie el select
+    if (roleSelect) {
+      roleSelect.addEventListener('change', updateBusinessField);
+    }
+    
+    // Aplicar cuando se abra el modal
+    const authModal = document.getElementById('authModal');
+    if (authModal) {
+      authModal.addEventListener('shown.bs.modal', updateBusinessField);
+    }
+  });
+</script>
 <!-- Load search-and-booking module (es module) -->
 <script type="module" src="js/search-and-booking.js?v=20250926-1"></script>
 
