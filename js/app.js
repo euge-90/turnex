@@ -1259,6 +1259,169 @@ window.addEventListener('DOMContentLoaded', () => {
   }, 500); // Esperar a que validation.js termine de inicializar
 });
 
+<script>
+// ============================================
+// SISTEMA DE ONBOARDING
+// ============================================
+
+// Mostrar banner de bienvenida si no está logueado
+function checkAndShowWelcomeBanner() {
+  const token = localStorage.getItem('token');
+  const bannerDismissed = sessionStorage.getItem('welcomeBannerDismissed');
+  
+  if (!token && !bannerDismissed) {
+    document.getElementById('welcomeBanner').style.display = 'block';
+  }
+}
+
+// Cerrar banner de bienvenida
+function closeWelcomeBanner() {
+  document.getElementById('welcomeBanner').style.display = 'none';
+  sessionStorage.setItem('welcomeBannerDismissed', 'true');
+}
+
+// Modal de onboarding con pasos
+function showOnboardingModal() {
+  Swal.fire({
+    title: '¿Cómo reservar tu turno?',
+    html: `
+      <div class="onboarding-steps">
+        <div class="onboarding-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>📝 Creá tu cuenta</h4>
+            <p>Hacé clic en "Crear cuenta" y completá tu email y contraseña. Solo toma 30 segundos.</p>
+          </div>
+        </div>
+        
+        <div class="onboarding-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>🔐 Iniciá sesión</h4>
+            <p>Ingresá con tus datos para acceder a todas las funcionalidades.</p>
+          </div>
+        </div>
+        
+        <div class="onboarding-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>✂️ Elegí tu servicio</h4>
+            <p>Mirá los servicios disponibles (corte, color, barba, etc.) y seleccioná el que necesitás.</p>
+          </div>
+        </div>
+        
+        <div class="onboarding-step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>📅 Seleccioná fecha y hora</h4>
+            <p>Elegí el día y horario que más te convenga en el calendario interactivo.</p>
+          </div>
+        </div>
+        
+        <div class="onboarding-step">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h4>✅ ¡Listo!</h4>
+            <p>Confirmá tu turno y recibí toda la información. Podés verlo en "Mis turnos".</p>
+          </div>
+        </div>
+      </div>
+    `,
+    width: '600px',
+    showCloseButton: true,
+    showConfirmButton: true,
+    confirmButtonText: '¡Entendido, vamos!',
+    confirmButtonColor: '#667eea',
+    customClass: {
+      popup: 'onboarding-modal'
+    }
+  });
+}
+
+// Mostrar mensaje cuando intenten reservar sin login
+function requireAuthMessage() {
+  Swal.fire({
+    icon: 'info',
+    title: '¡Un momento! 👋',
+    html: `
+      <p style="font-size: 1rem; margin: 1rem 0;">
+        Para reservar turnos necesitás tener una cuenta.
+      </p>
+      <p style="font-size: 0.9rem; color: #666;">
+        <strong>¿Primera vez?</strong> Creá tu cuenta gratis en 30 segundos.
+      </p>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Crear cuenta',
+    cancelButtonText: 'Ya tengo cuenta',
+    confirmButtonColor: '#667eea',
+    cancelButtonColor: '#4a5568'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Abrir modal de registro
+      document.getElementById('registerBtn').click();
+    } else if (result.dismiss === Swal.DismissReason.cancel) {
+      // Abrir modal de login
+      document.getElementById('loginBtn').click();
+    }
+  });
+}
+
+// Agregar badges informativos a los botones
+function addHelpBadges() {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    // Badge en el botón de reservar
+    const reserveButtons = document.querySelectorAll('[data-action="reserve"]');
+    reserveButtons.forEach(btn => {
+      if (!btn.querySelector('.badge')) {
+        btn.innerHTML += ' <span class="badge bg-warning text-dark badge-pulse ms-1">¡Registrate!</span>';
+      }
+    });
+  }
+}
+
+// Interceptar clicks en elementos que requieren autenticación
+function interceptAuthRequiredActions() {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-requires-auth]');
+    if (target && !localStorage.getItem('token')) {
+      e.preventDefault();
+      e.stopPropagation();
+      requireAuthMessage();
+    }
+  });
+}
+
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+  checkAndShowWelcomeBanner();
+  addHelpBadges();
+  interceptAuthRequiredActions();
+  
+  // Actualizar badges al hacer login/logout
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'token') {
+      checkAndShowWelcomeBanner();
+      addHelpBadges();
+    }
+  });
+});
+
+// Mostrar modal automáticamente si es la primera visita
+const isFirstVisit = !localStorage.getItem('hasVisited');
+if (isFirstVisit) {
+  localStorage.setItem('hasVisited', 'true');
+  // Mostrar después de 2 segundos para no ser invasivo
+  setTimeout(() => {
+    if (!localStorage.getItem('token')) {
+      showOnboardingModal();
+    }
+  }, 2000);
+}
+</script>
+
 
 
 

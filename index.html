@@ -78,6 +78,30 @@
     </div>
   </nav>
 
+  <!-- Banner de Bienvenida (solo para usuarios NO logueados) -->
+<div id="welcomeBanner" class="welcome-banner" style="display: none;">
+  <div class="container">
+    <div class="welcome-content">
+      <div class="welcome-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="welcome-text">
+        <h3>¡Bienvenido a Turnex! 👋</h3>
+        <p>Para reservar tu turno, <strong>creá tu cuenta gratis</strong> en segundos. Es rápido y seguro.</p>
+      </div>
+      <div class="welcome-actions">
+        <button class="btn btn-light btn-sm" onclick="showOnboardingModal()">
+          Ver cómo funciona
+        </button>
+        <button class="btn-close btn-close-white" onclick="closeWelcomeBanner()" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">
@@ -343,7 +367,7 @@
                   <div class="professional-rating">⭐ 4.9 (127 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book" data-action="book">Reservar Turno</button>
+              <button class="btn-book" data-action="book" data-requires-auth>Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -377,7 +401,7 @@
                   <div class="professional-rating">⭐ 4.8 (89 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book" data-action="book">Reservar Turno</button>
+              <button class="btn-book" data-action="book" data-requires-auth>Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -412,7 +436,7 @@
                   <div class="professional-rating">⭐ 4.9 (203 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book" data-action="book">Reservar Turno</button>
+              <button class="btn-book" data-action="book" data-requires-auth>Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -446,7 +470,7 @@
                   <div class="professional-rating">⭐ 4.8 (98 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book" data-action="book">Reservar Turno</button>
+              <button class="btn-book" data-action="book" data-requires-auth>Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -480,7 +504,7 @@
                   <div class="professional-rating">⭐ 4.6 (74 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book" data-action="book">Reservar Turno</button>
+              <button class="btn-book" data-action="book" data-requires-auth>Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -514,7 +538,7 @@
                   <div class="professional-rating">⭐ 4.9 (127 reseñas)</div>
                 </div>
               </div>
-              <button class="btn-book" data-action="book">Reservar Turno</button>
+              <button class="btn-book" data-action="book" data-requires-auth>Reservar Turno</button>
             </div>
           </div>
         </div>
@@ -651,7 +675,7 @@
           <ul class="list-unstyled footer-links">
             <li><a href="#servicios">Servicios</a></li>
             <li><a href="#como-funciona">Cómo funciona</a></li>
-            <li><a href="#" data-bs-toggle="modal" data-bs-target="#authModal">Mis turnos</a></li>
+            <li><a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-requires-auth>Mis turnos</a></li>
             <li><a href="#" onclick="showBusinessModal()">Para negocios</a></li>
           </ul>
         </div>
@@ -714,7 +738,7 @@
       <i class="bi bi-info-circle"></i>
       <span>Info</span>
     </a>
-    <a href="#" class="bottom-nav-item" data-nav="reservar" data-bs-toggle="modal" data-bs-target="#authModal">
+    <a href="#" class="bottom-nav-item" data-nav="reservar" data-requires-auth data-bs-toggle="modal" data-bs-target="#authModal">
       <i class="bi bi-calendar-check"></i>
       <span>Reservar</span>
     </a>
@@ -882,7 +906,7 @@
 <script src="js/inline-scripts.js?v=20250924-1"></script>
 
   <!-- Bookings widget trigger -->
-  <button id="turnexBookingsBtn" class="btn btn-sm btn-primary position-fixed" style="right:16px; bottom:90px; z-index:1090; border-radius:999px; padding:10px 14px; box-shadow:0 6px 18px rgba(0,0,0,.12);">Mis reservas</button>
+  <button id="turnexBookingsBtn" data-requires-auth class="btn btn-sm btn-primary position-fixed" style="right:16px; bottom:90px; z-index:1090; border-radius:999px; padding:10px 14px; box-shadow:0 6px 18px rgba(0,0,0,.12);">Mis reservas</button>
 
 
 <!-- Footer Year Script -->
