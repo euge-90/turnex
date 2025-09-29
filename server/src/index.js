@@ -24,11 +24,20 @@ app.get('/api/health', (req, res) => {
 });
 
 // Rutas: pasar la instancia de prisma a los factories de rutas
-app.use('/api/auth', authRoutes({ prisma }));
-app.use('/api/services', servicesRoutes({ prisma }));
-app.use('/api/bookings', bookingsRoutes({ prisma }));
-app.use('/api/config', configRoutes({ prisma }));
-app.use('/api/admin', adminRoutes({ prisma }));
+// Helper to mount either a router or a factory that returns a router
+function mountRoute(path, routeExport) {
+  if (typeof routeExport === 'function') {
+    app.use(path, routeExport({ prisma }));
+  } else {
+    app.use(path, routeExport);
+  }
+}
+
+mountRoute('/api/auth', authRoutes);
+mountRoute('/api/services', servicesRoutes);
+mountRoute('/api/bookings', bookingsRoutes);
+mountRoute('/api/config', configRoutes);
+mountRoute('/api/admin', adminRoutes);
 
 // Función de inicialización
 async function startup() {
