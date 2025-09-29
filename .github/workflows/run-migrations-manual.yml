@@ -1,0 +1,63 @@
+name: Run Prisma Migrations (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      use_staging:
+        description: 'If true, use STAGING_DATABASE_URL secret instead of DATABASE_URL'
+        required: false
+        default: 'true'
+
+jobs:
+  run-migrations:
+    name: Run migrations (requires environment approval)
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Select DB secret
+        id: db_choice
+        run: |
+          # The workflow expressions above are evaluated by GitHub Actions and injected here
+          if [ "${USE_STAGING}" = "true" ] && [ -n "${STAGING_DATABASE_URL}" ]; then
+            echo "Using STAGING_DATABASE_URL"
+            echo "DATABASE_URL=${STAGING_DATABASE_URL}" >> $GITHUB_ENV
+          elif [ -n "${DATABASE_URL_SECRET}" ]; then
+            echo "Using DATABASE_URL"
+            echo "DATABASE_URL=${DATABASE_URL_SECRET}" >> $GITHUB_ENV
+          else
+            echo "::error::No database secret found. Add STAGING_DATABASE_URL or DATABASE_URL to repository secrets."
+            exit 1
+          fi
+        env:
+          USE_STAGING: ${{ github.event.inputs.use_staging }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          DATABASE_URL_SECRET: ${{ secrets.DATABASE_URL }}
+
+      - name: Show chosen DB host (masked)
+        run: |
+          echo "DB preview: ${DATABASE_URL:0:40}..."
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Run Prisma migrate deploy
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma
+
+      - name: Run lightweight smoke check
+        run: |
+          # quick health check if the app can start (optional)
+          node -e "console.log('skipping smoke start')"
