@@ -43,5 +43,16 @@
     "testEnvironment": "node",
     "testTimeout": 20000,
     "transform": {}
+  },
+  
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "scripts": {
+    "seed": "node prisma/seed.js"
   }
 }
+
+
+
+

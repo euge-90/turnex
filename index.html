@@ -7,6 +7,17 @@
   <meta name="description" content="La forma más simple de reservar servicios de belleza y bienestar. Conectamos clientes con los mejores profesionales de Buenos Aires.">
   <meta name="api-base" content="http://localhost:3000/api">
   <script>
+  // Auto-switch API para producción
+  if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+    window.API_BASE = 'https://turnex-api.onrender.com/api';
+    console.log('🌐 Modo PRODUCCIÓN - API:', window.API_BASE);
+  } else {
+    const metaApiBase = document.querySelector('meta[name="api-base"]');
+    window.API_BASE = metaApiBase ? metaApiBase.content : 'http://localhost:3000/api';
+    console.log('💻 Modo LOCAL - API:', window.API_BASE);
+  }
+</script>
+  <script>
     // Apply saved theme ASAP to avoid flash
     (function(){
       try {
@@ -849,6 +860,18 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+<!-- Configuración de API (debe estar ANTES de cargar los módulos) -->
+<script>
+  // Detectar entorno y configurar API
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    window.API_BASE = 'http://localhost:3000/api';
+    console.log('💻 Modo LOCAL - API:', window.API_BASE);
+  } else {
+    window.API_BASE = 'https://turnex-api.onrender.com/api';
+    console.log('🌐 Modo PRODUCCIÓN - API:', window.API_BASE);
+  }
+</script>
 
 <!-- Validaciones en tiempo real -->
 <script src="js/validation.js"></script>

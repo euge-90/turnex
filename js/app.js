@@ -4,6 +4,15 @@ import { CalendarioTurnex } from './calendario-turnex.js'
 import { isLogged, login, signup, logout, getSession, isAdmin } from './auth.js'
 import { AuthTurnex } from './auth-turnex.js'
 import api from './api.js';
+import { 
+  showMessage, 
+  showSuccess, 
+  showError, 
+  confirmAction, 
+  showLoading, 
+  closeLoading, 
+  fetchAPI 
+} from './utils.js'
 
 // DOM refs
 const grid = qs('#calendarGrid')
@@ -603,7 +612,7 @@ function setupBookingForm () {
 }
 
 function init () {
-  yearEl.textContent = new Date().getFullYear()
+if (yearEl) yearEl.textContent = new Date().getFullYear()
   syncConfig()
   renderServicesSkeleton()
   syncServices().then(renderServices)

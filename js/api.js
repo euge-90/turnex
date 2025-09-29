@@ -1,4 +1,5 @@
 import sessionManager from './session.js';
+import { showSuccess, showError, showLoading, closeLoading } from './utils.js';
 
 class APIClient {
   constructor() {
@@ -24,25 +25,46 @@ class APIClient {
         headers
       });
 
+      // Manejar 401 (no autorizado)
       if (response.status === 401) {
         this._handleUnauthorized();
-        throw new Error('No autorizado');
+        throw new Error('Tu sesión expiró. Por favor, ingresá nuevamente.');
       }
 
+      // Manejar 403 (prohibido)
       if (response.status === 403) {
         this._handleForbidden();
-        throw new Error('Acceso denegado');
+        throw new Error('No tenés permisos para realizar esta acción');
       }
 
-      const data = await response.json();
+      // Intentar parsear la respuesta
+      let data;
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
 
+      // Si la respuesta no es OK, lanzar error con el mensaje del servidor
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Error en la petición');
+        const errorMessage = data.error || data.message || `Error ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       return data;
+      
     } catch (error) {
-      console.error(`Error en ${endpoint}:`, error);
+      // Errores de red
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        const networkError = 'No se pudo conectar con el servidor. Verificá tu conexión.';
+        console.error(`❌ Error de red en ${endpoint}:`, error);
+        throw new Error(networkError);
+      }
+      
+      // Re-lanzar el error con el mensaje apropiado
+      console.error(`❌ Error en ${endpoint}:`, error.message);
       throw error;
     }
   }
@@ -71,119 +93,226 @@ class APIClient {
     return this.request(endpoint, { method: 'DELETE' });
   }
 
+  async patch(endpoint, body = {}) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(body)
+    });
+  }
+
+  // ==========================================
   // AUTH
+  // ==========================================
+  
   async signup(userData) {
-    const data = await this.post('/auth/signup', userData);
-    if (data.token && data.user) {
-      sessionManager.login(data.user, data.token);
+    try {
+      const data = await this.post('/auth/signup', userData);
+      if (data.token && data.user) {
+        sessionManager.login(data.user, data.token);
+        showSuccess('Cuenta creada exitosamente');
+      }
+      return data;
+    } catch (error) {
+      showError(error.message || 'Error al crear la cuenta');
+      throw error;
     }
-    return data;
   }
 
   async login(credentials) {
-    const data = await this.post('/auth/login', credentials);
-    if (data.token && data.user) {
-      sessionManager.login(data.user, data.token);
+    try {
+      const data = await this.post('/auth/login', credentials);
+      if (data.token && data.user) {
+        sessionManager.login(data.user, data.token);
+        showSuccess(`Bienvenido ${data.user.name || data.user.email}`);
+      }
+      return data;
+    } catch (error) {
+      showError(error.message || 'Error al iniciar sesión');
+      throw error;
     }
-    return data;
   }
 
   logout() {
     sessionManager.logout();
+    showSuccess('Sesión cerrada correctamente');
   }
 
+  // ==========================================
   // SERVICES
+  // ==========================================
+  
   async getServices(businessId = null) {
-    const params = businessId ? { businessId } : {};
-    return this.get('/services', params);
+    try {
+      const params = businessId ? { businessId } : {};
+      return await this.get('/services', params);
+    } catch (error) {
+      console.error('Error al obtener servicios:', error);
+      showError('No se pudieron cargar los servicios');
+      throw error;
+    }
   }
 
   async getService(id) {
-    return this.get(`/services/${id}`);
+    try {
+      return await this.get(`/services/${id}`);
+    } catch (error) {
+      showError('No se pudo obtener el servicio');
+      throw error;
+    }
   }
 
   async createService(serviceData) {
-    return this.post('/services', serviceData);
+    try {
+      const result = await this.post('/services', serviceData);
+      showSuccess(`Servicio "${serviceData.name}" creado`);
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al crear el servicio');
+      throw error;
+    }
   }
 
   async updateService(id, serviceData) {
-    return this.put(`/services/${id}`, serviceData);
+    try {
+      const result = await this.put(`/services/${id}`, serviceData);
+      showSuccess('Servicio actualizado correctamente');
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al actualizar el servicio');
+      throw error;
+    }
   }
 
   async deleteService(id) {
-    return this.delete(`/services/${id}`);
+    try {
+      const result = await this.delete(`/services/${id}`);
+      showSuccess('Servicio eliminado correctamente');
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al eliminar el servicio');
+      throw error;
+    }
   }
 
+  // ==========================================
   // BOOKINGS
+  // ==========================================
+  
   async getBookings() {
-    return this.get('/bookings');
+    try {
+      return await this.get('/bookings');
+    } catch (error) {
+      console.error('Error al obtener turnos:', error);
+      showError('No se pudieron cargar los turnos');
+      throw error;
+    }
   }
 
   async getBookingsByDay(date) {
-    return this.get('/bookings/day', { date });
+    try {
+      return await this.get('/bookings/day', { date });
+    } catch (error) {
+      console.error('Error al obtener turnos del día:', error);
+      // No mostrar error aquí, es silencioso
+      return [];
+    }
   }
 
   async createBooking(bookingData) {
-    const res = await this.post('/bookings', bookingData);
-    try { showSuccessToast && showSuccessToast('✅ Turno reservado exitosamente') } catch (e) {}
-    return res;
+    try {
+      const result = await this.post('/bookings', bookingData);
+      // NO mostrar mensaje aquí, se maneja en el formulario con SweetAlert2
+      return result;
+    } catch (error) {
+      // Propagar el error para que lo maneje el formulario
+      throw error;
+    }
   }
 
   async cancelBooking(id) {
-    return this.delete(`/bookings/${id}`);
+    try {
+      const result = await this.delete(`/bookings/${id}`);
+      showSuccess('Turno cancelado correctamente');
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al cancelar el turno');
+      throw error;
+    }
   }
 
-  async cancelBooking(id) {
-  return this.delete(`/bookings/${id}`);
-}
+  async updateBookingStatus(id, status) {
+    try {
+      const result = await this.patch(`/bookings/${id}/status`, { status });
+      showSuccess('Estado del turno actualizado');
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al actualizar el estado');
+      throw error;
+    }
+  }
 
-// 👇 AGREGAR ESTE MÉTODO NUEVO
-async updateBookingStatus(id, status) {
-  return this.request(`/bookings/${id}/status`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status })
-  });
-}
-
-// CONFIG
-async getConfig() {
-  return this.get('/config');
-}
+  // ==========================================
+  // CONFIG
+  // ==========================================
+  
+  async getConfig() {
+    try {
+      return await this.get('/config');
+    } catch (error) {
+      console.error('Error al obtener configuración:', error);
+      // No mostrar error, usar valores por defecto
+      return null;
+    }
+  }
 
   async updateConfig(configData) {
-    return this.put('/config', configData);
+    try {
+      const result = await this.put('/config', configData);
+      // NO mostrar mensaje aquí, se maneja en cada funcionalidad específica
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al actualizar la configuración');
+      throw error;
+    }
   }
 
+  // ==========================================
   // ADMIN
+  // ==========================================
+  
   async getUsersCount() {
-    return this.get('/admin/users/count');
+    try {
+      return await this.get('/admin/users/count');
+    } catch (error) {
+      console.error('Error al obtener conteo de usuarios:', error);
+      return { total: 0 };
+    }
   }
 
+  // ==========================================
+  // HANDLERS PRIVADOS
+  // ==========================================
+  
   _handleUnauthorized() {
-    console.warn('Token inválido o expirado');
+    console.warn('⚠️ Token inválido o expirado');
     sessionManager.logout();
+    
+    // Cerrar cualquier modal abierto
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(modal => {
+      const instance = bootstrap.Modal.getInstance(modal);
+      if (instance) instance.hide();
+    });
+    
+    // Disparar evento para que la UI reaccione
+    window.dispatchEvent(new CustomEvent('auth:expired'));
   }
 
   _handleForbidden() {
-    console.warn('Acceso denegado');
-    if (window.showNotification) {
-      window.showNotification('No tienes permisos para realizar esta acción', 'error');
-    }
+    console.warn('⚠️ Acceso denegado');
     window.dispatchEvent(new CustomEvent('permission:denied'));
   }
 }
 
 const api = new APIClient();
 export default api;
-
-// Small visual helper used by UI flows
-function showSuccessToast(message) {
-  try {
-    if (window.Swal) {
-      window.Swal.fire({ icon: 'success', title: message, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true })
-      return
-    }
-    const ev = new CustomEvent('turnex:notification', { detail: { type: 'success', message } })
-    window.dispatchEvent(ev)
-  } catch (e) { console.error(e) }
-}
