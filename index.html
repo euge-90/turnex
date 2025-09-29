@@ -45,7 +45,8 @@
       .bottom-nav { position: static; border-top: none; height: auto; }
     }
     /* When the signup form is visible (no d-none), allow business container to show */
-    .auth-form:not(.d-none) #businessNameContainer { display: block !important; }
+   /* The business name container visibility is controlled by JS based on the selected role.
+     Removing the forced CSS rule so the script can toggle the element using .d-none or inline styles. */
   </style>
   
 </head>
