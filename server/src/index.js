@@ -23,7 +23,7 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, timestamp: new Date().toISOString() });
 });
 
-// Rutas
+// Rutas: pasar la instancia de prisma a los factories de rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/bookings', bookingsRoutes);
@@ -82,5 +82,5 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Exportar para tests
-export { app, prisma };
+export { app };
 export default app;
