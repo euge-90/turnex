@@ -24,11 +24,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // Rutas: pasar la instancia de prisma a los factories de rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/services', servicesRoutes);
-app.use('/api/bookings', bookingsRoutes);
-app.use('/api/config', configRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes({ prisma }));
+app.use('/api/services', servicesRoutes({ prisma }));
+app.use('/api/bookings', bookingsRoutes({ prisma }));
+app.use('/api/config', configRoutes({ prisma }));
+app.use('/api/admin', adminRoutes({ prisma }));
 
 // Función de inicialización
 async function startup() {
