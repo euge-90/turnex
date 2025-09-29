@@ -56,22 +56,38 @@ function setupAPIBase() {
 }
 
 // Manejar cambio de rol en signup
-const roleSelect = document.getElementById('signupRole');
-const businessContainer = document.getElementById('businessNameContainer');
-const businessNameInput = document.getElementById('signupBusinessName');
+// Toggle visibility of the business-name input in a DOM-ready, consistent way.
+function updateBusinessFieldVisibility() {
+  const roleSelectEl = document.getElementById('signupRole');
+  const businessContainerEl = document.getElementById('businessNameContainer');
+  const businessNameInputEl = document.getElementById('signupBusinessName');
+  if (!roleSelectEl || !businessContainerEl || !businessNameInputEl) return;
 
-if (roleSelect && businessContainer && businessNameInput) {
-  roleSelect.addEventListener('change', (e) => {
-    if (e.target.value === 'BUSINESS') {
-      businessContainer.style.display = 'block';
-      businessNameInput.setAttribute('required', 'required');
-    } else {
-      businessContainer.style.display = 'none';
-      businessNameInput.removeAttribute('required');
-      businessNameInput.value = '';
-    }
-  });
+  if (roleSelectEl.value === 'BUSINESS') {
+    businessContainerEl.classList.remove('d-none');
+    businessNameInputEl.required = true;
+  } else {
+    businessContainerEl.classList.add('d-none');
+    businessNameInputEl.required = false;
+    businessNameInputEl.value = '';
+  }
 }
+
+// Run on DOM ready and attach change handler
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateBusinessFieldVisibility);
+} else {
+  updateBusinessFieldVisibility();
+}
+
+const _roleSelectWatcher = () => {
+  const roleSelectEl = document.getElementById('signupRole');
+  if (roleSelectEl) {
+    roleSelectEl.addEventListener('change', updateBusinessFieldVisibility);
+  }
+};
+
+_roleSelectWatcher();
 
 setupAPIBase();
 
