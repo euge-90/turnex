@@ -44,7 +44,8 @@
       body { padding-bottom: 0 !important; }
       .bottom-nav { position: static; border-top: none; height: auto; }
     }
-    
+    /* When the signup form is visible (no d-none), allow business container to show */
+    .auth-form:not(.d-none) #businessNameContainer { display: block !important; }
   </style>
   
 </head>
@@ -909,70 +910,10 @@
 </script>
 
 <!-- Defensive enforcement: while auth modal open, ensure business field visible -->
-<script>
-  (function(){
-    var enforceTimer = null;
-    var authModalEl = document.getElementById('authModal');
-    function enforce(){
-      var role = document.getElementById('signupRole');
-      var container = document.getElementById('businessNameContainer');
-      var input = document.getElementById('signupBusinessName');
-      if(!role || !container || !input) return;
-      if(role.value === 'BUSINESS'){
-        container.style.display = 'block';
-        input.setAttribute('required','required');
-      }
-    }
-    function start(){ if(enforceTimer) return; enforceTimer = setInterval(enforce,150); }
-    function stop(){ if(enforceTimer){ clearInterval(enforceTimer); enforceTimer = null; } }
-    if(authModalEl){
-      authModalEl.addEventListener('shown.bs.modal', start);
-      authModalEl.addEventListener('hidden.bs.modal', stop);
-    }
-    window.addEventListener('pagehide', stop);
-  })();
-</script>
+
 
 <!-- Immediate UI toggle for business fields (non-module, runs early) -->
-<script>
-  function applyBusinessVisibility(roleSelect, businessContainer, businessNameInput){
-  if (!roleSelect || !businessContainer || !businessNameInput) return;
-  
-  if (roleSelect.value === 'BUSINESS') {
-    businessContainer.classList.remove('d-none');
-    businessNameInput.setAttribute('required', 'required');
-  } else {
-    businessContainer.classList.add('d-none');
-    businessNameInput.removeAttribute('required');
-    businessNameInput.value = '';
-  }
-}
 
-    // Toggle when the select changes
-    var roleSel = document.getElementById('signupRole');
-    if(roleSel) roleSel.addEventListener('change', applyBusinessVisibility);
-
-    // When the modal is shown, ensure the correct visibility
-    var authModalEl = document.getElementById('authModal');
-    if(window.bootstrap && authModalEl){
-      authModalEl.addEventListener('shown.bs.modal', function(){ setTimeout(applyBusinessVisibility, 10); });
-    } else if(authModalEl){
-      // Fallback: periodically check while modal exists
-      authModalEl.addEventListener('shown.bs.modal', function(){ setTimeout(applyBusinessVisibility, 50); });
-    }
-
-    // Ensure visibility immediately when user clicks 'Crear cuenta' (covers timing quirks)
-    var signupTriggers = document.querySelectorAll('[data-auth-mode="signup"]');
-    Array.prototype.forEach.call(signupTriggers, function(btn){
-      btn.addEventListener('click', function(){ setTimeout(applyBusinessVisibility, 20); });
-    });
-
-    // Initial application in case the page already has the select value
-    document.addEventListener('DOMContentLoaded', applyBusinessVisibility);
-    // Also run immediately in case scripts run after DOMContentLoaded
-    setTimeout(applyBusinessVisibility, 50);
-  })();
-</script>
 
 <!-- Antes del cierre de </body> -->
 <script type="module">
@@ -1040,41 +981,73 @@
     console.log('App inicializada');
   });
 </script>
+<!-- Control del campo Nombre del Negocio - SCRIPT ÚNICO -->
 <script>
-  // Forzar ocultación del campo de negocio en modo cliente
-  document.addEventListener('DOMContentLoaded', function() {
+(function() {
+  function updateBusinessField() {
     const roleSelect = document.getElementById('signupRole');
     const businessContainer = document.getElementById('businessNameContainer');
     const businessNameInput = document.getElementById('signupBusinessName');
     
-    function updateBusinessField() {
-      if (roleSelect && businessContainer && businessNameInput) {
-        if (roleSelect.value === 'BUSINESS') {
-          businessContainer.classList.remove('d-none');
-          businessNameInput.required = true;
-        } else {
-          businessContainer.classList.add('d-none');
-          businessNameInput.required = false;
-          businessNameInput.value = '';
-        }
-      }
-    }
+    if (!roleSelect || !businessContainer || !businessNameInput) return;
     
-    // Aplicar inmediatamente
+    if (roleSelect.value === 'BUSINESS') {
+      businessContainer.classList.remove('d-none');
+      businessNameInput.required = true;
+    } else {
+      businessContainer.classList.add('d-none');
+      businessNameInput.required = false;
+      businessNameInput.value = '';
+    }
+  }
+  
+  // Aplicar cuando cargue la página
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateBusinessField);
+  } else {
     updateBusinessField();
-    
-    // Aplicar cuando cambie el select
-    if (roleSelect) {
-      roleSelect.addEventListener('change', updateBusinessField);
-    }
-    
-    // Aplicar cuando se abra el modal
-    const authModal = document.getElementById('authModal');
-    if (authModal) {
-      authModal.addEventListener('shown.bs.modal', updateBusinessField);
-    }
+  }
+  
+  // Aplicar cuando cambie el select
+  const roleSelect = document.getElementById('signupRole');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', updateBusinessField);
+  }
+  
+  // Aplicar cuando se abra el modal
+  const authModal = document.getElementById('authModal');
+  if (authModal) {
+    authModal.addEventListener('shown.bs.modal', function() {
+      setTimeout(updateBusinessField, 50);
+    });
+  }
+  
+  // Aplicar cuando se cambie entre Login/Signup
+  document.querySelectorAll('[data-auth-mode="signup"]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      setTimeout(updateBusinessField, 100);
+    });
+  });
+})();
+</script>
+
+<!-- Antes del cierre de </body> -->
+<script type="module">
+  import sessionManager from './js/session.js';
+  import api from './js/api.js';
+  import { isLogged, login, signup, logout, hasRole } from './js/auth.js';
+  
+  window.sessionManager = sessionManager;
+  window.api = api;
+  window.authHelpers = { isLogged, login, signup, logout, hasRole };
+  
+  import('./js/app.js').then(module => {
+    console.log('App inicializada');
   });
 </script>
+
+<!-- Load search-and-booking module (es module) -->
+<script type="module" src="js/search-and-booking.js?v=20250926-1"></script>
 <!-- Load search-and-booking module (es module) -->
 <script type="module" src="js/search-and-booking.js?v=20250926-1"></script>
 
