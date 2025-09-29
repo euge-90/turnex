@@ -796,22 +796,21 @@
             <small class="text-muted">Selecciona el tipo de cuenta según tu necesidad</small>
           </div>
         
-          <!-- Nombre del negocio (solo para BUSINESS) -->
-          <div class="mb-3" id="businessNameContainer" style="display: none;">
-            <label for="signupBusinessName" class="form-label">
-              Nombre del Negocio <span class="text-danger">*</span>
-            </label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="signupBusinessName"
-              placeholder="Ej: Peluquería Moderna"
-              autocomplete="organization"
-            >
-            <small class="text-muted">Este será el nombre visible de tu negocio</small>
-            <div class="invalid-feedback">El nombre del negocio es requerido</div>
-          </div>
-
+    <!-- Nombre del negocio (solo para BUSINESS) -->
+<div class="mb-3 d-none" id="businessNameContainer">
+  <label for="signupBusinessName" class="form-label">
+    Nombre del Negocio <span class="text-danger">*</span>
+  </label>
+  <input 
+    type="text" 
+    class="form-control" 
+    id="signupBusinessName"
+    placeholder="Ej: Peluquería Moderna"
+    autocomplete="organization"
+  >
+  <small class="text-muted">Este será el nombre visible de tu negocio</small>
+  <div class="invalid-feedback">El nombre del negocio es requerido</div>
+</div>
           <!-- Contraseña -->
           <div class="mb-3 position-relative">
             <label for="signupPassword" class="form-label">Contraseña</label>
@@ -937,21 +936,18 @@
 
 <!-- Immediate UI toggle for business fields (non-module, runs early) -->
 <script>
-  (function(){
-    function applyBusinessVisibility() {
-      var role = document.getElementById('signupRole');
-      var container = document.getElementById('businessNameContainer');
-      var input = document.getElementById('signupBusinessName');
-      if(!role || !container || !input) return;
-      if(role.value === 'BUSINESS'){
-        container.style.display = 'block';
-        input.setAttribute('required','required');
-      } else {
-        container.style.display = 'none';
-        input.removeAttribute('required');
-        input.value = '';
-      }
-    }
+  function applyBusinessVisibility(roleSelect, businessContainer, businessNameInput){
+  if (!roleSelect || !businessContainer || !businessNameInput) return;
+  
+  if (roleSelect.value === 'BUSINESS') {
+    businessContainer.classList.remove('d-none');
+    businessNameInput.setAttribute('required', 'required');
+  } else {
+    businessContainer.classList.add('d-none');
+    businessNameInput.removeAttribute('required');
+    businessNameInput.value = '';
+  }
+}
 
     // Toggle when the select changes
     var roleSel = document.getElementById('signupRole');
