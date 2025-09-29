@@ -612,13 +612,23 @@ function setupBookingForm () {
 }
 
 function init () {
-if (yearEl) yearEl.textContent = new Date().getFullYear()
+  if (yearEl) yearEl.textContent = new Date().getFullYear()
   syncConfig()
   renderServicesSkeleton()
   syncServices().then(renderServices)
-  setupCalendar()
+  
+  // Solo inicializar calendario si existe en la página
+  if (grid && label && prev && next) {
+    setupCalendar()
+  }
+  
   setupAuth()
-  setupBookingForm()
+  
+  // Solo inicializar form si existe
+  if (form && btnConfirm) {
+    setupBookingForm()
+  }
+  
   renderHoursBanner()
   syncMyBookings().then(renderMyBookings)
   syncAdminBookings().then(renderAdmin)
