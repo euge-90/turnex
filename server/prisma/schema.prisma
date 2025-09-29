@@ -1,84 +1,91 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  CLIENT
-  BUSINESS
-  ADMIN
-}
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  password     String
-  name         String?
-  role         UserRole  @default(CLIENT)
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  role             Role      @default(CLIENT) // 
+  name             String?   // Nombre completo
+  phone            String?   // Teléfono de contacto
+  createdAt        DateTime  @default(now())
   
-  // Campos para usuarios BUSINESS
-  businessName String?
-  businessId   String?   @unique
+  // Password reset
+  resetToken       String?
+  resetTokenExpiry DateTime?
   
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  // Relaciones
+  bookings         Booking[]
   
-  bookings     Booking[]
-  services     Service[] // Servicios creados por este usuario (solo BUSINESS)
-  
-  @@index([email])
-  @@index([role])
+  // Para rol BUSINESS
+  businessName     String?   // Nombre del negocio
+  businessAddress  String?   // Dirección
+  businessPhone    String?   // Teléfono del negocio
+  businessId       String?   @unique  // ID único del negocio
 }
 
-model Service {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  price       Float
-  duration    Int       @default(30) // duración en minutos
-  
-  createdBy   User      @relation(fields: [userId], references: [id])
-  userId      String
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  bookings    Booking[]
-  
-  @@index([userId])
+enum Role {
+  CLIENT   // Usuario común - solo reserva turnos
+  BUSINESS // Dueño del negocio - gestión operativa
+  ADMIN    // Super admin - control total
 }
 
 model Booking {
-  id        String   @id @default(cuid())
-  date      String   // YYYY-MM-DD
-  time      String   // HH:MM
-  name      String
+  id              String   @id @default(uuid())
+  userId          String
+  serviceId       String
+  date            String
+  time            String
+  name            String
+  phone           String?
+  notes           String?
+  status          BookingStatus @default(CONFIRMED) //
+  reminderSent24h Boolean  @default(false)
+  reminderSent2h  Boolean  @default(false)
+  createdAt       DateTime @default(now())
   
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  
-  service   Service  @relation(fields: [serviceId], references: [id])
-  serviceId String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([userId])
-  @@index([serviceId])
-  @@index([date])
+  user            User     @relation(fields: [userId], references: [id])
+  service         Service  @relation(fields: [serviceId], references: [id])
+}
+
+enum BookingStatus {
+  CONFIRMED  // Confirmado
+  CANCELLED  // Cancelado por usuario
+  NO_SHOW    // No se presentó
+  COMPLETED  // Completado
+}
+
+model Service {
+  id          String    @id @default(uuid())
+  name        String
+  duration    Int       // en minutos
+  price       Float
+  description String?
+  category    String?   // Ej: "Corte", "Coloración", "Tratamiento"
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  bookings    Booking[]
 }
 
 model Config {
-  id             String   @id @default(cuid())
-  businessHours  String   @default("{\"tuesday\":{\"start\":\"09:00\",\"end\":\"18:00\"},\"wednesday\":{\"start\":\"09:00\",\"end\":\"18:00\"},\"thursday\":{\"start\":\"09:00\",\"end\":\"18:00\"},\"friday\":{\"start\":\"09:00\",\"end\":\"18:00\"},\"saturday\":{\"start\":\"09:00\",\"end\":\"18:00\"}}")
-  blockedDates   String   @default("[]")
-  blockedTimes   String   @default("[]")
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(uuid())
+  workingDays     String[] // ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+  startTime       String   // "09:00"
+  endTime         String   // "18:00"
+  slotDuration    Int      // 30 minutos
+  lunchBreakStart String?  // "13:00"
+  lunchBreakEnd   String?  // "14:00"
+  blockedDates    String[] // ["2025-12-25", "2025-01-01"]
+  updatedAt       DateTime @default(now())
 }
