@@ -133,10 +133,22 @@ class APIClient {
     return this.delete(`/bookings/${id}`);
   }
 
-  // CONFIG
-  async getConfig() {
-    return this.get('/config');
-  }
+  async cancelBooking(id) {
+  return this.delete(`/bookings/${id}`);
+}
+
+// 👇 AGREGAR ESTE MÉTODO NUEVO
+async updateBookingStatus(id, status) {
+  return this.request(`/bookings/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status })
+  });
+}
+
+// CONFIG
+async getConfig() {
+  return this.get('/config');
+}
 
   async updateConfig(configData) {
     return this.put('/config', configData);
