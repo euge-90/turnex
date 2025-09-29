@@ -17,7 +17,7 @@
     "db:reset": "prisma migrate reset --force",
     "db:push": "prisma db push",
     "studio": "prisma studio",
-    "seed": "node scripts/createInitialUsers.js",
+    "seed": "node prisma/seed.js",
     "open:health": "start \"\" \"http://localhost:3000/api/health\"",
     "dev:open": "concurrently -n API,BROWSER -c blue,green \"npm run dev\" \"wait-on http://localhost:3000/api/health && powershell -NoProfile -Command Start-Process 'http://localhost:3000/api/health'\""
   },
@@ -44,15 +44,7 @@
     "testTimeout": 20000,
     "transform": {}
   },
-  
   "prisma": {
-    "seed": "node prisma/seed.js"
-  },
-  "scripts": {
     "seed": "node prisma/seed.js"
   }
 }
-
-
-
-
