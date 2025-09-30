@@ -26,9 +26,13 @@ app.get('/api/health', (req, res) => {
 // Rutas: pasar la instancia de prisma a los factories de rutas
 // Helper to mount either a router or a factory that returns a router
 function mountRoute(path, routeExport) {
+  console.log(`📍 Montando ruta: ${path}, tipo: ${typeof routeExport}`);
   if (typeof routeExport === 'function') {
-    app.use(path, routeExport({ prisma }));
+    const router = routeExport({ prisma });
+    console.log(`✅ Factory ejecutada para ${path}, resultado: ${typeof router}`);
+    app.use(path, router);
   } else {
+    console.log(`✅ Router directo para ${path}`);
     app.use(path, routeExport);
   }
 }

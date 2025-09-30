@@ -1,246 +1,145 @@
-import express from 'express';
-import { PrismaClient } from '@prisma/client';
-import { authenticate, can } from '../../middlewares/auth.js';
+import { Router } from 'express';
+import { authMiddleware } from '../lib/auth.js';
 
-const router = express.Router();
-const prisma = new PrismaClient();
+export default function servicesRoutes({ prisma }) {
+  const router = Router();
 
-/**
- * GET /api/services
- * Listar servicios (público o filtrado por negocio)
- */
-router.get('/', async (req, res) => {
-  try {
-    const { businessId } = req.query;
-    
-    const where = businessId ? { 
-      user: { businessId } 
-    } : {};
+  // GET /api/services - Listar todos los servicios (público)
+  router.get('/', async (req, res) => {
+    try {
+      const services = await prisma.service.findMany({
+        where: { active: true },
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(services);
+    } catch (error) {
+      console.error('Error al obtener servicios:', error);
+      res.status(500).json({
+        error: 'Error al obtener servicios',
+        details: error.message
+      });
+    }
+  });
 
-    const services = await prisma.service.findMany({
-      where,
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            businessName: true,
-            businessId: true,
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+  // GET /api/services/:id - Obtener un servicio específico
+  router.get('/:id', async (req, res) => {
+    try {
+      const service = await prisma.service.findUnique({
+        where: { id: req.params.id }
+      });
 
-    res.json({ services });
-  } catch (error) {
-    console.error('Error al obtener servicios:', error);
-    res.status(500).json({ 
-      error: 'Error al obtener servicios',
-      details: error.message 
-    });
-  }
-});
-
-/**
- * GET /api/services/:id
- * Obtener un servicio específico
- */
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const service = await prisma.service.findUnique({
-      where: { id },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            businessName: true,
-            businessId: true,
-          }
-        }
+      if (!service) {
+        return res.status(404).json({ error: 'Servicio no encontrado' });
       }
-    });
 
-    if (!service) {
-      return res.status(404).json({ error: 'Servicio no encontrado' });
-    }
-
-    res.json({ service });
-  } catch (error) {
-    res.status(500).json({ 
-      error: 'Error al obtener servicio',
-      details: error.message 
-    });
-  }
-});
-
-/**
- * POST /api/services
- * Crear servicio (solo BUSINESS y ADMIN)
- */
-router.post('/', authenticate, can('create-service'), async (req, res) => {
-  try {
-    const { name, description, price, duration = 30 } = req.body;
-    const userId = req.user.id;
-
-    // Validaciones
-    if (!name || !price) {
-      return res.status(400).json({ 
-        error: 'Nombre y precio son requeridos' 
+      res.json(service);
+    } catch (error) {
+      res.status(500).json({
+        error: 'Error al obtener servicio',
+        details: error.message
       });
     }
+  });
 
-    if (price <= 0) {
-      return res.status(400).json({ 
-        error: 'El precio debe ser mayor a 0' 
-      });
-    }
+  // POST /api/services - Crear servicio (requiere auth)
+  router.post('/', authMiddleware(false), async (req, res) => {
+    try {
+      const { name, description, price, duration = 30, category } = req.body;
 
-    // Crear servicio
-    const service = await prisma.service.create({
-      data: {
-        name,
-        description,
-        price: parseFloat(price),
-        duration: parseInt(duration),
-        userId,
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            businessName: true,
-            businessId: true,
-          }
-        }
+      if (!name || price === undefined) {
+        return res.status(400).json({
+          error: 'Nombre y precio son requeridos'
+        });
       }
-    });
 
-    res.status(201).json({ 
-      message: 'Servicio creado exitosamente',
-      service 
-    });
-  } catch (error) {
-    console.error('Error al crear servicio:', error);
-    res.status(500).json({ 
-      error: 'Error al crear servicio',
-      details: error.message 
-    });
-  }
-});
-
-/**
- * PUT /api/services/:id
- * Actualizar servicio (solo propietario o ADMIN)
- */
-router.put('/:id', authenticate, can('edit-service'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, description, price, duration } = req.body;
-    const userId = req.user.id;
-    const isAdmin = req.user.role === 'ADMIN';
-
-    // Verificar que el servicio existe
-    const service = await prisma.service.findUnique({ 
-      where: { id } 
-    });
-
-    if (!service) {
-      return res.status(404).json({ error: 'Servicio no encontrado' });
-    }
-
-    // Verificar permisos: solo propietario o admin
-    if (service.userId !== userId && !isAdmin) {
-      return res.status(403).json({ 
-        error: 'No tienes permiso para editar este servicio' 
-      });
-    }
-
-    // Actualizar
-    const updatedService = await prisma.service.update({
-      where: { id },
-      data: {
-        ...(name && { name }),
-        ...(description !== undefined && { description }),
-        ...(price && { price: parseFloat(price) }),
-        ...(duration && { duration: parseInt(duration) }),
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            businessName: true,
-          }
+      const service = await prisma.service.create({
+        data: {
+          name,
+          description,
+          price: parseFloat(price),
+          duration: parseInt(duration),
+          category,
+          active: true
         }
+      });
+
+      res.status(201).json(service);
+    } catch (error) {
+      console.error('Error al crear servicio:', error);
+      res.status(500).json({
+        error: 'Error al crear servicio',
+        details: error.message
+      });
+    }
+  });
+
+  // PUT /api/services/:id - Actualizar servicio (requiere auth)
+  router.put('/:id', authMiddleware(false), async (req, res) => {
+    try {
+      const { name, description, price, duration, category } = req.body;
+
+      const service = await prisma.service.findUnique({
+        where: { id: req.params.id }
+      });
+
+      if (!service) {
+        return res.status(404).json({ error: 'Servicio no encontrado' });
       }
-    });
 
-    res.json({ 
-      message: 'Servicio actualizado exitosamente',
-      service: updatedService 
-    });
-  } catch (error) {
-    console.error('Error al actualizar servicio:', error);
-    res.status(500).json({ 
-      error: 'Error al actualizar servicio',
-      details: error.message 
-    });
-  }
-});
+      const updatedService = await prisma.service.update({
+        where: { id: req.params.id },
+        data: {
+          ...(name && { name }),
+          ...(description !== undefined && { description }),
+          ...(price !== undefined && { price: parseFloat(price) }),
+          ...(duration !== undefined && { duration: parseInt(duration) }),
+          ...(category !== undefined && { category })
+        }
+      });
 
-/**
- * DELETE /api/services/:id
- * Eliminar servicio (solo propietario o ADMIN, sin turnos futuros)
- */
-router.delete('/:id', authenticate, can('delete-service'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-    const isAdmin = req.user.role === 'ADMIN';
-
-    // Verificar que el servicio existe
-    const service = await prisma.service.findUnique({ 
-      where: { id },
-      include: { bookings: true }
-    });
-
-    if (!service) {
-      return res.status(404).json({ error: 'Servicio no encontrado' });
-    }
-
-    // Verificar permisos
-    if (service.userId !== userId && !isAdmin) {
-      return res.status(403).json({ 
-        error: 'No tienes permiso para eliminar este servicio' 
+      res.json(updatedService);
+    } catch (error) {
+      console.error('Error al actualizar servicio:', error);
+      res.status(500).json({
+        error: 'Error al actualizar servicio',
+        details: error.message
       });
     }
+  });
 
-    // Verificar que no tenga turnos futuros
-    const today = new Date().toISOString().split('T')[0];
-    const hasFutureBookings = service.bookings.some(b => b.date >= today);
+  // DELETE /api/services/:id - Eliminar servicio (requiere auth)
+  router.delete('/:id', authMiddleware(false), async (req, res) => {
+    try {
+      const service = await prisma.service.findUnique({
+        where: { id: req.params.id },
+        include: { bookings: true }
+      });
 
-    if (hasFutureBookings) {
-      return res.status(409).json({ 
-        error: 'No se puede eliminar un servicio con turnos futuros' 
+      if (!service) {
+        return res.status(404).json({ error: 'Servicio no encontrado' });
+      }
+
+      // Verificar que no tenga turnos futuros
+      const today = new Date().toISOString().split('T')[0];
+      const hasFutureBookings = service.bookings.some(b => b.date >= today);
+
+      if (hasFutureBookings) {
+        return res.status(409).json({
+          error: 'No se puede eliminar un servicio con turnos futuros'
+        });
+      }
+
+      await prisma.service.delete({ where: { id: req.params.id } });
+
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error al eliminar servicio:', error);
+      res.status(500).json({
+        error: 'Error al eliminar servicio',
+        details: error.message
       });
     }
+  });
 
-    // Eliminar
-    await prisma.service.delete({ where: { id } });
-
-    res.json({ message: 'Servicio eliminado exitosamente' });
-  } catch (error) {
-    console.error('Error al eliminar servicio:', error);
-    res.status(500).json({ 
-      error: 'Error al eliminar servicio',
-      details: error.message 
-    });
-  }
-});
-
-export default router;
+  return router;
+}

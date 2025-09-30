@@ -11,42 +11,49 @@ async function main() {
     return;
   }
 
-  // Crear servicios por defecto
+  // Crear servicios por defecto (según el frontend)
   const services = [
     {
-      name: 'Corte de Pelo',
-      description: 'Corte clásico o moderno según tu estilo',
+      name: 'Corte y Peinado',
+      description: 'Corte personalizado y peinado profesional con productos de calidad premium',
+      duration: 60,
+      price: 4500,
+      category: 'women'
+    },
+    {
+      name: 'Corte + Barba',
+      description: 'Corte moderno y arreglo de barba con técnicas profesionales y acabado perfecto',
+      duration: 45,
+      price: 3800,
+      category: 'men'
+    },
+    {
+      name: 'Color + Tratamiento',
+      description: 'Coloración completa con tratamiento nutritivo para un cabello saludable y brillante',
+      duration: 120,
+      price: 8200,
+      category: 'women'
+    },
+    {
+      name: 'Corte para Niños',
+      description: 'Cortes especializados para niños en ambiente cómodo y divertido',
       duration: 30,
-      price: 5000,
-      category: 'HAIR'
+      price: 2500,
+      category: 'kids'
     },
     {
-      name: 'Barba y Bigote',
-      description: 'Perfilado y arreglo de barba',
-      duration: 20,
-      price: 3000,
-      category: 'HAIR'
+      name: 'Peinado para Eventos',
+      description: 'Peinados elegantes para bodas, fiestas y ocasiones especiales',
+      duration: 75,
+      price: 5800,
+      category: 'events'
     },
     {
-      name: 'Coloración',
-      description: 'Tintura completa o mechas',
-      duration: 90,
-      price: 12000,
-      category: 'HAIR'
-    },
-    {
-      name: 'Corte Infantil',
-      description: 'Corte para niños hasta 12 años',
-      duration: 20,
-      price: 3500,
-      category: 'HAIR'
-    },
-    {
-      name: 'Peinado y Brushing',
-      description: 'Brushing profesional para eventos',
-      duration: 40,
-      price: 6000,
-      category: 'STYLING'
+      name: 'Tratamientos Capilares',
+      description: 'Tratamientos reconstructivos y nutritivos para todo tipo de cabello',
+      duration: 50,
+      price: 4200,
+      category: 'women'
     }
   ];
 

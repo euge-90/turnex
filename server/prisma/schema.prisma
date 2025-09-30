@@ -47,23 +47,26 @@ model Booking {
   serviceId       String
   date            String
   time            String
-  name            String
+  duration        Int      @default(30)     // Duración en minutos
+  customerName    String?                   // Nombre del cliente (opcional)
   phone           String?
   notes           String?
-  status          BookingStatus @default(CONFIRMED) //
+  status          BookingStatus @default(CONFIRMED)
   reminderSent24h Boolean  @default(false)
   reminderSent2h  Boolean  @default(false)
   createdAt       DateTime @default(now())
-  
+
   user            User     @relation(fields: [userId], references: [id])
   service         Service  @relation(fields: [serviceId], references: [id])
 }
 
 enum BookingStatus {
+  PENDING    // Pendiente de confirmación
   CONFIRMED  // Confirmado
+  IN_PROGRESS // En progreso
+  COMPLETED  // Completado
   CANCELLED  // Cancelado por usuario
   NO_SHOW    // No se presentó
-  COMPLETED  // Completado
 }
 
 model Service {
