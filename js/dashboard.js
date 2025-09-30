@@ -7,13 +7,17 @@ if (!sessionManager.isAuthenticated()) {
 }
 
 const user = sessionManager.getUser();
+const API_URL = window.API_BASE || 'https://turnex-api.onrender.com/api';
+const token = sessionManager.getToken();
 
-// Actualizar UI
+let selectedDate = null;
+let selectedTime = null;
+let selectedService = null;
+
+// Actualizar UI usuario
 document.getElementById('userName').textContent = user.name || user.email;
-document.getElementById('userRole').textContent = sessionManager.getRoleDisplayName();
-document.getElementById('userEmail').textContent = user.email;
+document.getElementById('userRole').textContent = getRoleDisplayName(user.role);
 document.getElementById('navUserInfo').textContent = user.name || user.email;
-document.getElementById('userAvatar').textContent = (user.name || user.email).charAt(0).toUpperCase();
 
 // Logout
 document.getElementById('btnLogout').addEventListener('click', () => {
@@ -21,107 +25,281 @@ document.getElementById('btnLogout').addEventListener('click', () => {
   window.location.href = 'index.html';
 });
 
-// Renderizar acciones por rol
-const actionsGrid = document.getElementById('actionsGrid');
-let actions = [];
+// Navegación entre secciones
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const sectionName = link.dataset.section;
+    showSection(sectionName);
 
-if (user.role === 'CLIENT') {
-  actions = [
-    { title: 'Buscar Servicios', desc: 'Explora servicios disponibles', icon: '🔍', color: '#667eea', link: 'index.html#servicios' },
-    { title: 'Reservar Turno', desc: 'Agenda una nueva cita', icon: '📅', color: '#f093fb', link: 'calendar.html' },
-    { title: 'Mis Reservas', desc: 'Ver y gestionar mis turnos', icon: '📋', color: '#4facfe', link: 'mis-reservas.html' },
-    { title: 'Mi Perfil', desc: 'Configuración de cuenta', icon: '👤', color: '#fa709a', onClick: showProfile }
-  ];
-} else if (user.role === 'BUSINESS') {
-  actions = [
-    { title: 'Calendario', desc: 'Ver turnos programados', icon: '📅', color: '#f093fb', link: 'calendar.html' },
-    { title: 'Reservas', desc: 'Gestionar todas las reservas', icon: '📋', color: '#4facfe', link: 'mis-reservas.html' },
-    { title: 'Mi Perfil', desc: 'Configuración del negocio', icon: '👤', color: '#fa709a', onClick: showProfile }
-  ];
-} else if (user.role === 'ADMIN') {
-  actions = [
-    { title: 'Todas las Reservas', desc: 'Ver todas las reservas', icon: '📋', color: '#f093fb', link: 'mis-reservas.html' },
-    { title: 'Estadísticas', desc: 'Reportes y analytics', icon: '📊', color: '#fa709a', onClick: loadStats },
-    { title: 'Configuración', desc: 'Ajustes del sistema', icon: '⚙️', color: '#4facfe', onClick: showProfile }
-  ];
-}
-
-actionsGrid.innerHTML = actions.map(a =>
-  `<a href="${a.link || '#'}" class="action-card" data-action="${a.title}">
-    <div class="action-icon" style="background: ${a.color}20; color: ${a.color};">${a.icon}</div>
-    <h5 class="mb-2 action-title">${a.title}</h5>
-    <p class="mb-0 action-desc">${a.desc}</p>
-  </a>`
-).join('');
-
-// Agregar listeners
-actions.forEach(action => {
-  if (action.onClick) {
-    const card = actionsGrid.querySelector(`[data-action="${action.title}"]`);
-    if (card) card.addEventListener('click', (e) => { e.preventDefault(); action.onClick(); });
-  }
+    // Update active tab
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+  });
 });
 
-// Funciones
-function showProfile() {
-  Swal.fire({
-    title: 'Mi Perfil',
-    html: `
-      <div class="text-start">
-        <p><strong>Nombre:</strong> ${user.name || user.email}</p>
-        <p><strong>Email:</strong> ${user.email}</p>
-        <p><strong>Rol:</strong> ${sessionManager.getRoleDisplayName()}</p>
-        ${user.businessName ? `<p><strong>Negocio:</strong> ${user.businessName}</p>` : ''}
-      </div>
-    `,
-    icon: 'info',
-    confirmButtonText: 'Cerrar',
-    confirmButtonColor: '#FF6B6B'
-  });
+window.showSection = function(sectionName) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(`${sectionName}-section`).classList.add('active');
+
+  // Cargar datos de la sección
+  if (sectionName === 'home') loadHome();
+  if (sectionName === 'calendar') loadCalendar();
+  if (sectionName === 'reservations') loadReservations();
+  if (sectionName === 'services') loadServices();
+};
+
+function getRoleDisplayName(role) {
+  const roles = { CLIENT: 'Cliente', BUSINESS: 'Negocio', ADMIN: 'Administrador' };
+  return roles[role] || role;
 }
 
-async function showBookings() {
-  window.location.href = 'mis-reservas.html';
-}
+// SECCIÓN HOME
+async function loadHome() {
+  try {
+    const bookings = await fetchBookings();
+    const upcoming = bookings.filter(b => new Date(b.date) >= new Date()).slice(0, 3);
 
-async function showAllBookings() {
-  window.location.href = 'mis-reservas.html';
-}
-    list.innerHTML = bookings.map(b => 
-      `<div class="booking-item">
-        <h6>${b.serviceName || 'Servicio'}</h6>
-        <p class="small text-muted"><i class="bi bi-calendar"></i> ${b.date} ${b.time} | <i class="bi bi-person"></i> ${b.name || b.email}</p>
-      </div>`
-    ).join('');
+    const container = document.getElementById('upcomingBookings');
+    if (upcoming.length === 0) {
+      container.innerHTML = '<p class="text-muted">No tenés reservas próximas</p>';
+    } else {
+      container.innerHTML = upcoming.map(b => `
+        <div class="booking-card">
+          <h6>${b.serviceName || 'Servicio'}</h6>
+          <p class="mb-0 small text-muted">
+            <i class="bi bi-calendar"></i> ${formatDate(b.date)} ${b.time}
+          </p>
+        </div>
+      `).join('');
+    }
   } catch (error) {
-    list.innerHTML = '<p class="text-danger">Error</p>';
+    document.getElementById('upcomingBookings').innerHTML = '<p class="text-danger">Error al cargar reservas</p>';
   }
 }
 
-async function loadStats() {
-  document.getElementById('statsSection').style.display = 'flex';
+// SECCIÓN CALENDARIO
+function loadCalendar() {
+  renderCalendar();
+  loadServicesForBooking();
+}
+
+function renderCalendar() {
+  const calendar = document.getElementById('calendar');
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  let html = '<div style="grid-column: span 7; text-align: center; font-weight: bold; margin-bottom: 16px;">';
+  html += `${today.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}</div>`;
+
+  ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
+    html += `<div style="font-weight: 600; text-align: center; padding: 8px;">${day}</div>`;
+  });
+
+  // Días vacíos antes del primer día
+  for (let i = 0; i < firstDay; i++) {
+    html += '<div class="calendar-day disabled"></div>';
+  }
+
+  // Días del mes
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    const isPast = date < new Date().setHours(0, 0, 0, 0);
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    html += `<div class="calendar-day ${isPast ? 'disabled' : ''}"
+                  onclick="${isPast ? '' : `selectDate('${dateStr}')`}">
+              ${day}
+            </div>`;
+  }
+
+  calendar.innerHTML = html;
+}
+
+window.selectDate = function(date) {
+  selectedDate = date;
+  document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+  event.target.classList.add('selected');
+
+  loadTimeSlots(date);
+};
+
+async function loadTimeSlots(date) {
+  document.getElementById('timeSlots').style.display = 'block';
+
+  // Horarios de 9am a 6pm cada 30 min
+  const slots = [];
+  for (let hour = 9; hour < 18; hour++) {
+    slots.push(`${String(hour).padStart(2, '0')}:00`);
+    slots.push(`${String(hour).padStart(2, '0')}:30`);
+  }
+
   try {
-    const bookings = await api.getBookings();
-    const services = await api.getServices();
-    document.getElementById('statBookings').textContent = bookings.length || 0;
-    document.getElementById('statServices').textContent = services.length || 0;
-    document.getElementById('statUsers').textContent = '0';
+    const bookedSlots = await fetch(`${API_URL}/bookings/day?date=${date}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.json()).catch(() => []);
+
+    const bookedTimes = bookedSlots.map(b => b.time);
+
+    document.getElementById('timeSlotsContainer').innerHTML = slots.map(time => {
+      const isBooked = bookedTimes.includes(time);
+      return `<div class="time-slot ${isBooked ? 'disabled' : ''}"
+                   onclick="${isBooked ? '' : `selectTime('${time}')`}">
+                ${time} ${isBooked ? '(Ocupado)' : ''}
+              </div>`;
+    }).join('');
   } catch (error) {
-    console.error('Error:', error);
+    document.getElementById('timeSlotsContainer').innerHTML = slots.map(time =>
+      `<div class="time-slot" onclick="selectTime('${time}')">${time}</div>`
+    ).join('');
+  }
+}
+
+window.selectTime = function(time) {
+  selectedTime = time;
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  event.target.classList.add('selected');
+
+  document.getElementById('serviceSelection').style.display = 'block';
+};
+
+async function loadServicesForBooking() {
+  try {
+    const services = await api.getServices();
+    const select = document.getElementById('serviceSelect');
+    select.innerHTML = '<option value="">Seleccionar servicio...</option>' +
+      services.map(s => `<option value="${s.id}">${s.name} - $${s.price || 0}</option>`).join('');
+  } catch (error) {
+    document.getElementById('serviceSelect').innerHTML = '<option>Error al cargar servicios</option>';
+  }
+}
+
+window.confirmBooking = async function() {
+  const serviceId = document.getElementById('serviceSelect').value;
+
+  if (!selectedDate || !selectedTime || !serviceId) {
+    Swal.fire('Error', 'Completá todos los campos', 'error');
+    return;
+  }
+
+  try {
+    await api.createBooking({
+      serviceId,
+      date: selectedDate,
+      time: selectedTime,
+      name: user.name || user.email
+    });
+
+    Swal.fire('¡Reserva confirmada!', `${selectedDate} a las ${selectedTime}`, 'success');
+    showSection('reservations');
+  } catch (error) {
+    Swal.fire('Error', error.message || 'No se pudo crear la reserva', 'error');
+  }
+};
+
+// SECCIÓN RESERVAS
+async function loadReservations() {
+  const container = document.getElementById('bookingsList');
+  container.innerHTML = '<p class="text-muted">Cargando...</p>';
+
+  try {
+    const bookings = await fetchBookings();
+
+    if (bookings.length === 0) {
+      container.innerHTML = '<p class="text-muted">No tenés reservas</p>';
+      return;
+    }
+
+    container.innerHTML = bookings.map(b => `
+      <div class="booking-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5>${b.serviceName || 'Servicio'}</h5>
+            <p class="mb-1">
+              <i class="bi bi-calendar"></i> ${formatDate(b.date)}
+              <i class="bi bi-clock ms-2"></i> ${b.time}
+            </p>
+            <p class="mb-0 small text-muted">
+              <i class="bi bi-person"></i> ${b.name || user.name}
+            </p>
+          </div>
+          <button class="btn btn-sm btn-outline-danger" onclick="cancelBooking('${b.id}')">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    container.innerHTML = '<p class="text-danger">Error al cargar reservas</p>';
   }
 }
 
 window.cancelBooking = async function(id) {
-  const confirm = await Swal.fire({ title: '¿Cancelar?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sí' });
-  if (confirm.isConfirmed) {
+  const result = await Swal.fire({
+    title: '¿Cancelar esta reserva?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, cancelar',
+    cancelButtonText: 'No'
+  });
+
+  if (result.isConfirmed) {
     try {
       await api.cancelBooking(id);
-      Swal.fire('¡Cancelada!', '', 'success');
-      showBookings();
+      Swal.fire('Cancelada', 'Tu reserva fue cancelada', 'success');
+      loadReservations();
     } catch (error) {
       Swal.fire('Error', error.message, 'error');
     }
   }
 };
 
-if (user.role === 'CLIENT') showBookings();
+// SECCIÓN SERVICIOS
+async function loadServices() {
+  const container = document.getElementById('servicesList');
+  container.innerHTML = '<p class="text-muted">Cargando...</p>';
+
+  try {
+    const services = await api.getServices();
+
+    if (services.length === 0) {
+      container.innerHTML = '<p class="text-muted">No hay servicios disponibles</p>';
+      return;
+    }
+
+    container.innerHTML = services.map(s => `
+      <div class="booking-card">
+        <h5>${s.name}</h5>
+        <p class="mb-1">${s.description || 'Sin descripción'}</p>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <span class="badge bg-primary">${s.duration || 30} min</span>
+          <strong>$${s.price || 0}</strong>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    container.innerHTML = '<p class="text-danger">Error al cargar servicios</p>';
+  }
+}
+
+// Helper functions
+async function fetchBookings() {
+  try {
+    return await api.getBookings();
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    return [];
+  }
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+// Inicializar
+loadHome();
