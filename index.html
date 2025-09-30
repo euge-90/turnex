@@ -900,10 +900,9 @@
 <!-- Validaciones en tiempo real -->
 <script src="js/validation.js"></script>
 
-<script type="module" src="js/auth.js?v=20250920-3"></script>
-<script type="module" src="js/app.js?v=20250920-1"></script>
 <script src="js/ux.js?v=20250920-1"></script>
 <script src="js/inline-scripts.js?v=20250924-1"></script>
+<script type="module" src="js/main.js?v=20250930-1"></script>
 
   <!-- Bookings widget trigger -->
   <button id="turnexBookingsBtn" data-requires-auth class="btn btn-sm btn-primary position-fixed" style="right:16px; bottom:90px; z-index:1090; border-radius:999px; padding:10px 14px; box-shadow:0 6px 18px rgba(0,0,0,.12);">Mis reservas</button>
@@ -942,69 +941,8 @@
 
 <!-- Antes del cierre de </body> -->
 <script type="module">
-  // Importar módulos
-  import sessionManager from './js/session.js';
-  import api from './js/api.js';
-  import { isLogged, login, signup, logout, hasRole } from './js/auth.js';
-  
-  // Hacer disponibles globalmente
-  window.sessionManager = sessionManager;
-  window.api = api;
-  window.authHelpers = { isLogged, login, signup, logout, hasRole };
-  
-  // Control del campo "Nombre del Negocio" - simple y directo
-  let roleListenerAdded = false;
-  
-  const authModal = document.getElementById('authModal');
-  function applyBusinessVisibility(roleSelect, businessContainer, businessNameInput){
-    if (!roleSelect || !businessContainer || !businessNameInput) return;
-    if (roleSelect.value === 'BUSINESS') {
-      businessContainer.style.display = 'block';
-      businessNameInput.required = true;
-    } else {
-      businessContainer.style.display = 'none';
-      businessNameInput.required = false;
-      businessNameInput.value = '';
-    }
-  }
-
-  // Ensure visibility when modal is shown and when the select changes
-  authModal.addEventListener('shown.bs.modal', function() {
-    if (!roleListenerAdded) {
-      const roleSelect = document.getElementById('signupRole');
-      const businessContainer = document.getElementById('businessNameContainer');
-      const businessNameInput = document.getElementById('signupBusinessName');
-      if (roleSelect && businessContainer && businessNameInput) {
-        roleSelect.addEventListener('change', function() { applyBusinessVisibility(roleSelect, businessContainer, businessNameInput); });
-        // apply initial visibility immediately (covers case when select already on BUSINESS)
-        applyBusinessVisibility(roleSelect, businessContainer, businessNameInput);
-        roleListenerAdded = true;
-      }
-    } else {
-      // if listener already attached, still ensure visibility each time modal opens
-      const roleSelect = document.getElementById('signupRole');
-      const businessContainer = document.getElementById('businessNameContainer');
-      const businessNameInput = document.getElementById('signupBusinessName');
-      applyBusinessVisibility(roleSelect, businessContainer, businessNameInput);
-    }
-  });
-  
-  // Also handle switching modal mode buttons (in case the modal was already open and user toggles)
-  document.querySelectorAll('[data-auth-mode]').forEach(btn => {
-    btn.addEventListener('click', function() {
-      // delay slightly to allow modal DOM to render, then apply visibility
-      setTimeout(()=> {
-        const roleSelect = document.getElementById('signupRole');
-        const businessContainer = document.getElementById('businessNameContainer');
-        const businessNameInput = document.getElementById('signupBusinessName');
-        applyBusinessVisibility(roleSelect, businessContainer, businessNameInput);
-      }, 50);
-    });
-  });
- // Inicializar app
-  import('./js/app.js').then(module => {
-    console.log('App inicializada');
-  });
+  // main.js ya maneja la inicialización
+  console.log('✅ Scripts cargados');
 </script>
 <!-- Control del campo Nombre del Negocio - SCRIPT ÚNICO -->
 <script>
@@ -1056,25 +994,6 @@
 })();
 </script>
 
-<!-- Antes del cierre de </body> -->
-<script type="module">
-  import sessionManager from './js/session.js';
-  import api from './js/api.js';
-  import { isLogged, login, signup, logout, hasRole } from './js/auth.js';
-  
-  window.sessionManager = sessionManager;
-  window.api = api;
-  window.authHelpers = { isLogged, login, signup, logout, hasRole };
-  
-  import('./js/app.js').then(module => {
-    console.log('App inicializada');
-  });
-</script>
-
-<!-- Load search-and-booking module (es module) -->
-<script type="module" src="js/search-and-booking.js?v=20250926-1"></script>
-<!-- Load search-and-booking module (es module) -->
-<script type="module" src="js/search-and-booking.js?v=20250926-1"></script>
 
 <!-- Bookings Modal -->
 <div class="modal fade" id="turnexBookingsModal" tabindex="-1" aria-hidden="true">
