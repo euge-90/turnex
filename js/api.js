@@ -1,73 +1,423 @@
-const API_BASE = (window.API_BASE || 'http://localhost:3000/api')
-const STORAGE_KEY = 'app_session_v1'
+import sessionManager from './session.js';
+import { showSuccess, showError, showLoading, closeLoading } from './utils.js';
 
-function readSession () {
-  try { const s = sessionStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s) } catch {}
-  try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s) } catch {}
-  return null
-}
-function getToken () { try { return readSession()?.token || null } catch { return null } }
-function setSession (data, opts = {}) {
-  const remember = opts.remember !== false // default true
-  const json = JSON.stringify(data)
-  try {
-    if (remember) { localStorage.setItem(STORAGE_KEY, json); sessionStorage.removeItem(STORAGE_KEY) } else { sessionStorage.setItem(STORAGE_KEY, json); localStorage.removeItem(STORAGE_KEY) }
-  } catch {}
-}
-function authHeaders () { const t = getToken(); return t ? { Authorization: `Bearer ${t}` } : {} }
-
-async function http (path, opts = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...opts,
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}), ...authHeaders() }
-  })
-  if (!res.ok) {
-    let payload
-    try { payload = await res.json() } catch { payload = { error: res.statusText } }
-    const e = new Error(payload.error || payload.message || 'Request failed')
-    e.status = res.status
-    e.payload = payload
-    throw e
+class APIClient {
+  constructor() {
+    this.baseURL = window.API_BASE || 'http://localhost:3000/api';
   }
-  const ct = res.headers.get('content-type') || ''; if (ct.includes('application/json')) return res.json(); return res.text()
+
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+
+    const token = sessionManager.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Timeout de 60 segundos para Render
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      // Manejar 401 (no autorizado)
+      if (response.status === 401) {
+        this._handleUnauthorized();
+        throw new Error('Tu sesión expiró. Por favor, ingresá nuevamente.');
+      }
+
+      // Manejar 403 (prohibido)
+      if (response.status === 403) {
+        this._handleForbidden();
+        throw new Error('No tenés permisos para realizar esta acción');
+      }
+
+      // Intentar parsear la respuesta
+      let data;
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+
+      // Si la respuesta no es OK, lanzar error con el mensaje del servidor
+      if (!response.ok) {
+        const errorMessage = data.error || data.message || `Error ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      return data;
+      
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      // Timeout
+      if (error.name === 'AbortError') {
+        const timeoutError = 'La solicitud tardó demasiado. El servidor está iniciando, intentá nuevamente en 30 segundos.';
+        console.error(`⏱️ Timeout en ${endpoint}`);
+        throw new Error(timeoutError);
+      }
+
+      // Errores de red
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        const networkError = 'No se pudo conectar con el servidor. Verificá tu conexión.';
+        console.error(`❌ Error de red en ${endpoint}:`, error);
+        throw new Error(networkError);
+      }
+
+      // Re-lanzar el error con el mensaje apropiado
+      console.error(`❌ Error en ${endpoint}:`, error.message);
+      throw error;
+    }
+  }
+
+  async get(endpoint, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+    return this.request(url, { method: 'GET' });
+  }
+
+  async post(endpoint, body = {}) {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+  }
+
+  async put(endpoint, body = {}) {
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(body)
+    });
+  }
+
+  async delete(endpoint) {
+    return this.request(endpoint, { method: 'DELETE' });
+  }
+
+  async patch(endpoint, body = {}) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(body)
+    });
+  }
+
+  // ==========================================
+  // AUTH
+  // ==========================================
+  
+  async signup(userData) {
+    try {
+      console.log('🔵 Signup request:', '/auth/signup', userData);
+      const data = await this.post('/auth/signup', userData);
+      console.log('✅ Signup response:', data);
+      if (data.token && data.user) {
+        sessionManager.login(data.user, data.token);
+      }
+      return data;
+    } catch (error) {
+      console.error('❌ Signup error:', error.message, error);
+      // NO usar fallback si es error del servidor (401, 400, etc)
+      if (error.message.includes('ya está registrado') ||
+          error.message.includes('8 caracteres') ||
+          error.message.includes('Credenciales') ||
+          error.message.includes('inválid')) {
+        throw error; // Re-lanzar errores de validación
+      }
+      console.warn('⚠️ API caída, usando auth local:', error.message);
+      const mockUser = {
+        id: crypto.randomUUID(),
+        email: userData.email,
+        name: userData.name || userData.email.split('@')[0],
+        role: userData.role || 'CLIENT',
+        businessName: userData.businessName || null,
+        phone: userData.phone || null
+      };
+      const mockToken = 'local-' + crypto.randomUUID();
+      const users = JSON.parse(localStorage.getItem('turnex-local-users') || '[]');
+      users.push(mockUser);
+      localStorage.setItem('turnex-local-users', JSON.stringify(users));
+      sessionManager.login(mockUser, mockToken);
+      // No mostrar mensaje - lo maneja validation.js
+      return { user: mockUser, token: mockToken };
+    }
+  }
+
+  async login(credentials) {
+    try {
+      console.log('🔵 Login request:', '/auth/login', credentials.email);
+      const data = await this.post('/auth/login', credentials);
+      console.log('✅ Login response:', data);
+      if (data.token && data.user) {
+        sessionManager.login(data.user, data.token);
+      }
+      return data;
+    } catch (error) {
+      console.error('❌ Login error:', error.message, error);
+      // NO usar fallback si es error del servidor (401, 400, etc)
+      if (error.message.includes('Credenciales') ||
+          error.message.includes('inválid') ||
+          error.message.includes('incorrectos')) {
+        throw error; // Re-lanzar errores de autenticación
+      }
+      console.warn('⚠️ API caída, usando auth local:', error.message);
+      const users = JSON.parse(localStorage.getItem('turnex-local-users') || '[]');
+      let user = users.find(u => u.email === credentials.email);
+      if (!user) {
+        user = {
+          id: crypto.randomUUID(),
+          email: credentials.email,
+          name: credentials.email.split('@')[0],
+          role: 'CLIENT',
+          businessName: null,
+          phone: null
+        };
+        users.push(user);
+        localStorage.setItem('turnex-local-users', JSON.stringify(users));
+      }
+      const mockToken = 'local-' + crypto.randomUUID();
+      sessionManager.login(user, mockToken);
+      // No mostrar mensaje - lo maneja validation.js
+      return { user, token: mockToken };
+    }
+  }
+
+  logout() {
+    sessionManager.logout();
+    showSuccess('Sesión cerrada correctamente');
+  }
+
+  // ==========================================
+  // SERVICES
+  // ==========================================
+  
+  async getServices(businessId = null) {
+    try {
+      const params = businessId ? { businessId } : {};
+      return await this.get('/services', params);
+    } catch (error) {
+      console.error('Error al obtener servicios:', error);
+      showError('No se pudieron cargar los servicios');
+      throw error;
+    }
+  }
+
+  async getService(id) {
+    try {
+      return await this.get(`/services/${id}`);
+    } catch (error) {
+      showError('No se pudo obtener el servicio');
+      throw error;
+    }
+  }
+
+  async createService(serviceData) {
+    try {
+      const result = await this.post('/services', serviceData);
+      showSuccess(`Servicio "${serviceData.name}" creado`);
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al crear el servicio');
+      throw error;
+    }
+  }
+
+  async updateService(id, serviceData) {
+    try {
+      const result = await this.put(`/services/${id}`, serviceData);
+      showSuccess('Servicio actualizado correctamente');
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al actualizar el servicio');
+      throw error;
+    }
+  }
+
+  async deleteService(id) {
+    try {
+      const result = await this.delete(`/services/${id}`);
+      showSuccess('Servicio eliminado correctamente');
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al eliminar el servicio');
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // BOOKINGS
+  // ==========================================
+  
+  async getBookings() {
+    try {
+      return await this.get('/bookings');
+    } catch (error) {
+      console.warn('⚠️ API caída, usando localStorage');
+      const user = sessionManager.getUser();
+      const allBookings = JSON.parse(localStorage.getItem('app_bookings_v1') || '[]');
+      return user ? allBookings.filter(b => b.email === user.email) : allBookings;
+    }
+  }
+
+  async getBookingsByDay(date) {
+    try {
+      return await this.get('/bookings/day', { date });
+    } catch (error) {
+      console.error('Error al obtener turnos del día:', error);
+      // No mostrar error aquí, es silencioso
+      return [];
+    }
+  }
+
+  async createBooking(bookingData) {
+    try {
+      const result = await this.post('/bookings', bookingData);
+      return result;
+    } catch (error) {
+      console.warn('⚠️ API caída, usando localStorage');
+      const user = sessionManager.getUser();
+      const allBookings = JSON.parse(localStorage.getItem('app_bookings_v1') || '[]');
+      const services = JSON.parse(localStorage.getItem('app_services_v1') || '[]');
+      const service = services.find(s => s.id === bookingData.serviceId);
+      const booking = {
+        id: crypto.randomUUID(),
+        email: user?.email || bookingData.email || 'guest@turnex.app',
+        name: user?.name || bookingData.name || 'Usuario',
+        serviceId: bookingData.serviceId,
+        serviceName: bookingData.serviceName || service?.name || 'Servicio',
+        duration: service?.duration || 30,
+        date: bookingData.date,
+        time: bookingData.time,
+        createdAt: Date.now()
+      };
+      allBookings.push(booking);
+      localStorage.setItem('app_bookings_v1', JSON.stringify(allBookings));
+      return booking;
+    }
+  }
+
+  async cancelBooking(id) {
+    try {
+      const result = await this.delete(`/bookings/${id}`);
+      showSuccess('Turno cancelado correctamente');
+      return result;
+    } catch (error) {
+      console.warn('⚠️ API caída, usando localStorage');
+      const user = sessionManager.getUser();
+      const allBookings = JSON.parse(localStorage.getItem('app_bookings_v1') || '[]');
+      const idx = allBookings.findIndex(b => b.id === id && b.email === user?.email);
+      if (idx === -1) throw new Error('Reserva no encontrada');
+      allBookings.splice(idx, 1);
+      localStorage.setItem('app_bookings_v1', JSON.stringify(allBookings));
+      showSuccess('Turno cancelado (modo local)');
+      return { success: true };
+    }
+  }
+
+  async updateBooking(id, bookingData) {
+    try {
+      const result = await this.put(`/bookings/${id}`, bookingData);
+      showSuccess('Turno actualizado correctamente');
+      return result;
+    } catch (error) {
+      console.warn('⚠️ API caída, usando localStorage');
+      const allBookings = JSON.parse(localStorage.getItem('app_bookings_v1') || '[]');
+      const idx = allBookings.findIndex(b => b.id === id);
+      if (idx === -1) throw new Error('Reserva no encontrada');
+      allBookings[idx] = { ...allBookings[idx], ...bookingData };
+      localStorage.setItem('app_bookings_v1', JSON.stringify(allBookings));
+      showSuccess('Turno actualizado (modo local)');
+      return allBookings[idx];
+    }
+  }
+
+  async updateBookingStatus(id, status) {
+    try {
+      const result = await this.patch(`/bookings/${id}/status`, { status });
+      showSuccess('Estado del turno actualizado');
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al actualizar el estado');
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // CONFIG
+  // ==========================================
+  
+  async getConfig() {
+    try {
+      return await this.get('/config');
+    } catch (error) {
+      console.error('Error al obtener configuración:', error);
+      // No mostrar error, usar valores por defecto
+      return null;
+    }
+  }
+
+  async updateConfig(configData) {
+    try {
+      const result = await this.put('/config', configData);
+      // NO mostrar mensaje aquí, se maneja en cada funcionalidad específica
+      return result;
+    } catch (error) {
+      showError(error.message || 'Error al actualizar la configuración');
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // ADMIN
+  // ==========================================
+  
+  async getUsersCount() {
+    try {
+      return await this.get('/admin/users/count');
+    } catch (error) {
+      console.error('Error al obtener conteo de usuarios:', error);
+      return { total: 0 };
+    }
+  }
+
+  // ==========================================
+  // HANDLERS PRIVADOS
+  // ==========================================
+  
+  _handleUnauthorized() {
+    console.warn('⚠️ Token inválido o expirado');
+    sessionManager.logout();
+    
+    // Cerrar cualquier modal abierto
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(modal => {
+      const instance = bootstrap.Modal.getInstance(modal);
+      if (instance) instance.hide();
+    });
+    
+    // Disparar evento para que la UI reaccione
+    window.dispatchEvent(new CustomEvent('auth:expired'));
+  }
+
+  _handleForbidden() {
+    console.warn('⚠️ Acceso denegado');
+    window.dispatchEvent(new CustomEvent('permission:denied'));
+  }
 }
 
-// Auth
-// extras (e.g., name, phone) are currently client-side only; backend accepts email/password
-export async function apiSignup ({ email, password, name, phone, remember = true, role, businessName, businessAddress, businessPhone } = {}) {
-  const payload = { name, email, phone, password }
-  if (role) payload.role = role
-  if (businessName) payload.businessName = businessName
-  if (businessAddress) payload.businessAddress = businessAddress
-  if (businessPhone) payload.businessPhone = businessPhone
-  const data = await http('/auth/signup', { method: 'POST', body: JSON.stringify(payload) })
-  setSession({ email: data.user.email, role: data.user.role, token: data.token, name: data.user.name || name || '', phone: data.user.phone || phone || '' }, { remember })
-  return data
-}
-export async function apiLogin ({ email, password, remember = true }) {
-  const data = await http('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
-  setSession({ email: data.user.email, role: data.user.role, token: data.token }, { remember })
-  return data
-}
-
-// Config
-export async function apiGetConfig () { return http('/config') }
-export async function apiPutConfig (next) { return http('/config', { method: 'PUT', body: JSON.stringify(next) }) }
-
-// Services
-export async function apiListServices () { return http('/services') }
-export async function apiCreateService ({ name, description = '', duration, price = 0 }) { return http('/services', { method: 'POST', body: JSON.stringify({ name, description, duration, price }) }) }
-export async function apiUpdateService (id, { name, description, duration, price }) { return http(`/services/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify({ name, description, duration, price }) }) }
-export async function apiDeleteService (id) { return http(`/services/${encodeURIComponent(id)}`, { method: 'DELETE' }) }
-
-// Bookings
-export async function apiGetBookingsByDate (date) { return http(`/bookings/day?date=${encodeURIComponent(date)}`) }
-export async function apiGetMyBookings () { return http('/bookings') }
-export async function apiCreateBooking ({ serviceId, date, time, name }) { return http('/bookings', { method: 'POST', body: JSON.stringify({ serviceId, date, time, name }) }) }
-export async function apiCancelBooking (id) { return http(`/bookings/${id}`, { method: 'DELETE' }) }
-
-export function getSession () { return readSession() }
-export function clearSession () { try { localStorage.removeItem(STORAGE_KEY) } catch {} try { sessionStorage.removeItem(STORAGE_KEY) } catch {} }
-
-// Admin
-export async function apiGetUsersCount () { return http('/admin/users/count') }
+const api = new APIClient();
+export default api;

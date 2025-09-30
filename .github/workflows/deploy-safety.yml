@@ -1,0 +1,85 @@
+name: Deploy Safety
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      run_migrations:
+        description: 'Run Prisma migrations and optional E2E (set true to run).'
+        required: false
+        default: 'false'
+      run_e2e:
+        description: 'Run E2E tests after migrations (use workflow_dispatch to enable)'
+        required: false
+        default: 'false'
+
+jobs:
+  migrate-and-check:
+    runs-on: ubuntu-latest
+    env:
+      PRISMA_SCHEMA: server/prisma/schema.prisma
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: "npm ci"
+
+      - name: Run Prisma migrate deploy (manual only)
+        # Only run migrations on explicit workflow_dispatch with run_migrations == 'true'.
+        # Running migrations automatically on push can attempt to migrate production DBs and
+        # cause P3005 when the schema already exists. Use the workflow_dispatch input to
+        # opt-in for migrations.
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_migrations == 'true' }}
+        run: |
+          # Prefer STAGING_DATABASE_URL for push-triggered CI; for manual dispatch allow DATABASE_URL fallback
+          if [ -n "${{ secrets.STAGING_DATABASE_URL }}" ]; then
+            DB_URL='${{ secrets.STAGING_DATABASE_URL }}'
+          else
+            DB_URL='${{ secrets.DATABASE_URL }}'
+          fi
+          if [ -z "${DB_URL}" ]; then
+            echo "::error::Missing database secret. Add STAGING_DATABASE_URL or DATABASE_URL at https://github.com/${{ github.repository }}/settings/secrets/actions and re-run this workflow."
+            exit 1
+          fi
+          echo "Using DB_URL from secret (masked)"
+          export DATABASE_URL="${DB_URL}"
+          npx prisma migrate deploy --schema $PRISMA_SCHEMA
+
+      - name: Run unit tests
+        run: "npm test"
+
+  optional-e2e:
+    needs: migrate-and-check
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_e2e == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: "npm ci"
+
+      - name: Start static server
+        run: "node ./scripts/start-static.js &"
+
+      - name: Wait for server
+        run: "npx wait-on http://127.0.0.1:8080"
+
+      - name: Install Playwright browsers
+        run: "npx playwright install"
+
+      - name: Run Playwright tests
+        run: "npx playwright test --project=chromium --reporter=github"

@@ -10,7 +10,7 @@ export default function authRoutes({ prisma }){
     try{
       const exists = await prisma.user.findUnique({ where:{ email } });
       if(!exists){
-        await prisma.user.create({ data:{ email, passwordHash: await hashPassword('admin123'), role:'ADMIN' } });
+        await prisma.user.create({ data:{ email, password: await hashPassword('admin123'), role:'ADMIN' } });
       }
     }catch{ /* noop */ }
   })();
@@ -28,7 +28,7 @@ export default function authRoutes({ prisma }){
       if(found) return res.status(409).json({error:'Email already registered'});
       const data = {
         email,
-        passwordHash: await hashPassword(password),
+        password: await hashPassword(password),
         role: r,
         name: name || undefined,
         phone: phone || undefined,
@@ -49,7 +49,7 @@ export default function authRoutes({ prisma }){
     try{
       const user = await prisma.user.findUnique({ where:{ email } });
       if(!user) return res.status(401).json({error:'Invalid credentials'});
-      const ok = await verifyPassword(password, user.passwordHash);
+      const ok = await verifyPassword(password, user.password);
       if(!ok) return res.status(401).json({error:'Invalid credentials'});
       const token = signToken(user);
       res.json({ token, user: { id:user.id, email:user.email, role:user.role } });

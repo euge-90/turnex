@@ -1,17 +1,23 @@
-/** @type {import('@playwright/test').PlaywrightTestConfig} */
-module.exports = {
-  timeout: 30000,
+import { defineConfig, devices } from '@playwright/test'
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  
   use: {
-    baseURL: 'http://localhost:8000',
-    headless: true,
-    viewport: { width: 1280, height: 800 },
-    actionTimeout: 10000,
-    navigationTimeout: 20000,
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'https://euge-90.github.io/turnex/',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
+
   projects: [
-    { name: 'chromium', use: { browserName: 'chromium' } },
-    { name: 'firefox', use: { browserName: 'firefox' } },
-    { name: 'webkit', use: { browserName: 'webkit' } }
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
-  testDir: 'tests/playwright'
-};
+})

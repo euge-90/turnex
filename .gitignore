@@ -34,4 +34,18 @@ server/.env.*
 # Playwright / test artifacts
 playwright-report/
 node_modules/
+test-results/
 tests/playwright/test-results/
+pw-debug-*.html
+pw-debug-*.png
+
+# Temporary files
+nul
+*.backup
+
+# Claude AI
+.claude/
+
+# Debug files
+served.html
+_remote_index.html

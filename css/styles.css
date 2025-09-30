@@ -119,6 +119,16 @@ body {
   transform: translateY(-1px);
 }
 
+/* Search highlight used by the client-side search to draw attention to matched services */
+.turnex-highlight { animation: turnexFlash 1.2s ease-in-out; box-shadow: 0 10px 30px rgba(20,120,255,.12) !important; border: 1px solid rgba(20,120,255,.12) !important; }
+@keyframes turnexFlash { 0% { transform: translateY(0) scale(1); } 20% { transform: translateY(-4px) scale(1.02); } 100% { transform: translateY(0) scale(1); } }
+
+/* Bookings modal list items */
+.booking-item { padding: .5rem .75rem; border-radius: 6px; background: #f8f9fa; display:flex; justify-content:space-between; align-items:center }
+.booking-name { font-weight:600 }
+.booking-date { font-size: .85rem }
+
+
 .btn-nav-accent {
   background: var(--gradient-accent);
   border: none;
@@ -1441,6 +1451,29 @@ body {
   font-weight: 600;
 }
 
+/* Dashboard styles */
+.sidebar {
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  padding-top: 0.5rem;
+}
+
+.dashboard-section {
+  padding-top: 1rem;
+}
+
+.nav-link {
+  color: #333;
+  padding: 0.5rem 1rem;
+}
+
+.nav-link:hover { background-color: #f8f9fa; }
+.nav-link.active { background-color: #0d6efd; color: white; }
+
+.card { transition: transform 0.2s; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
 .password-requirements small {
   display: block;
   line-height: 1.6;
@@ -1679,5 +1712,171 @@ body {
   
   .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%);
+  }
+
+
+/* Banner de Bienvenida */
+.welcome-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.welcome-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.welcome-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-text {
+  flex: 1;
+  min-width: 250px;
+}
+
+.welcome-text h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem 0;
+  font-weight: 600;
+}
+
+.welcome-text p {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.95;
+}
+
+.welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Modal de Onboarding */
+.onboarding-modal .modal-content {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.onboarding-modal .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1.5rem;
+}
+
+.onboarding-modal .modal-title {
+  font-weight: 600;
+}
+
+.onboarding-steps {
+  padding: 1.5rem;
+}
+
+.onboarding-step {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.onboarding-step:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.step-content h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+}
+
+.step-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.step-icon {
+  font-size: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+/* Tooltip Badge */
+.badge-pulse {
+  position: relative;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .welcome-content {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .welcome-text {
+    text-align: center;
+  }
+  
+  .welcome-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+
+
   }
 }

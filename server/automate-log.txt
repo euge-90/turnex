@@ -1,0 +1,32 @@
+﻿**********************
+Inicio de la transcripción de Windows PowerShell
+Hora de inicio: 20250927000303
+Nombre de usuario: LAPTOP-0CG47B4B\ojeda
+Usuario RunAs: LAPTOP-0CG47B4B\ojeda
+Nombre de la configuración: 
+Máquina: LAPTOP-0CG47B4B (Microsoft Windows NT 10.0.26100.0)
+Aplicación host: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Id. de proceso: 27720
+PSVersion: 5.1.26100.6584
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.6584
+BuildVersion: 10.0.26100.6584
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+La transcripción ha comenzado. El archivo de salida es .\automate-log.txt
+[2025-09-27 00:03:03] [INFO] Detected PostgreSQL install at C:\Program Files\PostgreSQL\17
+[2025-09-27 00:03:03] [INFO] Detected Postgres service: postgresql-x64-15
+[2025-09-27 00:03:03] [INFO] Backed up pg_hba.conf to C:\Program Files\PostgreSQL\17\data\pg_hba.conf.bak-20250927-000303
+[2025-09-27 00:03:03] [INFO] Temporarily set local auth to 'trust' in C:\Program Files\PostgreSQL\17\data\pg_hba.conf
+[2025-09-27 00:03:03] [INFO] Stopping service postgresql-x64-15...
+[2025-09-27 00:03:05] [INFO] Starting service postgresql-x64-15...
+[2025-09-27 00:03:08] [INFO] Altering postgres user password...
+[2025-09-27 00:03:08] [INFO] Running: C:\Program Files\PostgreSQL\15\bin\psql.exe -U postgres -h 127.0.0.1 -c ALTER USER postgres WITH PASSWORD 'YourNewStrongPassword123!';
+[2025-09-27 00:03:09] [ERROR] Failed to ALTER postgres password (exit code 2)
+**********************
+Fin de la transcripción de Windows PowerShell
+Hora de finalización: 20250927000309
+**********************

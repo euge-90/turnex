@@ -111,3 +111,180 @@ export function qs (sel) { return document.querySelector(sel) }
 export function qsa (sel) { return Array.from(document.querySelectorAll(sel)) }
 
 export function setAriaBusy (el, busy = true) { if (!el) return; el.setAttribute('aria-busy', String(busy)) }
+
+// ========================================
+// FEEDBACK VISUAL Y MANEJO DE ERRORES
+// ========================================
+
+/**
+ * Muestra un mensaje con SweetAlert2
+ * @param {string} type - 'success' | 'error' | 'warning' | 'info'
+ * @param {string} title - Título del mensaje
+ * @param {string} text - Texto del mensaje
+ */
+export function showMessage(type, title, text) {
+  const icons = {
+    success: 'success',
+    error: 'error',
+    warning: 'warning',
+    info: 'info'
+  }
+
+  return Swal.fire({
+    icon: icons[type] || 'info',
+    title: title,
+    text: text,
+    confirmButtonText: 'Entendido',
+    confirmButtonColor: '#6366f1',
+    timer: type === 'success' ? 3000 : undefined,
+    showConfirmButton: true
+  })
+}
+
+/**
+ * Muestra un mensaje de éxito (toast en esquina)
+ * @param {string} message - Mensaje a mostrar
+ */
+export function showSuccess(message) {
+  return Swal.fire({
+    icon: 'success',
+    title: '¡Listo!',
+    text: message,
+    timer: 2500,
+    showConfirmButton: false,
+    toast: true,
+    position: 'top-end',
+    background: '#10b981',
+    color: '#fff'
+  })
+}
+
+/**
+ * Muestra un mensaje de error
+ * @param {string} message - Mensaje de error
+ */
+export function showError(message) {
+  return Swal.fire({
+    icon: 'error',
+    title: 'Oops...',
+    text: message || 'Ocurrió un error inesperado',
+    confirmButtonText: 'Cerrar',
+    confirmButtonColor: '#ef4444'
+  })
+}
+
+/**
+ * Pide confirmación antes de una acción
+ * @param {string} title - Título de la confirmación
+ * @param {string} text - Texto explicativo
+ */
+export function confirmAction(title, text) {
+  return Swal.fire({
+    title: title,
+    text: text,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, continuar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#6366f1',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true
+  })
+}
+
+/**
+ * Muestra un loading mientras se procesa algo
+ * @param {string} message - Mensaje a mostrar
+ */
+export function showLoading(message = 'Procesando...') {
+  return Swal.fire({
+    title: message,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      Swal.showLoading()
+    }
+  })
+}
+
+/**
+ * Cierra el loading
+ */
+export function closeLoading() {
+  Swal.close()
+}
+
+/**
+ * Wrapper para fetch con manejo de errores
+ * @param {string} url - URL a fetchear
+ * @param {object} options - Opciones del fetch
+ * @returns {Promise<any>} - Respuesta parseada o lanza error
+ */
+export async function fetchAPI(url, options = {}) {
+  try {
+    // Agregar token si existe
+    const token = localStorage.getItem('token')
+    if (token) {
+      options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+      }
+    }
+
+    // Agregar Content-Type por defecto si hay body
+    if (options.body && !options.headers?.['Content-Type']) {
+      options.headers = {
+        ...options.headers,
+        'Content-Type': 'application/json'
+      }
+    }
+
+    const response = await fetch(url, options)
+    
+    // Si no es OK, intentar leer el mensaje de error del servidor
+    if (!response.ok) {
+      let errorMessage = 'Error en el servidor'
+      
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error || errorData.message || errorMessage
+      } catch {
+        // Si no puede parsear JSON, usar mensaje genérico según status
+        if (response.status === 401) {
+          errorMessage = 'Sesión expirada. Por favor, ingresá nuevamente.'
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+        } else if (response.status === 403) {
+          errorMessage = 'No tenés permisos para realizar esta acción'
+        } else if (response.status === 404) {
+          errorMessage = 'Recurso no encontrado'
+        } else if (response.status >= 500) {
+          errorMessage = 'Error en el servidor. Intentá más tarde.'
+        } else {
+          errorMessage = `Error ${response.status}: ${response.statusText}`
+        }
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    // Parsear respuesta
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json()
+    }
+    
+    return await response.text()
+    
+  } catch (error) {
+    // Manejo específico de errores de red
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      const errorMsg = 'No se pudo conectar con el servidor. Verificá tu conexión.'
+      showError(errorMsg)
+      throw new Error(errorMsg)
+    }
+    
+    // Para otros errores, solo re-lanzar (ya tienen mensaje apropiado)
+    throw error
+  }
+}

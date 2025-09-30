@@ -51,7 +51,7 @@ export default function bookingsRoutes({ prisma }){
       serviceId: String(serviceId),
       date, time, duration,
       customerName: name || null,
-      status: 'pending',
+      status: 'PENDING',
     }});
     res.status(201).json(booking);
   });
@@ -70,7 +70,7 @@ export default function bookingsRoutes({ prisma }){
     const id = String(req.params.id);
     if(req.user?.role !== 'admin') return res.status(403).json({ error:'Forbidden' });
     const { status } = req.body || {};
-    const allowed = new Set(['pending','confirmed','in_progress','completed','cancelled','no_show']);
+    const allowed = new Set(['PENDING','CONFIRMED','IN_PROGRESS','COMPLETED','CANCELLED','NO_SHOW']);
     if(!status || !allowed.has(String(status))) return res.status(400).json({ error:'Invalid status' });
     const exists = await prisma.booking.findUnique({ where:{ id } });
     if(!exists) return res.status(404).json({ error:'Not found' });

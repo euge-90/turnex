@@ -1,45 +1,144 @@
 import { Router } from 'express';
 import { authMiddleware } from '../lib/auth.js';
 
-export default function servicesRoutes({ prisma }){
+export default function servicesRoutes({ prisma }) {
   const router = Router();
 
-  router.get('/', async (_req,res)=>{
-    const svcs = await prisma.service.findMany({ orderBy:{ name:'asc' } });
-    res.json(svcs);
+  // GET /api/services - Listar todos los servicios (público)
+  router.get('/', async (req, res) => {
+    try {
+      const services = await prisma.service.findMany({
+        where: { active: true },
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(services);
+    } catch (error) {
+      console.error('Error al obtener servicios:', error);
+      res.status(500).json({
+        error: 'Error al obtener servicios',
+        details: error.message
+      });
+    }
   });
 
-  router.post('/', authMiddleware(true), async (req,res)=>{
-    const { name, description='', duration, price=0 } = req.body||{};
-    if(!name || !Number.isFinite(duration)) return res.status(400).json({error:'Missing fields'});
-    const svc = await prisma.service.create({ data:{ name, description, duration: Number(duration), price: Number(price)||0 } });
-    res.status(201).json(svc);
+  // GET /api/services/:id - Obtener un servicio específico
+  router.get('/:id', async (req, res) => {
+    try {
+      const service = await prisma.service.findUnique({
+        where: { id: req.params.id }
+      });
+
+      if (!service) {
+        return res.status(404).json({ error: 'Servicio no encontrado' });
+      }
+
+      res.json(service);
+    } catch (error) {
+      res.status(500).json({
+        error: 'Error al obtener servicio',
+        details: error.message
+      });
+    }
   });
 
-  router.put('/:id', authMiddleware(true), async (req,res)=>{
-    const id = String(req.params.id);
-    const exists = await prisma.service.findUnique({ where:{ id } });
-    if(!exists) return res.status(404).json({error:'Not found'});
-    const { name, description, duration, price } = req.body||{};
-    const svc = await prisma.service.update({ where:{ id }, data:{
-      ...(name!==undefined?{name}:{}) ,
-      ...(description!==undefined?{description}:{}) ,
-      ...(duration!==undefined?{duration: Number(duration)}:{}),
-      ...(price!==undefined?{price: Number(price)||0}:{}),
-    }});
-    res.json(svc);
+  // POST /api/services - Crear servicio (requiere auth)
+  router.post('/', authMiddleware(false), async (req, res) => {
+    try {
+      const { name, description, price, duration = 30, category } = req.body;
+
+      if (!name || price === undefined) {
+        return res.status(400).json({
+          error: 'Nombre y precio son requeridos'
+        });
+      }
+
+      const service = await prisma.service.create({
+        data: {
+          name,
+          description,
+          price: parseFloat(price),
+          duration: parseInt(duration),
+          category,
+          active: true
+        }
+      });
+
+      res.status(201).json(service);
+    } catch (error) {
+      console.error('Error al crear servicio:', error);
+      res.status(500).json({
+        error: 'Error al crear servicio',
+        details: error.message
+      });
+    }
   });
 
-  router.delete('/:id', authMiddleware(true), async (req,res)=>{
-    const id = String(req.params.id);
-    try{
-      // Guard: prevent deletion if future bookings exist
-      const nowKey = new Date().toISOString().slice(0,10);
-      const hasFuture = await prisma.booking.findFirst({ where:{ serviceId: id, date: { gte: nowKey } } });
-      if(hasFuture) return res.status(400).json({ error:'Service has future bookings' });
-      await prisma.service.delete({ where:{ id } });
+  // PUT /api/services/:id - Actualizar servicio (requiere auth)
+  router.put('/:id', authMiddleware(false), async (req, res) => {
+    try {
+      const { name, description, price, duration, category } = req.body;
+
+      const service = await prisma.service.findUnique({
+        where: { id: req.params.id }
+      });
+
+      if (!service) {
+        return res.status(404).json({ error: 'Servicio no encontrado' });
+      }
+
+      const updatedService = await prisma.service.update({
+        where: { id: req.params.id },
+        data: {
+          ...(name && { name }),
+          ...(description !== undefined && { description }),
+          ...(price !== undefined && { price: parseFloat(price) }),
+          ...(duration !== undefined && { duration: parseInt(duration) }),
+          ...(category !== undefined && { category })
+        }
+      });
+
+      res.json(updatedService);
+    } catch (error) {
+      console.error('Error al actualizar servicio:', error);
+      res.status(500).json({
+        error: 'Error al actualizar servicio',
+        details: error.message
+      });
+    }
+  });
+
+  // DELETE /api/services/:id - Eliminar servicio (requiere auth)
+  router.delete('/:id', authMiddleware(false), async (req, res) => {
+    try {
+      const service = await prisma.service.findUnique({
+        where: { id: req.params.id },
+        include: { bookings: true }
+      });
+
+      if (!service) {
+        return res.status(404).json({ error: 'Servicio no encontrado' });
+      }
+
+      // Verificar que no tenga turnos futuros
+      const today = new Date().toISOString().split('T')[0];
+      const hasFutureBookings = service.bookings.some(b => b.date >= today);
+
+      if (hasFutureBookings) {
+        return res.status(409).json({
+          error: 'No se puede eliminar un servicio con turnos futuros'
+        });
+      }
+
+      await prisma.service.delete({ where: { id: req.params.id } });
+
       res.status(204).end();
-    }catch(err){ res.status(500).json({ error:'Delete failed' }); }
+    } catch (error) {
+      console.error('Error al eliminar servicio:', error);
+      res.status(500).json({
+        error: 'Error al eliminar servicio',
+        details: error.message
+      });
+    }
   });
 
   return router;

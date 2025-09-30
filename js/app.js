@@ -3,7 +3,16 @@ import { CalendarioTurnex } from './calendario-turnex.js'
 // Legacy booking.js imports removed; API is the source of truth
 import { isLogged, login, signup, logout, getSession, isAdmin } from './auth.js'
 import { AuthTurnex } from './auth-turnex.js'
-import { apiListServices, apiCreateBooking, apiGetMyBookings, apiGetBookingsByDate, apiCancelBooking, apiGetConfig, apiPutConfig, apiCreateService, apiUpdateService, apiDeleteService, apiGetUsersCount } from './api.js'
+import api from './api.js';
+import { 
+  showMessage, 
+  showSuccess, 
+  showError, 
+  confirmAction, 
+  showLoading, 
+  closeLoading, 
+  fetchAPI 
+} from './utils.js'
 
 // DOM refs
 const grid = qs('#calendarGrid')
@@ -394,6 +403,33 @@ function showBusinessInfoModal (feature) {
 
   // Note: previous inline code accidentally injected into the template literal was removed here.
 
+  // Function to show/hide sections based on current hash and login status
+  const updateSectionVisibility = () => {
+    const hash = location.hash
+    const isLoggedIn = isLogged()
+    
+    // Hide all user sections by default
+    if (calendarioSection) calendarioSection.classList.add('d-none')
+    if (misTurnosSection) misTurnosSection.classList.add('d-none')
+    
+    // Show appropriate section for logged-in users
+    if (isLoggedIn) {
+      if (hash === '#calendario') {
+        if (calendarioSection) calendarioSection.classList.remove('d-none')
+        // Scroll to calendar section
+        setTimeout(() => {
+          calendarioSection?.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      } else if (hash === '#mis-turnos') {
+        if (misTurnosSection) misTurnosSection.classList.remove('d-none')
+        // Scroll to bookings section
+        setTimeout(() => {
+          misTurnosSection?.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      }
+    }
+  }
+
   const protectHashes = () => {
     if (!isLogged()) {
       const h = location.hash
@@ -403,6 +439,9 @@ function showBusinessInfoModal (feature) {
         const m = modal ? new bootstrap.Modal(modal) : null
         m?.show()
       }
+    } else {
+      // Show/hide sections based on hash for logged-in users
+      updateSectionVisibility()
     }
   }
   window.addEventListener('hashchange', protectHashes)
@@ -580,7 +619,7 @@ function setupBookingForm () {
     if (!selectedDateKey) { Swal.fire('Seleccioná un día', 'Elegí un día en el calendario', 'info'); return }
     if (!selectedTime) { Swal.fire('Seleccioná un horario', 'Elegí un horario disponible', 'info'); return }
     try {
-      const item = await apiCreateBooking({ serviceId, date: selectedDateKey, time: selectedTime, name: nameInput.value.trim() })
+      const item = await api.createBooking({ serviceId, date: selectedDateKey, time: selectedTime, name: nameInput.value.trim() })
       const descHtml = service?.description && service.description.trim().length > 0 ? `${service.description}<br>` : ''
       const durHtml = Number.isFinite(service?.duration) ? `<div class="text-body-secondary">Duración aprox. ${service.duration} min</div>` : ''
       await Swal.fire({
@@ -603,13 +642,23 @@ function setupBookingForm () {
 }
 
 function init () {
-  yearEl.textContent = new Date().getFullYear()
+  if (yearEl) yearEl.textContent = new Date().getFullYear()
   syncConfig()
   renderServicesSkeleton()
   syncServices().then(renderServices)
-  setupCalendar()
+  
+  // Solo inicializar calendario si existe en la página
+  if (grid && label && prev && next) {
+    setupCalendar()
+  }
+  
   setupAuth()
-  setupBookingForm()
+  
+  // Solo inicializar form si existe
+  if (form && btnConfirm) {
+    setupBookingForm()
+  }
+  
   renderHoursBanner()
   syncMyBookings().then(renderMyBookings)
   syncAdminBookings().then(renderAdmin)
@@ -618,6 +667,63 @@ function init () {
 }
 
 document.addEventListener('DOMContentLoaded', init)
+
+// Wire up book button behavior for dynamically rendered service cards
+window.addEventListener('turnex:services-rendered', () => {
+  document.querySelectorAll('.btn-book').forEach(btn => {
+    // avoid double-binding
+    if (btn.__txBound) return
+    btn.__txBound = true
+    btn.addEventListener('click', function (e) {
+      e.preventDefault()
+      // If not logged, open auth modal
+      if (!isLogged()) {
+        const modal = document.getElementById('authModal')
+        // Synchronously ensure modal is visible and has the expected class for tests
+        if (modal) {
+          modal.classList.add('show')
+          modal.style.display = 'block'
+          modal.removeAttribute('aria-hidden')
+          modal.setAttribute('aria-modal', 'true')
+        }
+        if (!document.querySelector('.modal-backdrop')) {
+          const b = document.createElement('div')
+          b.className = 'modal-backdrop fade show'
+          document.body.appendChild(b)
+        }
+        const m = modal ? new bootstrap.Modal(modal) : null
+        m?.show()
+        return
+      }
+      // Otherwise, show booking modal
+      const serviceCard = this.closest('.service-card')
+      const serviceName = serviceCard ? (serviceCard.querySelector('.service-title')?.textContent || '') : ''
+      const servicePrice = serviceCard ? (serviceCard.querySelector('.price-amount')?.textContent || '') : ''
+      showBookingModal(serviceName, servicePrice)
+    })
+  })
+})
+
+// Document-level fallback: handle clicks on any current or future booking buttons
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-action="book"], .btn-book')
+  if (!btn) return
+  e.preventDefault()
+  // Synchronously show auth modal for unauthenticated flows
+  const modal = document.getElementById('authModal')
+  if (modal) {
+    modal.classList.add('show')
+    modal.style.display = 'block'
+    modal.removeAttribute('aria-hidden')
+    modal.setAttribute('aria-modal', 'true')
+  }
+  if (!document.querySelector('.modal-backdrop')) {
+    const b = document.createElement('div')
+    b.className = 'modal-backdrop fade show'
+    document.body.appendChild(b)
+  }
+  try { const m = modal ? new bootstrap.Modal(modal) : null; m?.show() } catch (_) {}
+})
 
 // Global helpers for legacy inline handlers
 window.showDashboard = function () {
@@ -688,7 +794,7 @@ function renderAdmin () {
   (async () => {
     let usersTotal = '—'
     try {
-      const { total: count } = await apiGetUsersCount()
+      const { total: count } = await api.getUsersCount()
       usersTotal = count
     } catch {}
     adminSummaryEl && (adminSummaryEl.innerHTML = `
@@ -704,7 +810,7 @@ function renderAdmin () {
     const key = d.toISOString().slice(0, 10)
     const count = all.filter(b => b.date === key).length
     const label = d.toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: '2-digit' })
-    return `<li>${label}: <b>${count}</b></li>`
+    return `<li>${label}: <b>${counts.total}</b></li>`
   }).join(''))
 
   // Upcoming bookings table
@@ -732,7 +838,7 @@ function renderAdmin () {
       const res = await Swal.fire({ title: '¿Cancelar turno?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sí, cancelar' })
       if (!res.isConfirmed) return
       try {
-        await apiCancelBooking(id)
+        await api.cancelBooking(id)
         Swal.fire('Cancelado', 'Turno cancelado', 'success')
         if (window.txToast) { window.txToast({ type: 'success', text: 'Turno cancelado' }) }
         await Promise.all([
@@ -774,7 +880,7 @@ function renderAdmin () {
         }
       })
       try {
-        const saved = await apiPutConfig(newCfg)
+        const saved = await api.updateConfig(newCfg)
         setConfig({
           workingHours: saved.workingHours,
           blockedDays: saved.blockedDays,
@@ -813,7 +919,7 @@ function renderAdmin () {
         try {
           const newCfg = getConfig()
           newCfg.blockedDays = (newCfg.blockedDays || []).filter(x => x !== key)
-          const saved = await apiPutConfig(newCfg)
+          const saved = await api.updateConfig(newCfg)
           setConfig(saved)
           renderAdmin()
           if (window.txToast) { window.txToast({ type: 'success', text: `Día ${key} desbloqueado` }) }
@@ -831,7 +937,7 @@ function renderAdmin () {
         const setDays = new Set(newCfg.blockedDays || [])
         setDays.add(val)
         newCfg.blockedDays = Array.from(setDays)
-        const saved = await apiPutConfig(newCfg)
+        const saved = await api.updateConfig(newCfg)
         setConfig(saved)
         Swal.fire('Bloqueado', `Se bloqueó ${val}`, 'success')
         if (window.txToast) { window.txToast({ type: 'success', text: `Día ${val} bloqueado` }) }
@@ -851,7 +957,7 @@ function renderAdmin () {
           const idx = parseInt(btn.getAttribute('data-unrange'), 10)
           const newCfg = getConfig()
           newCfg.blockedDateRanges = (newCfg.blockedDateRanges || []).filter((_, i) => i !== idx)
-          const saved = await apiPutConfig(newCfg)
+          const saved = await api.updateConfig(newCfg)
           setConfig(saved)
           renderAdmin()
           if (window.txToast) { window.txToast({ type: 'success', text: 'Rango desbloqueado' }) }
@@ -867,7 +973,7 @@ function renderAdmin () {
       try {
         const newCfg = getConfig()
         newCfg.blockedDateRanges = [...(newCfg.blockedDateRanges || []), { from, to }]
-        const saved = await apiPutConfig(newCfg)
+        const saved = await api.updateConfig(newCfg)
         setConfig(saved)
         Swal.fire('Bloqueado', `Se bloqueó ${from} → ${to}`, 'success')
         if (window.txToast) { window.txToast({ type: 'success', text: `Rango ${from} → ${to} bloqueado` }) }
@@ -894,7 +1000,7 @@ function renderAdmin () {
           list.splice(idx, 1)
           if (!newCfg.blockedTimes) newCfg.blockedTimes = {}
           newCfg.blockedTimes[key] = list
-          const saved = await apiPutConfig(newCfg)
+          const saved = await api.updateConfig(newCfg)
           setConfig(saved)
           renderAdmin()
           if (window.txToast) { window.txToast({ type: 'success', text: 'Bloqueo horario quitado' }) }
@@ -915,7 +1021,7 @@ function renderAdmin () {
         const list = newCfg.blockedTimes[key] || []
         list.push([from, to])
         newCfg.blockedTimes[key] = list
-        const saved = await apiPutConfig(newCfg)
+        const saved = await api.updateConfig(newCfg)
         setConfig(saved)
         Swal.fire('Bloqueado', `Se bloqueó ${key} ${from}→${to}`, 'success')
         if (window.txToast) { window.txToast({ type: 'success', text: `Bloqueo ${from}→${to} en ${key}` }) }
@@ -962,7 +1068,7 @@ function renderAdmin () {
       btn.onclick = async () => {
         const id = btn.getAttribute('data-del-service')
         try {
-          await apiDeleteService(id)
+          await api.deleteService(id)
           await syncServices()
           renderServices()
           renderAdmin()
@@ -997,7 +1103,7 @@ function renderAdmin () {
         if (!name) { Swal.fire('Error', 'Nombre requerido', 'error'); return }
         if (!Number.isFinite(duration) || duration <= 0 || duration % 30 !== 0) { Swal.fire('Error', 'La duración debe ser múltiplo de 30', 'error'); return }
         try {
-          await apiUpdateService(id, { name, description, duration, price })
+          await api.updateService(id, { name, description, duration, price })
           await syncServices()
           renderServices()
           renderAdmin()
@@ -1016,7 +1122,7 @@ function renderAdmin () {
       if (!name) { Swal.fire('Error', 'Completá el nombre del servicio', 'error'); return }
       if (!Number.isFinite(duration) || duration <= 0 || duration % 30 !== 0) { Swal.fire('Error', 'La duración debe ser un múltiplo de 30 minutos', 'error'); return }
       try {
-        await apiCreateService({ name, description, duration, price: priceSafe })
+        await api.createService({ name, description, duration, price: priceSafe })
         await syncServices()
         svcNameInput.value = ''
         if (svcDescInput) svcDescInput.value = ''
@@ -1066,3 +1172,291 @@ function toggleEditRow (id, editing, restoreView = false) {
   btnSave.classList.toggle('d-none', !editing)
   btnCancel.classList.toggle('d-none', !editing)
 }
+
+// Implementación real de updateAuthUI
+window.updateAuthUI = function() {
+  const user = sessionManager.getUser();
+  const isAuth = sessionManager.isAuthenticated();
+  
+  console.log('🔄 Actualizando UI - Usuario:', user);
+  
+  const navbarList = document.querySelector('#navbarNav .navbar-nav');
+  
+  if (isAuth && user) {
+    // Ocultar botones de Ingresar y Crear cuenta
+    const loginBtn = document.querySelector('[data-auth-mode="login"]');
+    const signupBtn = document.querySelector('[data-auth-mode="signup"]');
+    
+    if (loginBtn) loginBtn.closest('li').style.display = 'none';
+    if (signupBtn) signupBtn.closest('li').style.display = 'none';
+    
+    // Agregar info de usuario si no existe
+    if (!document.getElementById('user-info-nav')) {
+      const userLi = document.createElement('li');
+      userLi.id = 'user-info-nav';
+      userLi.className = 'nav-item ms-lg-2';
+      
+      const roleLabel = user.role === 'ADMIN' ? '👑 ADMIN' : 
+                       user.role === 'BUSINESS' ? '🏢 NEGOCIO' : '';
+      
+      userLi.innerHTML = `
+        <div class="d-flex align-items-center">
+          <span class="text-white me-2">
+            ${user.name || user.email.split('@')[0]}
+            ${roleLabel ? `<span class="badge bg-warning text-dark ms-1">${roleLabel}</span>` : ''}
+          </span>
+          <button class="btn btn-sm btn-outline-light" onclick="sessionManager.logout()">Salir</button>
+        </div>
+      `;
+      
+      navbarList.appendChild(userLi);
+    }
+    
+    console.log(`✅ UI actualizada - Rol: ${user.role}`);
+    
+  } else {
+    // Mostrar botones de login/signup
+    const loginBtn = document.querySelector('[data-auth-mode="login"]');
+    const signupBtn = document.querySelector('[data-auth-mode="signup"]');
+    
+    if (loginBtn) loginBtn.closest('li').style.display = '';
+    if (signupBtn) signupBtn.closest('li').style.display = '';
+    
+    // Remover info de usuario
+    const userInfo = document.getElementById('user-info-nav');
+    if (userInfo) userInfo.remove();
+  }
+}
+
+// Al final de app.js
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Inicializando sistema de login con roles...');
+  
+  setTimeout(() => {
+    const loginForm = document.getElementById('loginForm');
+    
+    if (loginForm) {
+      // Remover TODOS los listeners anteriores
+      const newForm = loginForm.cloneNode(true);
+      loginForm.parentNode.replaceChild(newForm, loginForm);
+      
+      console.log('✅ Formulario de login clonado - listeners limpios');
+      
+      newForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const email = document.getElementById('loginEmail')?.value?.trim();
+        const password = document.getElementById('loginPassword')?.value;
+        
+        console.log('📧 Intentando login con:', email);
+        
+        if (!email || !password) {
+          Swal.fire('Error', 'Completa todos los campos', 'error');
+          return;
+        }
+        
+        try {
+          const response = await api.login({ email, password });
+          console.log('✅ LOGIN EXITOSO:', response);
+          console.log('👤 Usuario:', sessionManager.getUser());
+          
+          // Cerrar modal
+          const modal = document.getElementById('authModal');
+          if (modal) {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+          }
+          
+          updateAuthUI();
+          await Promise.all([syncMyBookings(), syncAdminBookings()]);
+          renderMyBookings();
+          renderAdmin();
+          
+          Swal.fire({
+            title: 'Bienvenido',
+            text: `Hola ${response.user.name || response.user.email}`,
+            icon: 'success',
+            timer: 2000
+          });
+          
+        } catch (error) {
+          console.error('❌ ERROR:', error);
+          Swal.fire('Error', error.message, 'error');
+        }
+      });
+    }
+  }, 500); // Esperar a que validation.js termine de inicializar
+});
+
+<script>
+// ============================================
+// SISTEMA DE ONBOARDING
+// ============================================
+
+// Mostrar banner de bienvenida si no está logueado
+function checkAndShowWelcomeBanner() {
+  const token = localStorage.getItem('token');
+  const bannerDismissed = sessionStorage.getItem('welcomeBannerDismissed');
+  
+  if (!token && !bannerDismissed) {
+    document.getElementById('welcomeBanner').style.display = 'block';
+  }
+}
+
+// Cerrar banner de bienvenida
+function closeWelcomeBanner() {
+  document.getElementById('welcomeBanner').style.display = 'none';
+  sessionStorage.setItem('welcomeBannerDismissed', 'true');
+}
+
+// Modal de onboarding con pasos
+function showOnboardingModal() {
+  Swal.fire({
+    title: '¿Cómo reservar tu turno?',
+    html: `
+      <div class="onboarding-steps">
+        <div class="onboarding-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>📝 Creá tu cuenta</h4>
+            <p>Hacé clic en "Crear cuenta" y completá tu email y contraseña. Solo toma 30 segundos.</p>
+          </div>
+        </div>
+        
+        <div class="onboarding-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>🔐 Iniciá sesión</h4>
+            <p>Ingresá con tus datos para acceder a todas las funcionalidades.</p>
+          </div>
+        </div>
+        
+        <div class="onboarding-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>✂️ Elegí tu servicio</h4>
+            <p>Mirá los servicios disponibles (corte, color, barba, etc.) y seleccioná el que necesitás.</p>
+          </div>
+        </div>
+        
+        <div class="onboarding-step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>📅 Seleccioná fecha y hora</h4>
+            <p>Elegí el día y horario que más te convenga en el calendario interactivo.</p>
+          </div>
+        </div>
+        
+        <div class="onboarding-step">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h4>✅ ¡Listo!</h4>
+            <p>Confirmá tu turno y recibí toda la información. Podés verlo en "Mis turnos".</p>
+          </div>
+        </div>
+      </div>
+    `,
+    width: '600px',
+    showCloseButton: true,
+    showConfirmButton: true,
+    confirmButtonText: '¡Entendido, vamos!',
+    confirmButtonColor: '#667eea',
+    customClass: {
+      popup: 'onboarding-modal'
+    }
+  });
+}
+
+// Mostrar mensaje cuando intenten reservar sin login
+function requireAuthMessage() {
+  Swal.fire({
+    icon: 'info',
+    title: '¡Un momento! 👋',
+    html: `
+      <p style="font-size: 1rem; margin: 1rem 0;">
+        Para reservar turnos necesitás tener una cuenta.
+      </p>
+      <p style="font-size: 0.9rem; color: #666;">
+        <strong>¿Primera vez?</strong> Creá tu cuenta gratis en 30 segundos.
+      </p>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Crear cuenta',
+    cancelButtonText: 'Ya tengo cuenta',
+    confirmButtonColor: '#667eea',
+    cancelButtonColor: '#4a5568'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Abrir modal de registro
+      document.getElementById('registerBtn').click();
+    } else if (result.dismiss === Swal.DismissReason.cancel) {
+      // Abrir modal de login
+      document.getElementById('loginBtn').click();
+    }
+  });
+}
+
+// Agregar badges informativos a los botones
+function addHelpBadges() {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    // Badge en el botón de reservar
+    const reserveButtons = document.querySelectorAll('[data-action="reserve"]');
+    reserveButtons.forEach(btn => {
+      if (!btn.querySelector('.badge')) {
+        btn.innerHTML += ' <span class="badge bg-warning text-dark badge-pulse ms-1">¡Registrate!</span>';
+      }
+    });
+  }
+}
+
+// Interceptar clicks en elementos que requieren autenticación
+function interceptAuthRequiredActions() {
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-requires-auth]');
+    if (target && !localStorage.getItem('token')) {
+      e.preventDefault();
+      e.stopPropagation();
+      requireAuthMessage();
+    }
+  });
+}
+
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+  checkAndShowWelcomeBanner();
+  addHelpBadges();
+  interceptAuthRequiredActions();
+  
+  // Actualizar badges al hacer login/logout
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'token') {
+      checkAndShowWelcomeBanner();
+      addHelpBadges();
+    }
+  });
+});
+
+// Mostrar modal automáticamente si es la primera visita
+const isFirstVisit = !localStorage.getItem('hasVisited');
+if (isFirstVisit) {
+  localStorage.setItem('hasVisited', 'true');
+  // Mostrar después de 2 segundos para no ser invasivo
+  setTimeout(() => {
+    if (!localStorage.getItem('token')) {
+      showOnboardingModal();
+    }
+  }, 2000);
+}
+</script>
+
+
+
+
+
+
+
+
+

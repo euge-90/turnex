@@ -1,61 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
+
 model User {
-  id           String    @id @default(cuid())
-  name         String    @default("Usuario")
-  email        String    @unique
-  phone        String?
-  // Business-specific info (optional; required when role == BUSINESS)
-  businessName    String?
-  businessAddress String?
-  businessPhone   String?
-  passwordHash String
-  role         UserRole  @default(CLIENT)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @default(now()) @updatedAt
-  bookings     Booking[]
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  role             Role      @default(CLIENT) // 
+  name             String?   // Nombre completo
+  phone            String?   // Teléfono de contacto
+  createdAt        DateTime  @default(now())
+  
+  // Password reset
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  
+  // Relaciones
+  bookings         Booking[]
+  
+  // Para rol BUSINESS
+  businessName     String?   // Nombre del negocio
+  businessAddress  String?   // Dirección
+  businessPhone    String?   // Teléfono del negocio
+  businessId       String?   @unique  // ID único del negocio
 }
 
-model Service {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  duration    Int
-  price       Int
-  bookings    Booking[]
+enum Role {
+  CLIENT   // Usuario común - solo reserva turnos
+  BUSINESS // Dueño del negocio - gestión operativa
+  ADMIN    // Super admin - control total
 }
 
 model Booking {
-  id         String   @id @default(cuid())
-  date       String
-  time       String
-  duration   Int
-  customerName String?
-  status     String   @default("pending")
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String
-  service    Service  @relation(fields: [serviceId], references: [id])
-  serviceId  String
-  createdAt  DateTime @default(now())
+  id              String   @id @default(uuid())
+  userId          String
+  serviceId       String
+  date            String
+  time            String
+  duration        Int      @default(30)     // Duración en minutos
+  customerName    String?                   // Nombre del cliente (opcional)
+  phone           String?
+  notes           String?
+  status          BookingStatus @default(CONFIRMED)
+  reminderSent24h Boolean  @default(false)
+  reminderSent2h  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id])
+  service         Service  @relation(fields: [serviceId], references: [id])
+}
+
+enum BookingStatus {
+  PENDING    // Pendiente de confirmación
+  CONFIRMED  // Confirmado
+  IN_PROGRESS // En progreso
+  COMPLETED  // Completado
+  CANCELLED  // Cancelado por usuario
+  NO_SHOW    // No se presentó
+}
+
+model Service {
+  id          String    @id @default(uuid())
+  name        String
+  duration    Int       // en minutos
+  price       Float
+  description String?
+  category    String?   // Ej: "Corte", "Coloración", "Tratamiento"
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  bookings    Booking[]
 }
 
 model Config {
-  id                Int   @id @default(1)
-  workingHours      String
-  blockedDays       String
-  blockedDateRanges String
-  blockedTimes      String
-}
-
-enum UserRole {
-  CLIENT
-  BUSINESS
-  ADMIN
+  id              String   @id @default(uuid())
+  workingDays     String[] // ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+  startTime       String   // "09:00"
+  endTime         String   // "18:00"
+  slotDuration    Int      // 30 minutos
+  lunchBreakStart String?  // "13:00"
+  lunchBreakEnd   String?  // "14:00"
+  blockedDates    String[] // ["2025-12-25", "2025-01-01"]
+  updatedAt       DateTime @default(now())
 }

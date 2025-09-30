@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Turnex</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .stat-card {
+      border-left: 4px solid #2563eb;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+    .booking-card {
+      border-left: 3px solid #10b981;
+    }
+    .booking-card.no-show {
+      border-left-color: #ef4444;
+    }
+    .booking-card.completed {
+      border-left-color: #6b7280;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="/">Turnex Admin</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <span class="nav-link" id="userInfo">Cargando...</span>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="logoutBtn">Cerrar sesión</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <!-- Dashboard Stats -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <h6 class="text-muted">Turnos hoy</h6>
+            <h2 id="todayBookings" class="mb-0">0</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <h6 class="text-muted">Próximo turno</h6>
+            <h5 id="nextBooking" class="mb-0">-</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <h6 class="text-muted">Completados</h6>
+            <h2 id="completedToday" class="mb-0">0</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stat-card">
+          <div class="card-body">
+            <h6 class="text-muted">Ingresos hoy</h6>
+            <h2 id="revenueToday" class="mb-0">$0</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings" type="button">
+          Turnos del día
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button">
+          Servicios
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config" type="button">
+          Configuración
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Turnos del día -->
+      <div class="tab-pane fade show active" id="bookings">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4>Turnos del día</h4>
+          <input type="date" id="dateFilter" class="form-control w-auto" />
+        </div>
+        <div id="bookingsList" class="row g-3">
+          <div class="col-12 text-center py-5">
+            <p class="text-muted">Cargando turnos...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Servicios -->
+      <div class="tab-pane fade" id="services">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4>Gestión de Servicios</h4>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#serviceModal">
+            + Nuevo Servicio
+          </button>
+        </div>
+        <div id="servicesList" class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Duración</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="servicesTableBody">
+              <tr>
+                <td colspan="6" class="text-center">Cargando servicios...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Configuración -->
+      <div class="tab-pane fade" id="config">
+        <h4 class="mb-3">Configuración del Negocio</h4>
+        <form id="configForm">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Hora inicio</label>
+              <input type="time" class="form-control" id="startTime" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Hora fin</label>
+              <input type="time" class="form-control" id="endTime" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Días laborales</label>
+            <div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dayTuesday" value="Tuesday">
+                <label class="form-check-label" for="dayTuesday">Martes</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dayWednesday" value="Wednesday">
+                <label class="form-check-label" for="dayWednesday">Miércoles</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dayThursday" value="Thursday">
+                <label class="form-check-label" for="dayThursday">Jueves</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="dayFriday" value="Friday">
+                <label class="form-check-label" for="dayFriday">Viernes</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="daySaturday" value="Saturday">
+                <label class="form-check-label" for="daySaturday">Sábado</label>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Guardar configuración</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Nuevo Servicio -->
+  <div class="modal fade" id="serviceModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Nuevo Servicio</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="serviceForm">
+            <input type="hidden" id="serviceId">
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="serviceName" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Categoría</label>
+              <select class="form-control" id="serviceCategory">
+                <option value="Corte">Corte</option>
+                <option value="Coloración">Coloración</option>
+                <option value="Tratamiento">Tratamiento</option>
+                <option value="Peinado">Peinado</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Duración (min)</label>
+                <input type="number" class="form-control" id="serviceDuration" min="15" step="15" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Precio ($)</label>
+                <input type="number" class="form-control" id="servicePrice" min="0" step="100" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Descripción</label>
+              <textarea class="form-control" id="serviceDescription" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Guardar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

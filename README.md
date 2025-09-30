@@ -6,6 +6,22 @@
 
 Aplicación web estática para reservar turnos de peluquería unisex (mujeres, hombres y niños). Mobile-first, accesible y rápida.
 
+---
+
+## ⚠️ IMPORTANTE - Seguridad
+
+**Si clonaste este repositorio antes del 2025-09-30, las credenciales de base de datos estuvieron expuestas.**
+
+**Acción requerida:** Lee [docs/SECURITY.md](./docs/SECURITY.md) para instrucciones detalladas de rotación de credenciales.
+
+**Resumen rápido:**
+1. ✅ Rotar credenciales de Neon PostgreSQL
+2. ✅ Generar nuevo JWT_SECRET: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+3. ✅ Actualizar variables de entorno en Render
+4. ✅ Verificar que `server/.env` NO está en Git
+
+---
+
 ## Tecnologías
 - HTML5 semántico + Bootstrap 5.3 (CDN)
 - CSS con custom properties, Grid/Flexbox
@@ -111,6 +127,10 @@ npm run studio
 ### PostgreSQL (opcional)
 1. Instalar PostgreSQL localmente y crear una base:
 	- DB: `turnex`
+
+## Local vs CI / Production
+
+When developing locally, prefer using a local Postgres and keep production/staging credentials out of the repository. See `docs/CI.md` for recommended secret names and workflow notes. The repo's `server/.env` may be set to a local database for development; production credentials should live in GitHub Actions secrets (example: `DATABASE_URL`).
 	- Usuario: `postgres` (o el que uses), contraseña acorde.
 2. Editar `server/.env` y ajustar `DATABASE_URL`:
 	```
@@ -152,6 +172,32 @@ Endpoints principales:
 - `GET /api/config` — Obtener configuración (horarios, bloqueos)
 - `PUT /api/config` — Actualizar configuración (admin)
 - `GET /api/admin/users/count` — Total de usuarios (admin)
+
+### Admin endpoint: `GET /api/admin/users`
+
+Returns a report for administrators containing counts per role and a short list of recent users.
+
+- Path: `GET /api/admin/users`
+- Auth: Requires `Authorization: Bearer <token>` where the JWT `role` claim must be `ADMIN`.
+- Response: 200 OK JSON with fields `counts` (array of {role,count}) and `recent` (array of recent users).
+
+Example response:
+
+```
+{
+	"counts": [
+		{ "role": "CLIENT", "count": 42 },
+		{ "role": "BUSINESS", "count": 7 },
+		{ "role": "ADMIN", "count": 1 }
+	],
+	"recent": [
+		{ "id": "cmg...", "email": "owner@example.com", "role": "BUSINESS", "createdAt": "2025-09-26T01:19:43.574Z", "name": "Owner Name" },
+		{ "id": "cmg...", "email": "admin@turnex.local", "role": "ADMIN", "createdAt": "2025-09-26T00:21:04.947Z", "name": "Admin" }
+	]
+}
+```
+
+Use this endpoint for quick role distribution checks or to display recent signups to administrators.
 
 Ejemplos rápidos (curl):
 
