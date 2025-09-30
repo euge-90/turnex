@@ -27,27 +27,30 @@ let actions = [];
 
 if (user.role === 'CLIENT') {
   actions = [
-    { title: 'Buscar Servicios', desc: 'Explora y reserva servicios', icon: '🔍', color: '#667eea', link: 'index.html#servicios' },
+    { title: 'Buscar Servicios', desc: 'Explora servicios disponibles', icon: '🔍', color: '#667eea', link: 'index.html#servicios' },
     { title: 'Reservar Turno', desc: 'Agenda una nueva cita', icon: '📅', color: '#f093fb', link: 'calendar.html' },
-    { title: 'Mis Reservas', desc: 'Ver y gestionar mis turnos', icon: '📋', color: '#4facfe', onClick: showBookings }
+    { title: 'Mis Reservas', desc: 'Ver y gestionar mis turnos', icon: '📋', color: '#4facfe', link: 'mis-reservas.html' },
+    { title: 'Mi Perfil', desc: 'Configuración de cuenta', icon: '👤', color: '#fa709a', onClick: showProfile }
   ];
 } else if (user.role === 'BUSINESS') {
   actions = [
     { title: 'Calendario', desc: 'Ver turnos programados', icon: '📅', color: '#f093fb', link: 'calendar.html' },
-    { title: 'Reservas', desc: 'Gestionar todas las reservas', icon: '📋', color: '#4facfe', onClick: showAllBookings }
+    { title: 'Reservas', desc: 'Gestionar todas las reservas', icon: '📋', color: '#4facfe', link: 'mis-reservas.html' },
+    { title: 'Mi Perfil', desc: 'Configuración del negocio', icon: '👤', color: '#fa709a', onClick: showProfile }
   ];
 } else if (user.role === 'ADMIN') {
   actions = [
-    { title: 'Todas las Reservas', desc: 'Ver todas las reservas', icon: '📋', color: '#f093fb', onClick: showAllBookings },
-    { title: 'Estadísticas', desc: 'Reportes y analytics', icon: '📊', color: '#fa709a', onClick: loadStats }
+    { title: 'Todas las Reservas', desc: 'Ver todas las reservas', icon: '📋', color: '#f093fb', link: 'mis-reservas.html' },
+    { title: 'Estadísticas', desc: 'Reportes y analytics', icon: '📊', color: '#fa709a', onClick: loadStats },
+    { title: 'Configuración', desc: 'Ajustes del sistema', icon: '⚙️', color: '#4facfe', onClick: showProfile }
   ];
 }
 
-actionsGrid.innerHTML = actions.map(a => 
+actionsGrid.innerHTML = actions.map(a =>
   `<a href="${a.link || '#'}" class="action-card" data-action="${a.title}">
     <div class="action-icon" style="background: ${a.color}20; color: ${a.color};">${a.icon}</div>
-    <h5 class="mb-2">${a.title}</h5>
-    <p class="text-muted mb-0 small">${a.desc}</p>
+    <h5 class="mb-2 action-title">${a.title}</h5>
+    <p class="mb-0 action-desc">${a.desc}</p>
   </a>`
 ).join('');
 
@@ -60,44 +63,30 @@ actions.forEach(action => {
 });
 
 // Funciones
+function showProfile() {
+  Swal.fire({
+    title: 'Mi Perfil',
+    html: `
+      <div class="text-start">
+        <p><strong>Nombre:</strong> ${user.name || user.email}</p>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Rol:</strong> ${sessionManager.getRoleDisplayName()}</p>
+        ${user.businessName ? `<p><strong>Negocio:</strong> ${user.businessName}</p>` : ''}
+      </div>
+    `,
+    icon: 'info',
+    confirmButtonText: 'Cerrar',
+    confirmButtonColor: '#FF6B6B'
+  });
+}
+
 async function showBookings() {
-  const section = document.getElementById('recentBookingsSection');
-  const list = document.getElementById('recentBookingsList');
-  section.style.display = 'block';
-  list.innerHTML = '<p class="text-muted">Cargando...</p>';
-  try {
-    const bookings = await api.getBookings();
-    if (!bookings || bookings.length === 0) {
-      list.innerHTML = '<p class="text-muted">No tienes reservas. <a href="calendar.html">¡Reserva ahora!</a></p>';
-      return;
-    }
-    list.innerHTML = bookings.slice(0, 5).map(b => 
-      `<div class="booking-item">
-        <div class="d-flex justify-content-between">
-          <div>
-            <h6 class="mb-1">${b.serviceName || 'Servicio'}</h6>
-            <p class="mb-0 small text-muted"><i class="bi bi-calendar"></i> ${b.date} a las ${b.time}</p>
-          </div>
-          <button class="btn btn-sm btn-outline-danger" onclick="cancelBooking('${b.id}')"><i class="bi bi-x-circle"></i></button>
-        </div>
-      </div>`
-    ).join('');
-  } catch (error) {
-    list.innerHTML = '<p class="text-danger">Error al cargar</p>';
-  }
+  window.location.href = 'mis-reservas.html';
 }
 
 async function showAllBookings() {
-  const section = document.getElementById('recentBookingsSection');
-  const list = document.getElementById('recentBookingsList');
-  section.style.display = 'block';
-  list.innerHTML = '<p class="text-muted">Cargando...</p>';
-  try {
-    const bookings = await api.getBookings();
-    if (!bookings || bookings.length === 0) {
-      list.innerHTML = '<p class="text-muted">No hay reservas.</p>';
-      return;
-    }
+  window.location.href = 'mis-reservas.html';
+}
     list.innerHTML = bookings.map(b => 
       `<div class="booking-item">
         <h6>${b.serviceName || 'Servicio'}</h6>

@@ -196,12 +196,18 @@ function initLoginForm() {
         });
 
         if (response && response.user && response.token) {
+          // Guardar sesión
+          localStorage.setItem('turnex-token', response.token);
+          localStorage.setItem('turnex-user', JSON.stringify(response.user));
+
           // Cerrar modal
           const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
           if (modal) modal.hide();
 
-          // Redirigir a dashboard
-          window.location.href = 'dashboard.html';
+          // Redirigir inmediatamente a dashboard
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 100);
         } else {
           throw new Error('Respuesta inválida del servidor');
         }
@@ -341,12 +347,18 @@ function initSignupForm() {
         const response = await window.api.signup(payload);
 
         if (response && response.user && response.token) {
+          // Guardar sesión
+          localStorage.setItem('turnex-token', response.token);
+          localStorage.setItem('turnex-user', JSON.stringify(response.user));
+
           // Cerrar modal
           const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
           if (modal) modal.hide();
 
-          // Redirigir a dashboard
-          window.location.href = 'dashboard.html';
+          // Redirigir inmediatamente a dashboard
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 100);
         } else {
           throw new Error('Respuesta inválida del servidor');
         }
