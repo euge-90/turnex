@@ -93,9 +93,9 @@
         <p>Para reservar tu turno, <strong>creá tu cuenta gratis</strong> en segundos. Es rápido y seguro.</p>
       </div>
       <div class="welcome-actions">
-        <button class="btn btn-light btn-sm" onclick="showOnboardingModal()">
+        <a class="btn btn-light btn-sm" href="#como-funciona">
           Ver cómo funciona
-        </button>
+        </a>
         <button class="btn-close btn-close-white" onclick="closeWelcomeBanner()" aria-label="Cerrar"></button>
       </div>
     </div>
@@ -612,7 +612,7 @@
       </div>
           
       <div class="text-center mt-4">
-        <button class="btn-accent btn-lg px-5 py-3" onclick="showBusinessModal()">
+        <button class="btn-accent btn-lg px-5 py-3" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-mode="signup" onclick="setTimeout(() => { document.getElementById('signupRole').value = 'BUSINESS'; document.getElementById('signupRole').dispatchEvent(new Event('change')); }, 100)">
           🚀 Registra tu negocio GRATIS
         </button>
       </div>
@@ -676,7 +676,7 @@
             <li><a href="#servicios">Servicios</a></li>
             <li><a href="#como-funciona">Cómo funciona</a></li>
             <li><a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-requires-auth>Mis turnos</a></li>
-            <li><a href="#" onclick="showBusinessModal()">Para negocios</a></li>
+            <li><a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-mode="signup" onclick="setTimeout(() => { const sel = document.getElementById('signupRole'); if(sel) { sel.value = 'BUSINESS'; sel.dispatchEvent(new Event('change')); }}, 100)">Para negocios</a></li>
           </ul>
         </div>
 
@@ -1016,5 +1016,13 @@
     </div>
   </div>
 </div>
+
+<script>
+// Funciones auxiliares
+window.closeWelcomeBanner = function() {
+  const banner = document.getElementById('welcomeBanner');
+  if (banner) banner.style.display = 'none';
+};
+</script>
 </body>
 </html>
