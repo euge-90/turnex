@@ -247,9 +247,9 @@ const passValid = (v) => v.length >= 8
       const password = loginForm.loginPassword.value
       const remember = !!document.getElementById('loginRemember')?.checked
       const inlineError = document.getElementById('loginInlineError')
-      if (inlineError) { 
+      if (inlineError) {
         inlineError.classList.add('d-none')
-        inlineError.textContent = '' 
+        inlineError.textContent = ''
       }
 
       const vEmail = emailRe.test(email)
@@ -268,19 +268,21 @@ const passValid = (v) => v.length >= 8
         if (window.Swal) Swal.fire({ icon: 'success', title: '¡Bienvenido!', text: 'Ingreso exitoso', timer: 1400, showConfirmButton: false })
         if (window.txToast) window.txToast({ type: 'success', text: 'Sesión iniciada' })
         bootstrap.Modal.getOrCreateInstance($authModal).hide()
+        // Redirigir a dashboard
+        setTimeout(() => { window.location.href = 'dashboard.html' }, 100)
       } catch (err) {
         let text = err.message
         if (err.status === 401) text = 'Credenciales inválidas.'
         if (err.status === 429) text = 'Demasiados intentos.'
         if (!navigator.onLine) text = 'Sin conexión.'
-        if (inlineError) { 
+        if (inlineError) {
           inlineError.textContent = text
-          inlineError.classList.remove('d-none') 
+          inlineError.classList.remove('d-none')
         } else if (window.Swal) {
           Swal.fire({ icon: 'error', title: 'No se pudo ingresar', text })
         }
-      } finally { 
-        setLoading(btn, false, 'Ingresar') 
+      } finally {
+        setLoading(btn, false, 'Ingresar')
       }
     })
 
@@ -315,7 +317,7 @@ const passValid = (v) => v.length >= 8
       markValid(signupForm.signupPassword, vPass1, 'Mínimo 8 caracteres.')
       markValid(signupForm.signupPassword2, vPass2, 'Las contraseñas no coinciden.')
 
-  if (!(vName && vEmail && vPhone && vPass1 && vPass2 && vBusiness)) return
+      if (!(vName && vEmail && vPhone && vPass1 && vPass2 && vBusiness)) return
 
       const btn = document.getElementById('signupSubmitBtn')
       setLoading(btn, true, 'Creando...')
@@ -329,24 +331,25 @@ const passValid = (v) => v.length >= 8
         }
         const { user } = await apiSignup(signupExtras)
         window.dispatchEvent(new CustomEvent('turnex:auth-success', { detail: { mode: 'signup', user } }))
-        if (window.Swal) Swal.fire({ icon: 'success', title: 'Cuenta creada', text: 'Ya podés iniciar sesión', timer: 1600, showConfirmButton: false })
+        if (window.Swal) Swal.fire({ icon: 'success', title: 'Cuenta creada', text: 'Ingresando...', timer: 1600, showConfirmButton: false })
         if (window.txToast) window.txToast({ type: 'success', text: 'Cuenta creada' })
         bootstrap.Modal.getOrCreateInstance($authModal).hide()
-        setMode('login')
+        // Redirigir a dashboard
+        setTimeout(() => { window.location.href = 'dashboard.html' }, 100)
       } catch (err) {
         let text = err.message
         if (err.status === 409) text = 'Ese email ya está registrado.'
         if (err.status === 400) text = 'Datos inválidos.'
         if (!navigator.onLine) text = 'Sin conexión.'
         const inline = document.getElementById('signupInlineError')
-        if (inline) { 
+        if (inline) {
           inline.textContent = text
-          inline.classList.remove('d-none') 
+          inline.classList.remove('d-none')
         } else if (window.Swal) {
           Swal.fire({ icon: 'error', title: 'No se pudo crear la cuenta', text })
         }
-      } finally { 
-        setLoading(btn, false, 'Crear cuenta') 
+      } finally {
+        setLoading(btn, false, 'Crear cuenta')
       }
     })
 
