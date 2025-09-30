@@ -6,6 +6,22 @@
 
 Aplicación web estática para reservar turnos de peluquería unisex (mujeres, hombres y niños). Mobile-first, accesible y rápida.
 
+---
+
+## ⚠️ IMPORTANTE - Seguridad
+
+**Si clonaste este repositorio antes del 2025-09-30, las credenciales de base de datos estuvieron expuestas.**
+
+**Acción requerida:** Lee [docs/SECURITY.md](./docs/SECURITY.md) para instrucciones detalladas de rotación de credenciales.
+
+**Resumen rápido:**
+1. ✅ Rotar credenciales de Neon PostgreSQL
+2. ✅ Generar nuevo JWT_SECRET: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+3. ✅ Actualizar variables de entorno en Render
+4. ✅ Verificar que `server/.env` NO está en Git
+
+---
+
 ## Tecnologías
 - HTML5 semántico + Bootstrap 5.3 (CDN)
 - CSS con custom properties, Grid/Flexbox
