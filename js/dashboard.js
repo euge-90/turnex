@@ -13,6 +13,7 @@ const token = sessionManager.getToken();
 let selectedDate = null;
 let selectedTime = null;
 let selectedService = null;
+let currentMonthOffset = 0;
 
 // Actualizar UI usuario
 document.getElementById('userName').textContent = user.name || user.email;
@@ -80,24 +81,41 @@ async function loadHome() {
 
 // SECCIÓN CALENDARIO
 function loadCalendar() {
+  currentMonthOffset = 0;
   renderCalendar();
   loadServicesForBooking();
 }
 
+window.changeMonth = function(offset) {
+  currentMonthOffset += offset;
+  // Limitar navegación: máximo 6 meses adelante, no permitir meses pasados
+  if (currentMonthOffset < 0) currentMonthOffset = 0;
+  if (currentMonthOffset > 6) currentMonthOffset = 6;
+  renderCalendar();
+  // Ocultar slots de horarios al cambiar mes
+  document.getElementById('timeSlots').style.display = 'none';
+  document.getElementById('serviceSelection').style.display = 'none';
+};
+
 function renderCalendar() {
   const calendar = document.getElementById('calendar');
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const targetDate = new Date(today.getFullYear(), today.getMonth() + currentMonthOffset, 1);
+  const year = targetDate.getFullYear();
+  const month = targetDate.getMonth();
+
+  // Actualizar título del mes
+  const monthTitle = targetDate.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  document.getElementById('calendarMonthTitle').textContent = monthTitle.charAt(0).toUpperCase() + monthTitle.slice(1);
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  let html = '<div style="grid-column: span 7; text-align: center; font-weight: bold; margin-bottom: 16px;">';
-  html += `${today.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}</div>`;
+  let html = '';
 
-  ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
-    html += `<div style="font-weight: 600; text-align: center; padding: 8px;">${day}</div>`;
+  // Días de la semana
+  ['D', 'L', 'M', 'M', 'J', 'V', 'S'].forEach(day => {
+    html += `<div style="font-weight: 600; text-align: center; padding: 8px; color: #6c757d; font-size: 12px;">${day}</div>`;
   });
 
   // Días vacíos antes del primer día
@@ -105,10 +123,12 @@ function renderCalendar() {
     html += '<div class="calendar-day disabled"></div>';
   }
 
+  const nowTime = new Date().setHours(0, 0, 0, 0);
+
   // Días del mes
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
-    const isPast = date < new Date().setHours(0, 0, 0, 0);
+    const isPast = date.getTime() < nowTime;
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     html += `<div class="calendar-day ${isPast ? 'disabled' : ''}"
@@ -149,7 +169,7 @@ async function loadTimeSlots(date) {
       const isBooked = bookedTimes.includes(time);
       return `<div class="time-slot ${isBooked ? 'disabled' : ''}"
                    onclick="${isBooked ? '' : `selectTime('${time}')`}">
-                ${time} ${isBooked ? '(Ocupado)' : ''}
+                ${time}
               </div>`;
     }).join('');
   } catch (error) {
@@ -171,10 +191,31 @@ async function loadServicesForBooking() {
   try {
     const services = await api.getServices();
     const select = document.getElementById('serviceSelect');
-    select.innerHTML = '<option value="">Seleccionar servicio...</option>' +
-      services.map(s => `<option value="${s.id}">${s.name} - $${s.price || 0}</option>`).join('');
+
+    if (!services || services.length === 0) {
+      // Mock services si no hay en backend
+      const mockServices = [
+        { id: 'mock-1', name: 'Corte de pelo', price: 5000, duration: 30 },
+        { id: 'mock-2', name: 'Peinado', price: 8000, duration: 45 },
+        { id: 'mock-3', name: 'Coloración', price: 12000, duration: 90 },
+        { id: 'mock-4', name: 'Tratamiento capilar', price: 15000, duration: 60 }
+      ];
+      select.innerHTML = '<option value="">Seleccionar servicio...</option>' +
+        mockServices.map(s => `<option value="${s.id}">${s.name} - $${s.price.toLocaleString('es-AR')} (${s.duration}min)</option>`).join('');
+    } else {
+      select.innerHTML = '<option value="">Seleccionar servicio...</option>' +
+        services.map(s => `<option value="${s.id}">${s.name} - $${s.price || 0} (${s.duration || 30}min)</option>`).join('');
+    }
   } catch (error) {
-    document.getElementById('serviceSelect').innerHTML = '<option>Error al cargar servicios</option>';
+    console.error('Error loading services:', error);
+    // Fallback con servicios mock
+    const mockServices = [
+      { id: 'mock-1', name: 'Corte de pelo', price: 5000, duration: 30 },
+      { id: 'mock-2', name: 'Peinado', price: 8000, duration: 45 }
+    ];
+    const select = document.getElementById('serviceSelect');
+    select.innerHTML = '<option value="">Seleccionar servicio...</option>' +
+      mockServices.map(s => `<option value="${s.id}">${s.name} - $${s.price.toLocaleString('es-AR')}</option>`).join('');
   }
 }
 

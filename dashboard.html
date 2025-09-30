@@ -19,23 +19,80 @@
   <link href="css/styles.css" rel="stylesheet">
   <style>
     body { padding-top: 70px; min-height: 100vh; background: #f8f9fa; font-family: 'Inter', sans-serif; }
+
+    /* Mejorar contraste de títulos */
+    h1, h2, h3, h4, h5, h6 { color: #1a1a1a; font-weight: 600; }
+
     .section { display: none; }
     .section.active { display: block; }
     .nav-tabs .nav-link { border: none; color: #6c757d; font-weight: 500; }
     .nav-tabs .nav-link.active { color: #FF6B6B; border-bottom: 3px solid #FF6B6B; }
+
+    /* Dashboard container responsive */
+    .container { max-width: 1200px; padding: 15px; }
+    @media (min-width: 768px) { .container { padding: 30px; } }
+
     .dashboard-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
     .user-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 32px; margin-bottom: 32px; }
-    .quick-action-btn { padding: 16px 24px; border-radius: 8px; border: none; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; cursor: pointer; margin: 8px; }
+    .user-header h3 { color: white; }
+
+    .quick-action-btn { padding: 16px 24px; border-radius: 8px; border: none; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; cursor: pointer; margin: 8px; font-weight: 500; color: #2d3748; }
     .quick-action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
     .booking-card { background: white; border-left: 4px solid #FF6B6B; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-    .calendar-day { aspect-ratio: 1; border: 1px solid #dee2e6; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
-    .calendar-day:hover { background: #f8f9fa; }
-    .calendar-day.selected { background: #FF6B6B; color: white; }
+    .booking-card h5, .booking-card h6 { color: #2d3748; }
+
+    /* Calendario compacto y navegable */
+    .calendar-container { max-width: 500px; margin: 0 auto; }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .calendar-nav-btn { padding: 8px 16px; border: 1px solid #dee2e6; border-radius: 6px; background: white; cursor: pointer; transition: all 0.2s; }
+    .calendar-nav-btn:hover { background: #f8f9fa; border-color: #667eea; }
+    .calendar-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .calendar-month-title { font-weight: 600; font-size: 1.1rem; color: #2d3748; }
+
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .calendar-day {
+      aspect-ratio: 1;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      min-height: 40px;
+    }
+    .calendar-day:hover:not(.disabled) { background: #f8f9fa; border-color: #667eea; }
+    .calendar-day.selected { background: #667eea; color: white; border-color: #667eea; }
     .calendar-day.disabled { opacity: 0.3; cursor: not-allowed; }
-    .time-slot { padding: 12px; border: 1px solid #dee2e6; border-radius: 8px; margin: 8px 0; cursor: pointer; transition: all 0.2s; }
-    .time-slot:hover { background: #f8f9fa; }
-    .time-slot.selected { background: #FF6B6B; color: white; border-color: #FF6B6B; }
+
+    @media (min-width: 768px) {
+      .calendar-container { max-width: 600px; }
+      .calendar-day { font-size: 16px; min-height: 50px; }
+    }
+
+    /* Grid de horarios dinámico */
+    .time-slots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .time-slot {
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      font-weight: 500;
+      color: #2d3748;
+    }
+    .time-slot:hover:not(.disabled) { border-color: #667eea; background: #f7fafc; }
+    .time-slot.selected { background: #667eea; color: white; border-color: #667eea; }
+    .time-slot.disabled { opacity: 0.4; cursor: not-allowed; background: #f8f9fa; }
   </style>
 </head>
 <body>
@@ -95,14 +152,27 @@
     <div id="calendar-section" class="section">
       <div class="dashboard-card">
         <h4>Seleccionar Fecha</h4>
-        <div id="calendar" class="calendar-grid mb-4"></div>
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <button class="calendar-nav-btn" onclick="changeMonth(-1)">
+              <i class="bi bi-chevron-left"></i> Anterior
+            </button>
+            <span class="calendar-month-title" id="calendarMonthTitle">-</span>
+            <button class="calendar-nav-btn" onclick="changeMonth(1)">
+              Siguiente <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+          <div id="calendar" class="calendar-grid mb-4"></div>
+        </div>
         <div id="timeSlots" style="display:none;">
           <h5>Horarios Disponibles</h5>
-          <div id="timeSlotsContainer"></div>
+          <div id="timeSlotsContainer" class="time-slots-grid"></div>
         </div>
         <div id="serviceSelection" style="display:none;">
           <h5>Seleccionar Servicio</h5>
-          <select class="form-select mb-3" id="serviceSelect"></select>
+          <select class="form-select mb-3" id="serviceSelect">
+            <option value="">Cargando servicios...</option>
+          </select>
           <button class="btn btn-primary w-100" onclick="confirmBooking()">Confirmar Reserva</button>
         </div>
       </div>
