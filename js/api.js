@@ -8,7 +8,7 @@ class APIClient {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers
@@ -19,11 +19,18 @@ class APIClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Timeout de 60 segundos para Render
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
       const response = await fetch(url, {
         ...options,
-        headers
+        headers,
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       // Manejar 401 (no autorizado)
       if (response.status === 401) {
@@ -56,13 +63,22 @@ class APIClient {
       return data;
       
     } catch (error) {
+      clearTimeout(timeoutId);
+
+      // Timeout
+      if (error.name === 'AbortError') {
+        const timeoutError = 'La solicitud tardó demasiado. El servidor está iniciando, intentá nuevamente en 30 segundos.';
+        console.error(`⏱️ Timeout en ${endpoint}`);
+        throw new Error(timeoutError);
+      }
+
       // Errores de red
       if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
         const networkError = 'No se pudo conectar con el servidor. Verificá tu conexión.';
         console.error(`❌ Error de red en ${endpoint}:`, error);
         throw new Error(networkError);
       }
-      
+
       // Re-lanzar el error con el mensaje apropiado
       console.error(`❌ Error en ${endpoint}:`, error.message);
       throw error;

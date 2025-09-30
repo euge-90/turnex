@@ -179,18 +179,31 @@ function initLoginForm() {
       if (spinner) spinner.classList.remove('d-none');
 
       try {
+        // Esperar a que window.api esté disponible
+        let attempts = 0;
+        while (!window.api && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+
+        if (!window.api) {
+          throw new Error('Error al cargar el módulo de autenticación');
+        }
+
         const response = await window.api.login({
           email: emailInput.value.trim(),
           password: passwordInput.value
         });
 
-        if (response.user && response.token) {
+        if (response && response.user && response.token) {
           // Cerrar modal
           const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
           if (modal) modal.hide();
 
           // Redirigir a dashboard
           window.location.href = 'dashboard.html';
+        } else {
+          throw new Error('Respuesta inválida del servidor');
         }
       } catch (error) {
         console.error('Error en login:', error);
@@ -302,6 +315,17 @@ function initSignupForm() {
       if (spinner) spinner.classList.remove('d-none');
 
       try {
+        // Esperar a que window.api esté disponible
+        let attempts = 0;
+        while (!window.api && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+
+        if (!window.api) {
+          throw new Error('Error al cargar el módulo de autenticación');
+        }
+
         const payload = {
           name: nameInput.value.trim(),
           email: emailInput.value.trim(),
@@ -316,13 +340,15 @@ function initSignupForm() {
 
         const response = await window.api.signup(payload);
 
-        if (response.user && response.token) {
+        if (response && response.user && response.token) {
           // Cerrar modal
           const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
           if (modal) modal.hide();
 
           // Redirigir a dashboard
           window.location.href = 'dashboard.html';
+        } else {
+          throw new Error('Respuesta inválida del servidor');
         }
       } catch (error) {
         console.error('Error en signup:', error);
