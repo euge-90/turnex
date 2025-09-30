@@ -122,13 +122,22 @@ class APIClient {
   
   async signup(userData) {
     try {
+      console.log('🔵 Signup request:', '/auth/signup', userData);
       const data = await this.post('/auth/signup', userData);
+      console.log('✅ Signup response:', data);
       if (data.token && data.user) {
         sessionManager.login(data.user, data.token);
-        // No mostrar mensaje aquí - lo maneja validation.js
       }
       return data;
     } catch (error) {
+      console.error('❌ Signup error:', error.message, error);
+      // NO usar fallback si es error del servidor (401, 400, etc)
+      if (error.message.includes('ya está registrado') ||
+          error.message.includes('8 caracteres') ||
+          error.message.includes('Credenciales') ||
+          error.message.includes('inválid')) {
+        throw error; // Re-lanzar errores de validación
+      }
       console.warn('⚠️ API caída, usando auth local:', error.message);
       const mockUser = {
         id: crypto.randomUUID(),
@@ -150,13 +159,21 @@ class APIClient {
 
   async login(credentials) {
     try {
+      console.log('🔵 Login request:', '/auth/login', credentials.email);
       const data = await this.post('/auth/login', credentials);
+      console.log('✅ Login response:', data);
       if (data.token && data.user) {
         sessionManager.login(data.user, data.token);
-        // No mostrar mensaje aquí - lo maneja validation.js
       }
       return data;
     } catch (error) {
+      console.error('❌ Login error:', error.message, error);
+      // NO usar fallback si es error del servidor (401, 400, etc)
+      if (error.message.includes('Credenciales') ||
+          error.message.includes('inválid') ||
+          error.message.includes('incorrectos')) {
+        throw error; // Re-lanzar errores de autenticación
+      }
       console.warn('⚠️ API caída, usando auth local:', error.message);
       const users = JSON.parse(localStorage.getItem('turnex-local-users') || '[]');
       let user = users.find(u => u.email === credentials.email);
