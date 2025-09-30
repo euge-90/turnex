@@ -274,24 +274,55 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import sessionManager from './js/session.js';
-    import themeManager from './js/theme.js';
-    import api from './js/api.js';
+    console.log('🔍 BUSINESS DASHBOARD: Iniciando verificación de autenticación...');
 
-    // Proteger: solo BUSINESS
-    if (!sessionManager.isAuthenticated()) {
+    // Verificación SIMPLE con logs detallados
+    const token = localStorage.getItem('turnex-token');
+    const userStr = localStorage.getItem('turnex-user');
+
+    console.log('Token existe:', !!token);
+    console.log('User existe:', !!userStr);
+
+    if (!token || !userStr) {
+      console.log('❌ No autenticado, redirigiendo a index.html');
       window.location.href = 'index.html';
-    } else if (!sessionManager.hasRole('BUSINESS')) {
-      const role = sessionManager.getUser()?.role;
-      if (role === 'CLIENT') window.location.href = 'client-dashboard.html';
-      else if (role === 'ADMIN') window.location.href = 'admin-dashboard.html';
+      throw new Error('Not authenticated');
     }
 
-    const user = sessionManager.getUser();
+    const user = JSON.parse(userStr);
+    console.log('✅ Usuario autenticado:', user);
+    console.log('Rol del usuario:', user.role);
+
+    // Verificar que sea BUSINESS
+    if (user.role !== 'BUSINESS') {
+      console.log('❌ Rol incorrecto para business-dashboard:', user.role);
+      if (user.role === 'CLIENT') {
+        console.log('Redirigiendo a client-dashboard.html');
+        window.location.href = 'client-dashboard.html';
+      } else if (user.role === 'ADMIN') {
+        console.log('Redirigiendo a admin-dashboard.html');
+        window.location.href = 'admin-dashboard.html';
+      }
+      throw new Error('Wrong role');
+    }
+
+    console.log('✅ Rol correcto (BUSINESS), mostrando dashboard');
+
+    // Mostrar datos del usuario
     document.getElementById('userName').textContent = user.businessName || user.name || user.email;
     document.getElementById('navUserInfo').textContent = user.businessName || user.name || user.email;
 
-    document.getElementById('btnLogout').addEventListener('click', () => sessionManager.logout());
+    // Importar módulos DESPUÉS de verificar auth
+    const themeManager = await import('./js/theme.js');
+    const api = (await import('./js/api.js')).default;
+
+    // Botón logout
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      console.log('Cerrando sesión...');
+      localStorage.removeItem('turnex-token');
+      localStorage.removeItem('turnex-user');
+      window.location.href = 'index.html';
+    });
 
     // Navegación
     document.querySelectorAll('.nav-link').forEach(link => {
