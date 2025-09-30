@@ -152,13 +152,27 @@ class SessionManager {
     if (!this.user) return;
 
     const redirects = {
-      'CLIENT': '#servicios',
-      'BUSINESS': '#mis-servicios',
-      'ADMIN': '#admin'
+      'CLIENT': 'dashboard.html',
+      'BUSINESS': 'dashboard.html',
+      'ADMIN': 'dashboard.html'
     };
 
-    const hash = redirects[this.user.role] || '#';
-    window.location.hash = hash;
+    const target = redirects[this.user.role] || 'dashboard.html';
+
+    // Evitar loop infinito si ya estamos en dashboard
+    if (!window.location.pathname.includes('dashboard.html')) {
+      window.location.href = target;
+    }
+  }
+
+  getRoleDisplayName() {
+    if (!this.user) return 'Invitado';
+    const names = {
+      'CLIENT': 'Usuario',
+      'BUSINESS': 'Empresa',
+      'ADMIN': 'Administrador'
+    };
+    return names[this.user.role] || 'Usuario';
   }
 
   _dispatchEvent(eventName, detail = {}) {

@@ -189,8 +189,8 @@ function initLoginForm() {
           const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
           if (modal) modal.hide();
 
-          // Recargar página para actualizar UI
-          window.location.reload();
+          // Redirigir a dashboard
+          window.location.href = 'dashboard.html';
         }
       } catch (error) {
         console.error('Error en login:', error);
@@ -321,8 +321,8 @@ function initSignupForm() {
           const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
           if (modal) modal.hide();
 
-          // Recargar página para actualizar UI
-          window.location.reload();
+          // Redirigir a dashboard
+          window.location.href = 'dashboard.html';
         }
       } catch (error) {
         console.error('Error en signup:', error);
