@@ -68,15 +68,13 @@ async function startup() {
     if (!cfg) {
       await prisma.config.create({
         data: {
-          businessHours: JSON.stringify({
-            tuesday: { start: '09:00', end: '18:00' },
-            wednesday: { start: '09:00', end: '18:00' },
-            thursday: { start: '09:00', end: '18:00' },
-            friday: { start: '09:00', end: '18:00' },
-            saturday: { start: '09:00', end: '18:00' }
-          }),
-          blockedDates: JSON.stringify([]),
-          blockedTimes: JSON.stringify([])
+          workingDays: ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+          startTime: '09:00',
+          endTime: '18:00',
+          slotDuration: 30,
+          lunchBreakStart: '13:00',
+          lunchBreakEnd: '14:00',
+          blockedDates: []
         }
       });
       console.log('✅ Configuración inicial creada');
