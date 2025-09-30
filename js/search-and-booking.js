@@ -106,12 +106,54 @@ export function refreshBookingsWidget () {
   try {
     const el = document.getElementById('turnexBookingsList')
     if (!el) return
-    const arr = JSON.parse(localStorage.getItem('turnex:bookings') || '[]')
-    if (!arr.length) { el.innerHTML = '<div class="text-body-secondary">No tenés reservas</div>'; return }
-    el.innerHTML = arr.slice(0,10).map(b => `<div class="booking-item"><div class="booking-name">${esc(b.serviceName)}</div><div class="booking-date small text-muted">${new Date(b.createdAt).toLocaleString()}</div></div>`).join('')
+
+    // Leer turnos desde la estructura real (app_bookings_v1)
+    const allBookings = JSON.parse(localStorage.getItem('app_bookings_v1') || '[]')
+
+    // Filtrar por usuario actual si está logueado
+    let userBookings = allBookings
     try {
-      // notify tests / other scripts that bookings were refreshed
-      window.dispatchEvent && window.dispatchEvent(new CustomEvent('turnex:bookings-refreshed', { detail: { count: arr.length } }))
+      const userJson = localStorage.getItem('turnex-user')
+      if (userJson) {
+        const user = JSON.parse(userJson)
+        userBookings = allBookings.filter(b => b.email === user.email)
+      }
+    } catch (e) { /* usar todos los turnos si no hay sesión */ }
+
+    if (!userBookings.length) {
+      el.innerHTML = '<div class="text-body-secondary text-center py-3">No tenés turnos reservados</div>'
+      return
+    }
+
+    // Renderizar lista completa con opciones de editar/eliminar
+    el.innerHTML = userBookings.slice(0, 20).map(b => `
+      <div class="card mb-2 booking-item-card" data-booking-id="${esc(b.id)}">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <h6 class="mb-1 fw-semibold">${esc(b.serviceName)}</h6>
+              <div class="small text-muted">
+                <i class="bi bi-calendar3"></i> ${esc(b.date)} a las ${esc(b.time)}
+              </div>
+              <div class="small text-muted">
+                <i class="bi bi-clock"></i> Duración: ${b.duration || 30} min
+              </div>
+            </div>
+            <div class="btn-group-vertical btn-group-sm">
+              <button class="btn btn-sm btn-outline-primary" onclick="editBooking('${esc(b.id)}')" title="Editar">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking('${esc(b.id)}')" title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('')
+
+    try {
+      window.dispatchEvent && window.dispatchEvent(new CustomEvent('turnex:bookings-refreshed', { detail: { count: userBookings.length } }))
     } catch (e) { /* ignore */ }
   } catch (e) { console.error(e) }
 }
@@ -159,6 +201,87 @@ export function setupBookingsButton() {
       } catch (e) { console.error(e) }
     })
   } catch (e) { console.error(e) }
+}
+
+// Función global para editar turno
+window.editBooking = async function(bookingId) {
+  try {
+    const allBookings = JSON.parse(localStorage.getItem('app_bookings_v1') || '[]')
+    const booking = allBookings.find(b => b.id === bookingId)
+    if (!booking) {
+      alert('Turno no encontrado')
+      return
+    }
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Editar Turno',
+      html: `
+        <div class="text-start">
+          <div class="mb-3">
+            <label class="form-label">Servicio</label>
+            <input id="edit-service" class="form-control" value="${esc(booking.serviceName)}" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Fecha</label>
+            <input id="edit-date" type="date" class="form-control" value="${booking.date}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Hora</label>
+            <input id="edit-time" type="time" class="form-control" value="${booking.time}">
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        return {
+          date: document.getElementById('edit-date').value,
+          time: document.getElementById('edit-time').value
+        }
+      }
+    })
+
+    if (formValues) {
+      const idx = allBookings.findIndex(b => b.id === bookingId)
+      if (idx !== -1) {
+        allBookings[idx] = { ...allBookings[idx], ...formValues }
+        localStorage.setItem('app_bookings_v1', JSON.stringify(allBookings))
+        refreshBookingsWidget()
+        Swal.fire('¡Actualizado!', 'Tu turno fue modificado correctamente', 'success')
+      }
+    }
+  } catch (error) {
+    console.error('Error editando turno:', error)
+    Swal.fire('Error', 'No se pudo editar el turno', 'error')
+  }
+}
+
+// Función global para eliminar turno
+window.deleteBooking = async function(bookingId) {
+  try {
+    const result = await Swal.fire({
+      title: '¿Cancelar turno?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No, mantener'
+    })
+
+    if (result.isConfirmed) {
+      const allBookings = JSON.parse(localStorage.getItem('app_bookings_v1') || '[]')
+      const filtered = allBookings.filter(b => b.id !== bookingId)
+      localStorage.setItem('app_bookings_v1', JSON.stringify(filtered))
+      refreshBookingsWidget()
+      Swal.fire('¡Cancelado!', 'Tu turno fue eliminado', 'success')
+    }
+  } catch (error) {
+    console.error('Error eliminando turno:', error)
+    Swal.fire('Error', 'No se pudo cancelar el turno', 'error')
+  }
 }
 
 export default {
