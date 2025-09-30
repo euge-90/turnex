@@ -43,18 +43,13 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, timestamp: new Date().toISOString() });
 });
 
-// Rutas: pasar la instancia de prisma a los factories de rutas
-// Helper to mount either a router or a factory that returns a router
+// Rutas: mount routers directly
+// Note: All routes export express.Router() instances, not factories
 function mountRoute(path, routeExport) {
-  console.log(`📍 Montando ruta: ${path}, tipo: ${typeof routeExport}`);
-  if (typeof routeExport === 'function') {
-    const router = routeExport({ prisma });
-    console.log(`✅ Factory ejecutada para ${path}, resultado: ${typeof router}`);
-    app.use(path, router);
-  } else {
-    console.log(`✅ Router directo para ${path}`);
-    app.use(path, routeExport);
-  }
+  console.log(`📍 Montando ruta: ${path}`);
+  // Express Router is a function, but we use it directly, not call it
+  app.use(path, routeExport);
+  console.log(`✅ Ruta montada: ${path}`);
 }
 
 mountRoute('/api/auth', authRoutes);
