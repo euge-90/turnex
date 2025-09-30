@@ -7,7 +7,7 @@ const VALIDATION_RULES = {
   },
   password: {
     minLength: 8,
-    message: 'Mínimo 8 caracteres'
+    message: 'La contraseña debe tener mínimo 8 caracteres'
   },
   phone: {
     pattern: /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{4,}$/,
@@ -214,7 +214,12 @@ function initLoginForm() {
       } catch (error) {
         console.error('Error en login:', error);
         if (errorDiv) {
-          errorDiv.textContent = error.message || 'Error al iniciar sesión';
+          // Mensajes más claros
+          let errorMsg = error.message || 'Error al iniciar sesión';
+          if (errorMsg.includes('Credenciales inválidas')) {
+            errorMsg = 'Email o contraseña incorrectos. Verificá tus datos.';
+          }
+          errorDiv.textContent = errorMsg;
           errorDiv.classList.remove('d-none');
         }
 
@@ -365,7 +370,14 @@ function initSignupForm() {
       } catch (error) {
         console.error('Error en signup:', error);
         if (errorDiv) {
-          errorDiv.textContent = error.message || 'Error al crear cuenta';
+          // Mensajes más claros
+          let errorMsg = error.message || 'Error al crear cuenta';
+          if (errorMsg.includes('ya existe') || errorMsg.includes('already exists')) {
+            errorMsg = 'Este email ya está registrado. Intenta iniciar sesión.';
+          } else if (errorMsg.includes('8 caracteres')) {
+            errorMsg = 'La contraseña debe tener mínimo 8 caracteres.';
+          }
+          errorDiv.textContent = errorMsg;
           errorDiv.classList.remove('d-none');
         }
 
