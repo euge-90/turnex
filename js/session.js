@@ -152,15 +152,16 @@ class SessionManager {
     if (!this.user) return;
 
     const redirects = {
-      'CLIENT': 'dashboard.html',
-      'BUSINESS': 'dashboard.html',
-      'ADMIN': 'dashboard.html'
+      'CLIENT': 'client-dashboard.html',
+      'BUSINESS': 'business-dashboard.html',
+      'ADMIN': 'admin-dashboard.html'
     };
 
-    const target = redirects[this.user.role] || 'dashboard.html';
+    const target = redirects[this.user.role] || 'client-dashboard.html';
 
-    // Evitar loop infinito si ya estamos en dashboard
-    if (!window.location.pathname.includes('dashboard.html')) {
+    // Evitar loop infinito si ya estamos en el dashboard correcto
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage !== target && !currentPage.includes('index.html')) {
       window.location.href = target;
     }
   }
