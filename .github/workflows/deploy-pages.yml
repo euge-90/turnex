@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
           mkdir -p site
           # Core files (present in this project)
-          for f in index.html 404.html manifest.json sw.js .nojekyll; do
+          for f in index.html dashboard.html 404.html manifest.json sw.js .nojekyll; do
             if [[ -f "$f" ]]; then cp -a "$f" site/; fi
           done
           # Static folders
