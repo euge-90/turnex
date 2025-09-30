@@ -403,6 +403,33 @@ function showBusinessInfoModal (feature) {
 
   // Note: previous inline code accidentally injected into the template literal was removed here.
 
+  // Function to show/hide sections based on current hash and login status
+  const updateSectionVisibility = () => {
+    const hash = location.hash
+    const isLoggedIn = isLogged()
+    
+    // Hide all user sections by default
+    if (calendarioSection) calendarioSection.classList.add('d-none')
+    if (misTurnosSection) misTurnosSection.classList.add('d-none')
+    
+    // Show appropriate section for logged-in users
+    if (isLoggedIn) {
+      if (hash === '#calendario') {
+        if (calendarioSection) calendarioSection.classList.remove('d-none')
+        // Scroll to calendar section
+        setTimeout(() => {
+          calendarioSection?.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      } else if (hash === '#mis-turnos') {
+        if (misTurnosSection) misTurnosSection.classList.remove('d-none')
+        // Scroll to bookings section
+        setTimeout(() => {
+          misTurnosSection?.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      }
+    }
+  }
+
   const protectHashes = () => {
     if (!isLogged()) {
       const h = location.hash
@@ -412,6 +439,9 @@ function showBusinessInfoModal (feature) {
         const m = modal ? new bootstrap.Modal(modal) : null
         m?.show()
       }
+    } else {
+      // Show/hide sections based on hash for logged-in users
+      updateSectionVisibility()
     }
   }
   window.addEventListener('hashchange', protectHashes)
