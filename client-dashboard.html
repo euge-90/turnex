@@ -326,26 +326,54 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
-    import sessionManager from './js/session.js';
-    import themeManager from './js/theme.js';
-    import './js/dashboard.js';
+    console.log('🔍 CLIENT DASHBOARD: Iniciando verificación de autenticación...');
 
-    // Proteger: solo CLIENT
-    if (!sessionManager.isAuthenticated()) {
+    // Verificación SIMPLE con logs detallados
+    const token = localStorage.getItem('turnex-token');
+    const userStr = localStorage.getItem('turnex-user');
+
+    console.log('Token existe:', !!token);
+    console.log('User existe:', !!userStr);
+
+    if (!token || !userStr) {
+      console.log('❌ No autenticado, redirigiendo a index.html');
       window.location.href = 'index.html';
-    } else if (!sessionManager.hasRole('CLIENT')) {
-      // Redirigir a dashboard correcto
-      const role = sessionManager.getUser()?.role;
-      if (role === 'BUSINESS') window.location.href = 'business-dashboard.html';
-      else if (role === 'ADMIN') window.location.href = 'admin-dashboard.html';
+      throw new Error('Not authenticated'); // Detener ejecución
     }
 
-    const user = sessionManager.getUser();
+    const user = JSON.parse(userStr);
+    console.log('✅ Usuario autenticado:', user);
+    console.log('Rol del usuario:', user.role);
+
+    // Verificar que sea CLIENT
+    if (user.role !== 'CLIENT') {
+      console.log('❌ Rol incorrecto para client-dashboard:', user.role);
+      if (user.role === 'BUSINESS') {
+        console.log('Redirigiendo a business-dashboard.html');
+        window.location.href = 'business-dashboard.html';
+      } else if (user.role === 'ADMIN') {
+        console.log('Redirigiendo a admin-dashboard.html');
+        window.location.href = 'admin-dashboard.html';
+      }
+      throw new Error('Wrong role'); // Detener ejecución
+    }
+
+    console.log('✅ Rol correcto (CLIENT), mostrando dashboard');
+
+    // Mostrar datos del usuario
     document.getElementById('userName').textContent = `Hola, ${user.name || user.email}`;
     document.getElementById('navUserInfo').textContent = user.name || user.email;
 
+    // Importar módulos DESPUÉS de verificar auth
+    import('./js/theme.js');
+    import('./js/dashboard.js');
+
+    // Botón logout
     document.getElementById('btnLogout').addEventListener('click', () => {
-      sessionManager.logout();
+      console.log('Cerrando sesión...');
+      localStorage.removeItem('turnex-token');
+      localStorage.removeItem('turnex-user');
+      window.location.href = 'index.html';
     });
   </script>
 </body>

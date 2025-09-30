@@ -196,6 +196,10 @@ function initLoginForm() {
         });
 
         if (response && response.user && response.token) {
+          console.log('✅ Login exitoso:', response.user);
+          console.log('Token recibido:', response.token);
+          console.log('Rol del usuario:', response.user.role);
+
           // Guardar sesión
           localStorage.setItem('turnex-token', response.token);
           localStorage.setItem('turnex-user', JSON.stringify(response.user));
@@ -204,9 +208,23 @@ function initLoginForm() {
           const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
           if (modal) modal.hide();
 
-          // Redirigir inmediatamente a dashboard
+          // Redirigir según rol
+          const role = response.user.role;
+          let redirectUrl = 'client-dashboard.html'; // default
+
+          if (role === 'CLIENT') {
+            redirectUrl = 'client-dashboard.html';
+          } else if (role === 'BUSINESS') {
+            redirectUrl = 'business-dashboard.html';
+          } else if (role === 'ADMIN') {
+            redirectUrl = 'admin-dashboard.html';
+          }
+
+          console.log('Redirigiendo a:', redirectUrl);
+
+          // Redirigir inmediatamente
           setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = redirectUrl;
           }, 100);
         } else {
           throw new Error('Respuesta inválida del servidor');
@@ -352,6 +370,10 @@ function initSignupForm() {
         const response = await window.api.signup(payload);
 
         if (response && response.user && response.token) {
+          console.log('✅ Signup exitoso:', response.user);
+          console.log('Token recibido:', response.token);
+          console.log('Rol del usuario:', response.user.role);
+
           // Guardar sesión
           localStorage.setItem('turnex-token', response.token);
           localStorage.setItem('turnex-user', JSON.stringify(response.user));
@@ -360,9 +382,23 @@ function initSignupForm() {
           const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
           if (modal) modal.hide();
 
-          // Redirigir inmediatamente a dashboard
+          // Redirigir según rol
+          const role = response.user.role;
+          let redirectUrl = 'client-dashboard.html'; // default
+
+          if (role === 'CLIENT') {
+            redirectUrl = 'client-dashboard.html';
+          } else if (role === 'BUSINESS') {
+            redirectUrl = 'business-dashboard.html';
+          } else if (role === 'ADMIN') {
+            redirectUrl = 'admin-dashboard.html';
+          }
+
+          console.log('Redirigiendo a:', redirectUrl);
+
+          // Redirigir inmediatamente
           setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = redirectUrl;
           }, 100);
         } else {
           throw new Error('Respuesta inválida del servidor');
