@@ -145,41 +145,98 @@ function setupFieldValidation(inputId, validationFn) {
 function initLoginForm() {
   const form = document.getElementById('loginForm');
   if (!form) return;
-  
-  // Setup validations visuales solamente
+
+  // Clonar para remover listeners previos
+  const newForm = form.cloneNode(true);
+  form.parentNode.replaceChild(newForm, form);
+
+  // Setup validations visuales DESPUÉS de clonar
   setupFieldValidation('loginEmail', validateEmail);
   setupFieldValidation('loginPassword', validatePassword);
-  
-  // Setup password toggle
+
+  // Setup password toggle DESPUÉS de clonar
   setupPasswordToggle('[data-toggle-password="loginPassword"]', 'loginPassword');
-  
-  // NO interceptar el submit - dejarlo para app.js
-  console.log('Login form validación visual activada - submit manejado por app.js');
+
+  // Agregar handler de submit
+  newForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const emailInput = document.getElementById('loginEmail');
+    const passwordInput = document.getElementById('loginPassword');
+    const submitBtn = document.getElementById('loginSubmitBtn');
+    const errorDiv = document.getElementById('loginInlineError');
+
+    const emailResult = validateEmail(emailInput.value);
+    const passwordResult = validatePassword(passwordInput.value);
+
+    showFieldFeedback(emailInput, emailResult.valid, emailResult.message);
+    showFieldFeedback(passwordInput, passwordResult.valid, passwordResult.message);
+
+    if (emailResult.valid && passwordResult.valid) {
+      // Deshabilitar botón y mostrar spinner
+      submitBtn.disabled = true;
+      const spinner = submitBtn.querySelector('.spinner-border');
+      if (spinner) spinner.classList.remove('d-none');
+
+      try {
+        const response = await window.api.login({
+          email: emailInput.value.trim(),
+          password: passwordInput.value
+        });
+
+        if (response.user && response.token) {
+          // Cerrar modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+          if (modal) modal.hide();
+
+          // Recargar página para actualizar UI
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error en login:', error);
+        if (errorDiv) {
+          errorDiv.textContent = error.message || 'Error al iniciar sesión';
+          errorDiv.classList.remove('d-none');
+        }
+
+        // Re-habilitar botón
+        submitBtn.disabled = false;
+        if (spinner) spinner.classList.add('d-none');
+      }
+    }
+  });
+
+  console.log('Login form handler instalado');
 }
 
 // Init Signup
 function initSignupForm() {
   const form = document.getElementById('signupForm');
   if (!form) return;
-  
+
+  // Clonar PRIMERO para remover listeners previos
+  const newForm = form.cloneNode(true);
+  form.parentNode.replaceChild(newForm, form);
+
+  // Setup validations DESPUÉS de clonar
   setupFieldValidation('signupName', validateName);
   setupFieldValidation('signupEmail', validateEmail);
   setupFieldValidation('signupPhone', validatePhone);
   setupFieldValidation('signupPassword', validatePassword);
-  
+
   const passwordInput = document.getElementById('signupPassword');
   const password2Input = document.getElementById('signupPassword2');
-  
+
   if (password2Input) {
     const newPassword2 = password2Input.cloneNode(true);
     password2Input.parentNode.replaceChild(newPassword2, password2Input);
-    
+
     newPassword2.addEventListener('input', function() {
       const pass1 = document.getElementById('signupPassword');
       const result = validatePasswordMatch(pass1.value, this.value);
       showFieldFeedback(this, result.valid, result.message);
     });
-    
+
     newPassword2.addEventListener('blur', function() {
       if (this.value.trim() !== '') {
         const pass1 = document.getElementById('signupPassword');
@@ -188,7 +245,7 @@ function initSignupForm() {
       }
     });
   }
-  
+
   if (passwordInput) {
     passwordInput.addEventListener('input', function() {
       const pass2 = document.getElementById('signupPassword2');
@@ -198,37 +255,86 @@ function initSignupForm() {
       }
     });
   }
-  
+
   setupPasswordToggle('[data-toggle-password="signupPassword"]', 'signupPassword');
   setupPasswordToggle('[data-toggle-password="signupPassword2"]', 'signupPassword2');
   
-  const newForm = form.cloneNode(true);
-  form.parentNode.replaceChild(newForm, form);
-  
-  newForm.addEventListener('submit', function(e) {
+  newForm.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const nameInput = document.getElementById('signupName');
     const emailInput = document.getElementById('signupEmail');
     const phoneInput = document.getElementById('signupPhone');
     const pass1 = document.getElementById('signupPassword');
     const pass2 = document.getElementById('signupPassword2');
-    
+    const roleSelect = document.getElementById('signupRole');
+    const businessNameInput = document.getElementById('signupBusinessName');
+    const submitBtn = document.getElementById('signupSubmitBtn');
+    const errorDiv = document.getElementById('signupInlineError');
+
     const nameResult = validateName(nameInput.value);
     const emailResult = validateEmail(emailInput.value);
     const phoneResult = validatePhone(phoneInput.value);
     const passwordResult = validatePassword(pass1.value);
     const password2Result = validatePasswordMatch(pass1.value, pass2.value);
-    
+
     showFieldFeedback(nameInput, nameResult.valid, nameResult.message);
     showFieldFeedback(emailInput, emailResult.valid, emailResult.message);
     showFieldFeedback(phoneInput, phoneResult.valid, phoneResult.message);
     showFieldFeedback(pass1, passwordResult.valid, passwordResult.message);
     showFieldFeedback(pass2, password2Result.valid, password2Result.message);
-    
-    if (nameResult.valid && emailResult.valid && phoneResult.valid && 
-        passwordResult.valid && password2Result.valid) {
-      console.log('Signup válido');
+
+    // Validar businessName si es BUSINESS
+    let businessNameValid = true;
+    if (roleSelect.value === 'BUSINESS') {
+      if (!businessNameInput.value.trim()) {
+        businessNameValid = false;
+        showFieldFeedback(businessNameInput, false, 'El nombre del negocio es requerido');
+      }
+    }
+
+    if (nameResult.valid && emailResult.valid && phoneResult.valid &&
+        passwordResult.valid && password2Result.valid && businessNameValid) {
+
+      // Deshabilitar botón y mostrar spinner
+      submitBtn.disabled = true;
+      const spinner = submitBtn.querySelector('.spinner-border');
+      if (spinner) spinner.classList.remove('d-none');
+
+      try {
+        const payload = {
+          name: nameInput.value.trim(),
+          email: emailInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          password: pass1.value,
+          role: roleSelect.value
+        };
+
+        if (roleSelect.value === 'BUSINESS') {
+          payload.businessName = businessNameInput.value.trim();
+        }
+
+        const response = await window.api.signup(payload);
+
+        if (response.user && response.token) {
+          // Cerrar modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+          if (modal) modal.hide();
+
+          // Recargar página para actualizar UI
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error en signup:', error);
+        if (errorDiv) {
+          errorDiv.textContent = error.message || 'Error al crear cuenta';
+          errorDiv.classList.remove('d-none');
+        }
+
+        // Re-habilitar botón
+        submitBtn.disabled = false;
+        if (spinner) spinner.classList.add('d-none');
+      }
     }
   });
 }
