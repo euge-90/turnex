@@ -109,7 +109,7 @@ class APIClient {
       const data = await this.post('/auth/signup', userData);
       if (data.token && data.user) {
         sessionManager.login(data.user, data.token);
-        showSuccess('Cuenta creada exitosamente');
+        // No mostrar mensaje aquí - lo maneja validation.js
       }
       return data;
     } catch (error) {
@@ -127,7 +127,7 @@ class APIClient {
       users.push(mockUser);
       localStorage.setItem('turnex-local-users', JSON.stringify(users));
       sessionManager.login(mockUser, mockToken);
-      showSuccess('Cuenta creada (modo local)');
+      // No mostrar mensaje - lo maneja validation.js
       return { user: mockUser, token: mockToken };
     }
   }
@@ -137,7 +137,7 @@ class APIClient {
       const data = await this.post('/auth/login', credentials);
       if (data.token && data.user) {
         sessionManager.login(data.user, data.token);
-        showSuccess(`Bienvenido ${data.user.name || data.user.email}`);
+        // No mostrar mensaje aquí - lo maneja validation.js
       }
       return data;
     } catch (error) {
@@ -158,7 +158,7 @@ class APIClient {
       }
       const mockToken = 'local-' + crypto.randomUUID();
       sessionManager.login(user, mockToken);
-      showSuccess(`Bienvenido ${user.name}`);
+      // No mostrar mensaje - lo maneja validation.js
       return { user, token: mockToken };
     }
   }
