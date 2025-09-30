@@ -47,11 +47,14 @@ export function setupHeroBindings () {
   } catch (e) { console.error(e) }
 }
 
-// Bookings (local demo storage)
-export function handleBooking (serviceOrBtn) {
+// Bookings (local demo storage) - UPDATED to open modal with date/time selection
+export async function handleBooking (serviceOrBtn) {
   const cached = window.__services_cache || []
   let serviceId = null
   let serviceName = ''
+  let serviceDuration = 30
+  let servicePrice = 0
+
   // if an element (button) was passed, derive info from DOM
   if (serviceOrBtn && typeof serviceOrBtn === 'object' && serviceOrBtn.tagName) {
     const btn = serviceOrBtn
@@ -66,16 +69,165 @@ export function handleBooking (serviceOrBtn) {
     serviceId = String(serviceOrBtn)
   }
 
-  const svc = cached.find(s => String(s.id) === String(serviceId)) || { id: serviceId || 'local_' + Date.now(), name: serviceName || '' }
-  const booking = { id: 'b_' + Date.now(), serviceId: svc.id, serviceName: svc.name || '', createdAt: new Date().toISOString() }
+  const svc = cached.find(s => String(s.id) === String(serviceId))
+  if (svc) {
+    serviceName = svc.name
+    serviceDuration = svc.duration || 30
+    servicePrice = svc.price || 0
+  }
+
+  // Check if user is logged in
+  let userEmail = ''
+  let userName = ''
   try {
-    const arr = JSON.parse(localStorage.getItem('turnex:bookings') || '[]')
-    arr.unshift(booking)
-    localStorage.setItem('turnex:bookings', JSON.stringify(arr))
-    try { window.dispatchEvent && window.dispatchEvent(new CustomEvent('turnex:bookings-updated', { detail: { booking, count: arr.length } })) } catch (e) { /* ignore */ }
-  } catch (e) { console.error(e) }
-  try { showBookingConfirmation(booking, svc) } catch (e) { console.error(e) }
-  refreshBookingsWidget()
+    const userJson = localStorage.getItem('turnex-user')
+    if (userJson) {
+      const user = JSON.parse(userJson)
+      userEmail = user.email || ''
+      userName = user.name || user.email || ''
+    }
+  } catch (e) { /* no session */ }
+
+  if (!userEmail) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Iniciá sesión',
+      text: 'Necesitás estar logueado para reservar turnos',
+      confirmButtonText: 'Entendido'
+    })
+    return
+  }
+
+  // Import booking functions
+  const { createBooking, listTakenSlots } = await import('./booking.js')
+  const { generateTimeSlots, isWorkingDay, isPast, fmtDateKey } = await import('./utils.js')
+
+  // Generate min date (tomorrow)
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const minDate = fmtDateKey(tomorrow)
+
+  // Generate max date (60 days from now)
+  const maxDateObj = new Date(today)
+  maxDateObj.setDate(maxDateObj.getDate() + 60)
+  const maxDate = fmtDateKey(maxDateObj)
+
+  const { value: formValues } = await Swal.fire({
+    title: 'Reservar Turno',
+    html: `
+      <div class="text-start">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Servicio</label>
+          <input class="form-control" value="${esc(serviceName)}" readonly>
+          <small class="text-muted">Duración: ${serviceDuration} min | Precio: $${servicePrice}</small>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Fecha</label>
+          <input id="booking-date" type="date" class="form-control" min="${minDate}" max="${maxDate}" required>
+          <small class="text-muted">Martes a sábado únicamente</small>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Horario</label>
+          <select id="booking-time" class="form-select" required>
+            <option value="">Seleccioná primero una fecha</option>
+          </select>
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Reservar',
+    cancelButtonText: 'Cancelar',
+    didOpen: () => {
+      const dateInput = document.getElementById('booking-date')
+      const timeSelect = document.getElementById('booking-time')
+
+      // Update available times when date changes
+      dateInput.addEventListener('change', function() {
+        const selectedDate = this.value
+        if (!selectedDate) {
+          timeSelect.innerHTML = '<option value="">Seleccioná una fecha</option>'
+          return
+        }
+
+        const dateObj = new Date(selectedDate + 'T00:00:00')
+
+        // Validate working day
+        if (!isWorkingDay(dateObj)) {
+          timeSelect.innerHTML = '<option value="">No trabajamos este día (solo Mar-Sáb)</option>'
+          return
+        }
+
+        // Validate not past
+        if (isPast(dateObj)) {
+          timeSelect.innerHTML = '<option value="">No se puede reservar en fechas pasadas</option>'
+          return
+        }
+
+        // Get available slots
+        const allSlots = generateTimeSlots(dateObj)
+        const takenSlots = listTakenSlots(selectedDate)
+
+        const availableSlots = allSlots.filter(slot => !takenSlots.has(slot))
+
+        if (availableSlots.length === 0) {
+          timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>'
+          return
+        }
+
+        timeSelect.innerHTML = '<option value="">Seleccioná un horario</option>' +
+          availableSlots.map(slot => `<option value="${slot}">${slot}</option>`).join('')
+      })
+    },
+    preConfirm: () => {
+      const date = document.getElementById('booking-date').value
+      const time = document.getElementById('booking-time').value
+
+      if (!date || !time) {
+        Swal.showValidationMessage('Completá todos los campos')
+        return false
+      }
+
+      return { date, time }
+    }
+  })
+
+  if (formValues) {
+    try {
+      const newBooking = createBooking({
+        email: userEmail,
+        name: userName,
+        serviceId: serviceId,
+        serviceName: serviceName,
+        date: formValues.date,
+        time: formValues.time
+      })
+
+      Swal.fire({
+        icon: 'success',
+        title: '¡Reserva confirmada!',
+        html: `
+          <div class="text-start">
+            <p><strong>Servicio:</strong> ${esc(serviceName)}</p>
+            <p><strong>Fecha:</strong> ${formValues.date}</p>
+            <p><strong>Hora:</strong> ${formValues.time}</p>
+            <p class="text-muted mt-2">Te esperamos!</p>
+          </div>
+        `,
+        confirmButtonText: 'Entendido'
+      })
+
+      refreshBookingsWidget()
+    } catch (error) {
+      console.error('Error creando reserva:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'No se pudo crear la reserva',
+        confirmButtonText: 'Cerrar'
+      })
+    }
+  }
 }
 
 function showBookingConfirmation (booking, service) {
@@ -203,42 +355,123 @@ export function setupBookingsButton() {
   } catch (e) { console.error(e) }
 }
 
-// Función global para editar turno
+// Función global para editar turno - UPDATED with availability validation
 window.editBooking = async function(bookingId) {
   try {
     const allBookings = JSON.parse(localStorage.getItem('app_bookings_v1') || '[]')
     const booking = allBookings.find(b => b.id === bookingId)
     if (!booking) {
-      alert('Turno no encontrado')
+      Swal.fire('Error', 'Turno no encontrado', 'error')
       return
     }
+
+    // Import functions for validation
+    const { canFitExcluding, listTakenSlotsForDateExcluding } = await import('./booking.js')
+    const { generateTimeSlots, isWorkingDay, isPast, fmtDateKey } = await import('./utils.js')
+
+    // Generate min date (today)
+    const today = new Date()
+    const minDate = fmtDateKey(today)
+
+    // Generate max date (60 days from now)
+    const maxDateObj = new Date(today)
+    maxDateObj.setDate(maxDateObj.getDate() + 60)
+    const maxDate = fmtDateKey(maxDateObj)
 
     const { value: formValues } = await Swal.fire({
       title: 'Editar Turno',
       html: `
         <div class="text-start">
           <div class="mb-3">
-            <label class="form-label">Servicio</label>
-            <input id="edit-service" class="form-control" value="${esc(booking.serviceName)}" readonly>
+            <label class="form-label fw-bold">Servicio</label>
+            <input class="form-control" value="${esc(booking.serviceName)}" readonly>
+            <small class="text-muted">Duración: ${booking.duration || 30} min</small>
           </div>
           <div class="mb-3">
-            <label class="form-label">Fecha</label>
-            <input id="edit-date" type="date" class="form-control" value="${booking.date}">
+            <label class="form-label fw-bold">Fecha</label>
+            <input id="edit-date" type="date" class="form-control" value="${booking.date}" min="${minDate}" max="${maxDate}" required>
+            <small class="text-muted">Martes a sábado únicamente</small>
           </div>
           <div class="mb-3">
-            <label class="form-label">Hora</label>
-            <input id="edit-time" type="time" class="form-control" value="${booking.time}">
+            <label class="form-label fw-bold">Horario</label>
+            <select id="edit-time" class="form-select" required>
+              <option value="">Seleccioná un horario</option>
+            </select>
           </div>
         </div>
       `,
       showCancelButton: true,
       confirmButtonText: 'Guardar',
       cancelButtonText: 'Cancelar',
-      preConfirm: () => {
-        return {
-          date: document.getElementById('edit-date').value,
-          time: document.getElementById('edit-time').value
+      didOpen: () => {
+        const dateInput = document.getElementById('edit-date')
+        const timeSelect = document.getElementById('edit-time')
+
+        // Function to update available times
+        function updateAvailableTimes() {
+          const selectedDate = dateInput.value
+          if (!selectedDate) {
+            timeSelect.innerHTML = '<option value="">Seleccioná una fecha</option>'
+            return
+          }
+
+          const dateObj = new Date(selectedDate + 'T00:00:00')
+
+          // Validate working day
+          if (!isWorkingDay(dateObj)) {
+            timeSelect.innerHTML = '<option value="">No trabajamos este día (solo Mar-Sáb)</option>'
+            return
+          }
+
+          // Validate not past (allow today)
+          const todayKey = fmtDateKey(new Date())
+          if (selectedDate < todayKey) {
+            timeSelect.innerHTML = '<option value="">No se puede reservar en fechas pasadas</option>'
+            return
+          }
+
+          // Get available slots (excluding current booking)
+          const allSlots = generateTimeSlots(dateObj)
+          const takenSlots = listTakenSlotsForDateExcluding(selectedDate, bookingId)
+
+          const availableSlots = allSlots.filter(slot => !takenSlots.has(slot))
+
+          if (availableSlots.length === 0) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>'
+            return
+          }
+
+          // Build options, pre-select current time if available
+          timeSelect.innerHTML = '<option value="">Seleccioná un horario</option>' +
+            availableSlots.map(slot => {
+              const selected = slot === booking.time ? 'selected' : ''
+              return `<option value="${slot}" ${selected}>${slot}</option>`
+            }).join('')
         }
+
+        // Initial load
+        updateAvailableTimes()
+
+        // Update on date change
+        dateInput.addEventListener('change', updateAvailableTimes)
+      },
+      preConfirm: () => {
+        const date = document.getElementById('edit-date').value
+        const time = document.getElementById('edit-time').value
+
+        if (!date || !time) {
+          Swal.showValidationMessage('Completá todos los campos')
+          return false
+        }
+
+        // Validate availability with full duration check
+        const duration = booking.duration || 30
+        if (!canFitExcluding(date, time, duration, bookingId)) {
+          Swal.showValidationMessage('El horario seleccionado no está disponible o no tiene suficiente duración')
+          return false
+        }
+
+        return { date, time }
       }
     })
 
@@ -248,12 +481,17 @@ window.editBooking = async function(bookingId) {
         allBookings[idx] = { ...allBookings[idx], ...formValues }
         localStorage.setItem('app_bookings_v1', JSON.stringify(allBookings))
         refreshBookingsWidget()
-        Swal.fire('¡Actualizado!', 'Tu turno fue modificado correctamente', 'success')
+        Swal.fire({
+          icon: 'success',
+          title: '¡Actualizado!',
+          text: 'Tu turno fue modificado correctamente',
+          confirmButtonText: 'Entendido'
+        })
       }
     }
   } catch (error) {
     console.error('Error editando turno:', error)
-    Swal.fire('Error', 'No se pudo editar el turno', 'error')
+    Swal.fire('Error', error.message || 'No se pudo editar el turno', 'error')
   }
 }
 
