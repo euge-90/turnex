@@ -75,10 +75,10 @@ class SessionManager {
   this.saveSession = (...args) => this.login(...args)
 
       this._dispatchEvent('session:login', { user });
-      
-      // Redirigir según el rol
-      this._redirectByRole();
-      
+
+      // NO redirigir aquí - lo maneja validation.js después del login
+      // this._redirectByRole();
+
       return true;
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
