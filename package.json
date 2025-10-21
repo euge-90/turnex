@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
-    "@vitest/ui": "^1.6.1",
+    "@vitest/ui": "^3.2.4",
     "eslint": "^8.57.1",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.32.0",
@@ -21,7 +21,7 @@
     "jsdom": "^22.1.0",
     "stylelint": "^16.24.0",
     "stylelint-config-standard": "^39.0.0",
-    "vitest": "^1.6.1"
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2"
